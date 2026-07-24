@@ -1,0 +1,890 @@
+/* ═══════════════════════════════════════════════════════════
+   DOCUMENTS MODULE — Production-Ready Stylesheet
+   TC & Migration Certificate
+
+   CRITICAL: Override global app-level table/td/th from index.css
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Reset ALL table elements inside doc-sheet ── */
+.doc-sheet,
+.doc-sheet table,
+.doc-sheet thead,
+.doc-sheet tbody,
+.doc-sheet tr,
+.doc-sheet th,
+.doc-sheet td {
+  background: transparent !important;
+  color: #000 !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* ══════════════════════════════════════════════
+   SCREEN CHROME
+══════════════════════════════════════════════ */
+.doc-page-wrap {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 12px 32px;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+/* ── Toolbar ── */
+.doc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.doc-toolbar a {
+  color: #1a3c6e;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.88rem;
+}
+.doc-lock-banner {
+  flex: 1 1 100%;
+  padding: 8px 12px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  color: #78350f;
+}
+.doc-btn {
+  border-radius: 7px;
+  padding: 7px 16px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s;
+}
+.doc-btn-primary   { background: #1a3c6e; color: #fff; border-color: #1a3c6e; }
+.doc-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.doc-btn-secondary { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
+.doc-btn-danger    { background: #b91c1c; color: #fff; border-color: #991b1b; }
+
+/* ══════════════════════════════════════════════
+   A4 CERTIFICATE SHEET
+══════════════════════════════════════════════ */
+.doc-print-area.doc-sheet {
+  box-sizing: border-box;
+  width: 210mm;
+  max-width: min(210mm, 100%);
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 10mm 14mm 14mm;
+  background: #fff !important;
+  border: 1px solid #94a3b8;
+  box-shadow: 0 4px 24px rgba(15,23,42,0.08);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10pt;
+  line-height: 1.4;
+  color: #000;
+}
+
+.doc-sheet.doc-migration-sheet {
+  border: 3px double #000;
+}
+
+/* ── Text helpers ── */
+.doc-no-upper { text-transform: none !important; }
+.doc-upper    { text-transform: uppercase; }
+
+/* ── Certificate number ── */
+.doc-cert-no {
+  text-align: right;
+  font-size: 8.5pt;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+/* ══════════════════════════════════════════════
+   HEADER TABLE
+══════════════════════════════════════════════ */
+.doc-header-table {
+  width: 100%;
+  border-collapse: collapse !important;
+  table-layout: fixed;
+  margin-bottom: 2px;
+}
+.doc-header-table td {
+  vertical-align: middle !important;
+  padding: 2px 4px !important;
+}
+.doc-h-left {
+  width: 20%;
+  font-size: 8.5pt;
+  font-weight: 700;
+  line-height: 1.2;
+  vertical-align: top !important;
+}
+.doc-h-center {
+  width: 60%;
+  text-align: center;
+}
+.doc-h-right {
+  width: 20%;
+  text-align: right;
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  vertical-align: top !important;
+}
+.doc-header-logo-placeholder {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 2px;
+  border: 1px dashed #94a3b8 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7pt;
+  color: #64748b;
+}
+.doc-h-center img {
+  max-height: 52px;
+  max-width: 90px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+.doc-header-tagline-bn {
+  font-size: 8.5pt;
+  font-weight: 600;
+  margin-top: 2px;
+  text-transform: none !important;
+}
+
+/* ── School block ── */
+.doc-school-block {
+  text-align: center;
+  margin: 4px 0 4px;
+}
+.doc-school-name-text {
+  font-size: 16pt;
+  font-weight: 800;
+}
+.doc-school-name-text .doc-line-input {
+  font-size: 16pt;
+  font-weight: 800;
+  text-align: center;
+}
+.doc-school-meta-row {
+  text-align: center;
+  font-size: 9pt;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* ── Horizontal rule ── */
+.doc-hr {
+  border: none;
+  border-top: 2px solid #000;
+  margin: 6px 0 10px;
+}
+
+/* ── Document title ── */
+.doc-title {
+  text-align: center;
+  font-size: 14pt;
+  font-weight: 800;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ══════════════════════════════════════════════
+   MAIN LAYOUT TABLE
+   • Left col (fields): 76%
+   • Right col (photo): 24%
+══════════════════════════════════════════════ */
+.doc-main-outer {
+  width: 100%;
+  border-collapse: collapse !important;
+  table-layout: fixed;
+}
+.doc-main-outer > tbody > tr > td.doc-main-fields {
+  width: 76%;
+  vertical-align: top !important;
+  padding: 0 10px 0 0 !important;
+}
+.doc-main-outer > tbody > tr > td.doc-main-photo {
+  width: 24%;
+  vertical-align: top !important;
+  padding: 0 !important;
+  text-align: center;
+}
+
+/* ── Fields table (label | value) ── */
+.doc-fields-table {
+  width: 100%;
+  border-collapse: collapse !important;
+  table-layout: fixed;
+}
+.doc-fields-table > tbody > tr > td {
+  vertical-align: top !important;
+  padding: 3px 4px !important;
+}
+
+/* Label column */
+.doc-td-label {
+  width: 44%;
+  font-weight: 700;
+  font-size: 9pt;
+  text-transform: uppercase;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  padding-right: 8px !important;
+  vertical-align: top !important;
+  line-height: 1.3;
+}
+
+/* Value column */
+.doc-td-value {
+  width: 56%;
+  vertical-align: bottom !important;
+}
+
+/* ── Underlined line ── */
+.doc-line-cell {
+  width: 100%;
+  min-height: 1.3em;
+  border-bottom: 1px solid #000 !important;
+  box-sizing: border-box;
+  display: block;
+}
+.doc-line-readonly {
+  display: block;
+  min-height: 1.3em;
+  font-weight: 700;
+  font-size: 9.5pt;
+  padding: 1px 2px 2px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.doc-line-input {
+  width: 100%;
+  border: none !important;
+  border-bottom: 1px solid #000 !important;
+  background: transparent !important;
+  font: inherit !important;
+  font-weight: 700 !important;
+  font-size: 9.5pt !important;
+  padding: 1px 2px !important;
+  margin: 0;
+  outline: none;
+  box-sizing: border-box;
+  text-transform: uppercase;
+  display: block;
+}
+textarea.doc-line-input {
+  resize: none;
+  min-height: 2.2em;
+  overflow: hidden;
+}
+
+/* ── Split row (two fields side by side e.g. Code + PEN) ── */
+.doc-row-split-table {
+  width: 100%;
+  border-collapse: collapse !important;
+  table-layout: fixed;
+}
+.doc-row-split-table > tbody > tr > td {
+  vertical-align: bottom !important;
+  padding: 3px 4px !important;
+}
+
+/* ── Certify row ── */
+.doc-certify-row {
+  font-size: 9.5pt;
+  font-weight: 600;
+  text-transform: none;
+  padding-top: 8px !important;
+}
+.doc-certify-row .doc-line-cell {
+  display: inline-block;
+  min-width: 110px;
+  vertical-align: baseline;
+}
+
+/* ══════════════════════════════════════════════
+   PHOTO BOX
+══════════════════════════════════════════════ */
+.doc-photo-frame {
+  width: 28mm;
+  height: 35mm;
+  margin: 0 auto;
+  border: 1.5px solid #000 !important;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #f8fafc;
+  position: relative;
+  display: block;
+}
+.doc-student-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.doc-photo-placeholder {
+  width: 28mm;
+  height: 35mm;
+  margin: 0 auto;
+  border: 1.5px solid #000 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7pt;
+  color: #94a3b8;
+  text-align: center;
+  padding: 4px;
+  box-sizing: border-box;
+  line-height: 1.3;
+}
+
+/* ══════════════════════════════════════════════
+   FOOTER (3 columns)
+══════════════════════════════════════════════ */
+.doc-footer-table {
+  width: 100%;
+  border-collapse: collapse !important;
+  table-layout: fixed;
+  margin-top: 18px;
+}
+.doc-footer-table > tbody > tr > td {
+  vertical-align: bottom !important;
+  padding: 6px 4px !important;
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.doc-footer-stamp {
+  text-align: center;
+  font-size: 8pt;
+  font-weight: 600;
+  color: #555;
+  border: 1px dashed #999 !important;
+  padding: 14px 6px;
+  min-height: 58px;
+  text-transform: none;
+}
+
+/* ══════════════════════════════════════════════
+   ACKNOWLEDGEMENT
+══════════════════════════════════════════════ */
+.doc-ack {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 2px dotted #000;
+}
+.doc-ack-title {
+  text-align: center;
+  font-size: 10.5pt;
+  font-weight: 800;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════════
+   MIGRATION SPECIFIC
+══════════════════════════════════════════════ */
+.doc-migration-title {
+  text-align: center;
+  font-size: 14pt;
+  font-weight: 800;
+  margin: 6px 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.doc-migration-intro {
+  margin: 0 0 8px;
+  font-size: 9.5pt;
+  font-weight: 600;
+  line-height: 1.5;
+  text-transform: none !important;
+}
+
+/* ══════════════════════════════════════════════
+   HUB & LIST
+══════════════════════════════════════════════ */
+.doc-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+.doc-hub-head {
+  margin-bottom: 8px;
+}
+.doc-hub-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.doc-hub-subtitle {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+  max-width: 760px;
+}
+.doc-hub-card {
+  background: #fff;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s, transform 0.18s, border-color 0.2s;
+  min-height: 168px;
+  display: flex;
+  flex-direction: column;
+}
+.doc-hub-card:hover {
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  border-color: #9fb6d9;
+  transform: translateY(-2px);
+}
+.doc-hub-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.06rem;
+  font-weight: 700;
+  color: #1a3c6e;
+}
+.doc-hub-card p  {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #64748b;
+  flex: 1;
+}
+.doc-hub-link {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+.doc-hub-card-template {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+.doc-hub-badge {
+  display: inline-flex;
+  width: fit-content;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1e40af;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 4px 8px;
+  margin-top: 10px;
+}
+.doc-list-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.doc-list-table-wrap {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: auto;
+}
+.doc-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+.doc-list-table th,
+.doc-list-table td {
+  padding: 10px 12px !important;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9 !important;
+  background: transparent;
+}
+.doc-list-table th { background: #f8fafc !important; font-weight: 700; }
+.doc-list-table a  { color: #1a3c6e; font-weight: 600; }
+
+/* ══════════════════════════════════════════════
+   PRINT — VISIBILITY TRICK (most reliable)
+   Everything hidden except the certificate sheet
+══════════════════════════════════════════════ */
+@media print {
+  /* Step 1: Hide EVERYTHING */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Step 2: Show ONLY the certificate area and its children */
+  .doc-print-area,
+  .doc-print-area * {
+    visibility: visible !important;
+  }
+
+  /* Step 3: Position the certificate at top-left of the page */
+  .doc-print-area.doc-sheet {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 210mm !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 10mm 14mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Migration double-border must survive print */
+  .doc-sheet.doc-migration-sheet {
+    border: 3px double #000 !important;
+  }
+
+  /* Inputs appear as underlined text */
+  .doc-line-input {
+    border-bottom: 1px solid #000 !important;
+    background: transparent !important;
+  }
+  textarea.doc-line-input {
+    resize: none !important;
+    overflow: hidden !important;
+  }
+  .doc-line-readonly {
+    border-bottom: none !important;
+  }
+
+  /* Photo */
+  .doc-photo-frame,
+  .doc-photo-placeholder {
+    border: 1.5px solid #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  img.doc-student-photo {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+
+  /* Stamp area */
+  .doc-footer-stamp {
+    border: 1px dashed #999 !important;
+  }
+}
+
+@page {
+  size: A4 portrait;
+  margin: 8mm;
+}
+
+/*  CertificateOverlay print styles  */
+.cert-overlay-wrapper {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+@media print {
+  .cert-overlay-wrapper {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  .cert-overlay-wrapper img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   STRUCTURED CERTIFICATE VIEW — Inline field classes
+   Used by StructuredCertificateView.jsx
+══════════════════════════════════════════════ */
+
+/* Text transform helpers */
+.doc-upper    { text-transform: uppercase !important; }
+.doc-no-upper { text-transform: none !important; }
+
+/* Inline editable value cell */
+.doc-line-cell {
+  display: block;
+  width: 100%;
+  border-bottom: 1px solid #000;
+  min-height: 1.45em;
+  padding: 1px 2px 2px;
+}
+
+/* Input inside the value cell */
+.doc-line-input {
+  display: block;
+  width: 100%;
+  border: none;
+  border-bottom: none;  /* parent cell has the line */
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  outline: none;
+  padding: 0 2px;
+  line-height: 1.35;
+  resize: none;
+}
+.doc-line-input:focus {
+  background: #fffbeb;
+  outline: 1px dashed #f59e0b;
+  outline-offset: 1px;
+}
+
+/* Read-only span inside value cell */
+.doc-line-readonly {
+  display: block;
+  min-height: 1.35em;
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 0 2px;
+  word-break: break-word;
+}
+
+/* Table layout inside structured certificate */
+.doc-fields-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.doc-fields-table > tbody > tr > td {
+  vertical-align: top;
+  padding: 3px 4px;
+}
+
+/* td helpers */
+.doc-td-label {
+  font-weight: 700;
+  font-size: 9pt;
+  text-transform: uppercase;
+  padding-right: 8px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+  vertical-align: top;
+}
+.doc-td-value {
+  vertical-align: bottom;
+}
+
+/* Header layout */
+.doc-header-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-bottom: 4px;
+}
+.doc-header-table td { padding: 2px 4px; vertical-align: middle; }
+.doc-h-left  { width: 20%; font-size: 8.5pt; font-weight: 700; vertical-align: top; }
+.doc-h-center { width: 60%; text-align: center; }
+.doc-h-right { width: 20%; text-align: right; font-size: 8pt; font-weight: 800; vertical-align: top; }
+.doc-header-logo-placeholder {
+  width: 52px; height: 52px; margin: 0 auto 2px;
+  border: 1px dashed #999;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7pt; color: #aaa;
+}
+
+/* Certificate number top-right */
+.doc-cert-no {
+  text-align: right;
+  font-size: 8.5pt;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.doc-no-upper.doc-cert-no { text-transform: none; }
+
+/* School name block */
+.doc-school-block { text-align: center; margin: 4px 0 2px; }
+.doc-school-name-text {
+  font-size: 16pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.doc-school-meta-row {
+  text-align: center;
+  font-size: 9pt;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* Divider */
+.doc-hr {
+  border: none;
+  border-top: 2px solid #000;
+  margin: 6px 0 10px;
+}
+
+/* Certificate title */
+.doc-title {
+  text-align: center;
+  font-size: 14pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0 0 10px;
+}
+.doc-migration-title {
+  text-align: center;
+  font-size: 14pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 6px 0 8px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 4px;
+}
+.doc-migration-intro {
+  font-size: 9.5pt;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* Main body table: fields | photo */
+.doc-main-outer {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.doc-main-fields {
+  width: 76%;
+  vertical-align: top;
+  padding-right: 10px;
+}
+.doc-main-photo {
+  width: 24%;
+  vertical-align: top;
+  text-align: center;
+}
+
+/* Footer table */
+.doc-footer-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 18px;
+}
+.doc-footer-table > tbody > tr > td {
+  vertical-align: bottom;
+  padding: 6px 4px;
+  font-size: 8.5pt;
+  font-weight: 700;
+}
+.doc-footer-stamp {
+  text-align: center;
+  font-size: 8pt;
+  font-weight: 600;
+  color: #555;
+  border: 1px dashed #999;
+  padding: 14px 6px;
+  min-height: 58px;
+}
+
+/* Acknowledgement section (TC only) */
+.doc-ack {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 2px dotted #000;
+}
+.doc-ack-title {
+  text-align: center;
+  font-size: 10.5pt;
+  font-weight: 800;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════════
+   PRINT — Structured view
+   Hides all app chrome; only the A4 sheet prints
+══════════════════════════════════════════════ */
+@media print {
+  /* Hide everything by default */
+  body > *,
+  #root > *,
+  .doc-page-wrap > *:not(.doc-print-area) {
+    display: none !important;
+  }
+
+  /* Show ONLY the certificate sheet */
+  .doc-print-area {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 !important;
+    padding: 10mm 14mm 14mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Disable editing controls inside the sheet */
+  .doc-print-area input,
+  .doc-print-area textarea,
+  .doc-print-area select {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Focus highlight gone in print */
+  .doc-line-input:focus {
+    background: transparent !important;
+    outline: none !important;
+  }
+
+  /* Toolbar / lock banners hidden in print */
+  .doc-toolbar,
+  .doc-no-print,
+  .doc-lock-banner {
+    display: none !important;
+  }
+
+  /* Student photo */
+  img.doc-student-photo {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+
+  /* Stamp area */
+  .doc-footer-stamp {
+    border: 1px dashed #999 !important;
+  }
+}
+
