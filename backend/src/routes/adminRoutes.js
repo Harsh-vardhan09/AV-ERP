@@ -1,0 +1,112 @@
+const express = require('express');
+const router = express.Router();
+const admin = require('../controller/adminController');
+const { varifyToken } = require('../middlewares/varifyToken');
+const { authorize } = require('../middlewares/roleMiddleware');
+const validateObjectId = require('../middlewares/validateObjectId');
+
+// ── Guards ────────────────────────────────────────────────────────────────────
+// All admin routes require authentication
+router.use(varifyToken);
+
+// Admin + Admission: full write access
+const writeGuard = authorize('admin', 'admission');
+// Admin + Admission + Teacher + Exam Controller: can read reference data (classes, sessions, subjects)
+const readGuard  = authorize('admin', 'admission', 'teacher', 'exam_controller');
+
+// ── Session management ────────────────────────────────────────────────────────
+router.post('/session',                      authorize('admin'), admin.createSession);
+router.get('/sessions',                      readGuard,          admin.getAllSessions);
+router.get('/session/active',                readGuard,          admin.getActiveSession);
+router.put('/session/:id',                   authorize('admin'), validateObjectId('id'), admin.updateSession);
+router.delete('/session/:id',                authorize('admin'), validateObjectId('id'), admin.deleteSession);
+router.post('/session/:id/copy-classes',              authorize('admin'), validateObjectId('id'), admin.copyClassesToSession);
+router.post('/session/:id/sync-students',             authorize('admin'), validateObjectId('id'), admin.syncStudentSessions);
+router.post('/session/:id/copy-subject-maps',         authorize('admin'), validateObjectId('id'), admin.copySubjectMapsToSession);
+router.post('/session/:id/copy-teacher-assignments',  authorize('admin'), validateObjectId('id'), admin.copyTeacherAssignmentsToSession);
+
+// ── Class management ──────────────────────────────────────────────────────────
+router.post('/class',             writeGuard, admin.createClass);
+router.get('/classes',            readGuard,  admin.getAllClasses);
+router.put('/class/:id',          writeGuard, validateObjectId('id'), admin.updateClass);
+router.delete('/class/:id',       authorize('admin'), validateObjectId('id'), admin.deleteClass);
+
+// ── Section management ────────────────────────────────────────────────────────
+router.post('/section',           writeGuard, admin.createSection);
+router.post('/sections/bulk',     writeGuard, admin.createBulkSections);
+router.get('/sections',           readGuard,  admin.getAllSections);
+router.put('/section/:id',        writeGuard, validateObjectId('id'), admin.updateSection);
+router.delete('/section/:id',     authorize('admin'), validateObjectId('id'), admin.deleteSection);
+
+// ── Subject management ────────────────────────────────────────────────────────
+router.post('/subject',           writeGuard, admin.createSubject);
+router.get('/subjects',           readGuard,  admin.getAllSubjects);
+router.put('/subject/:id',        writeGuard, validateObjectId('id'), admin.updateSubject);
+router.delete('/subject/:id',     authorize('admin'), validateObjectId('id'), admin.deleteSubject);
+
+// ── Class-Subject mapping ─────────────────────────────────────────────────────
+router.post('/class-subject-map',     writeGuard, admin.mapSubjectToClass);
+router.get('/class-subjects',         readGuard,  admin.getClassSubjects);
+router.delete('/class-subject-map/:id', writeGuard, admin.removeClassSubjectMapping);
+
+// ── Teacher-Subject assignment ────────────────────────────────────────────────
+router.post('/teacher-assignment',        writeGuard, admin.assignTeacherToSubject);
+router.get('/teacher-assignments',        readGuard,  admin.getTeacherAssignments);
+router.put('/teacher-assignment/:id',     writeGuard, admin.updateTeacherAssignment);
+router.delete('/teacher-assignment/:id',  writeGuard, admin.removeTeacherAssignment);
+
+// ── Class Teacher assignment ──────────────────────────────────────────────────
+router.post('/class-teacher',         writeGuard, admin.assignClassTeacher);
+router.get('/class-teachers',         readGuard,  admin.getClassTeachers);
+router.put('/class-teacher/:id',      writeGuard, admin.updateClassTeacher);
+router.delete('/class-teacher/:id',   writeGuard, admin.removeClassTeacher);
+
+// ── Exam management ───────────────────────────────────────────────────────────
+router.post('/exam',           writeGuard, admin.createExam);
+router.get('/exams',           readGuard,  admin.getAllExams);
+router.get('/exam/:id',        readGuard,  validateObjectId('id'), admin.getExam);
+router.put('/exam/:id',        writeGuard, validateObjectId('id'), admin.updateExam);
+router.delete('/exam/:id',     writeGuard, validateObjectId('id'), admin.deleteExam);
+router.patch('/exam/:id/start-evaluation',    writeGuard, validateObjectId('id'), admin.startEvaluation);
+router.patch('/exam/:id/complete-evaluation', writeGuard, validateObjectId('id'), admin.completeEvaluation);
+// Link / unlink a report template to an exam (PATCH /exam/:id/template)
+router.patch('/exam/:id/template', writeGuard, validateObjectId('id'), admin.linkTemplateToExam);
+
+// Also: read-only route to list school's report templates (used by admin exam form)
+router.get('/report-templates', readGuard, admin.listReportTemplates);
+
+// ── Exam Subject config ───────────────────────────────────────────────────────
+router.post('/exam-subject',         writeGuard, admin.addExamSubject);
+router.get('/exam-subjects/:examId', readGuard,  admin.getExamSubjects);
+router.put('/exam-subject/:id',      writeGuard, admin.updateExamSubject);
+router.delete('/exam-subject/:id',   writeGuard, admin.removeExamSubject);
+
+// ── Marks Audit Log ───────────────────────────────────────────────────────────
+router.get('/marks-audit-log', authorize('admin'), admin.getMarksAuditLog);
+
+// ── Teacher leave management ──────────────────────────────────────────────────
+router.get('/teacher-leaves',       authorize('admin'), admin.getTeacherLeaves);
+router.put('/teacher-leave/:id',    authorize('admin'), admin.approveTeacherLeave);
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+router.get('/dashboard',            readGuard, admin.getDashboardStats);
+router.get('/dashboard/analytics',  readGuard, admin.getDashboardAnalytics);
+
+// ── Knowledge Center ──────────────────────────────────────────────────────────
+router.get('/knowledge-center', readGuard, admin.getKnowledgeCenterMaterials);
+
+// ── Student directory ─────────────────────────────────────────────────────────
+router.get('/students',     readGuard, admin.getAdminStudents);
+router.get('/students/:id', readGuard, validateObjectId('id'), admin.getAdminStudentDetail);
+
+// ── Teacher directory ─────────────────────────────────────────────────────────
+router.get('/teachers',     readGuard, admin.getAdminTeachers);
+router.get('/teachers/:id', readGuard, validateObjectId('id'), admin.getAdminTeacherDetail);
+
+// Dashboard detail views (card click-through) — SECURED: require auth + admin role
+router.get('/all-students', authorize('admin'), admin.getAllStudentsAdmin);
+router.get('/all-teachers', authorize('admin'), admin.getAllTeachersAdmin);
+router.get('/all-classes',  authorize('admin', 'admission', 'teacher'), admin.getAllClassesAdmin);
+router.get('/all-subjects', authorize('admin', 'admission', 'teacher'), admin.getAllSubjectsAdmin);
+
+module.exports = router;

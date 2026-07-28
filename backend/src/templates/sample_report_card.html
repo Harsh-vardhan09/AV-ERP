@@ -1,0 +1,292 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  DYNAMIC REPORT CARD TEMPLATE  — Supported Token Reference          ║
+  ║                                                                      ║
+  ║  This file is for REFERENCE. Upload only the <body> content          ║
+  ║  (everything inside <!-- TEMPLATE START --> to <!-- TEMPLATE END -->) ║
+  ║  via the Super Admin → Template Manager.                             ║
+  ║                                                                      ║
+  ║  TOKEN SYNTAX:  {{token_name}}                                       ║
+  ║  LOOP SYNTAX:   {{#subjects}}...{{/subjects}}                        ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+
+  ══ AVAILABLE TOKENS ══════════════════════════════════════════════════
+
+  STUDENT
+    {{name}}              Full name
+    {{firstName}}         First name only
+    {{lastName}}          Last name only
+    {{scholarNo}}         Scholar number
+    {{rollNo}}            Roll number
+    {{admissionNo}}       Admission number
+    {{pen}}               PEN number
+    {{dob}}               Date of birth (DD/MM/YYYY)
+    {{gender}}            Gender
+    {{category}}          Category (General/OBC/SC/ST)
+    {{bloodGroup}}        Blood group
+    {{religion}}          Religion
+    {{caste}}             Caste
+    {{nationality}}       Nationality
+
+  CLASS & SECTION
+    {{className}}         e.g. "Class 2nd"
+    {{sectionName}}       e.g. "A"
+    {{classSection}}      e.g. "Class 2nd A"
+
+  PARENTS
+    {{fatherName}}        Father's name
+    {{motherName}}        Mother's name
+    {{fatherOccupation}}  Father's occupation
+    {{motherOccupation}}  Mother's occupation
+    {{fatherPhone}}       Father's phone
+
+  SESSION
+    {{session}}           Session name  e.g. "2022-23"
+    {{academicYear}}      Same as session
+    {{year_start}}        e.g. "2022"
+    {{year_end}}          e.g. "23"
+    {{appear_year_start}} Same as year_start
+    {{appear_year_end}}   Same as year_end
+
+  ATTENDANCE (flat — safe in any template)
+    {{attendance_total}}       Total school days
+    {{attendance_present}}     Days present
+    {{attendance_absent}}      Days absent
+    {{attendance_late}}        Late days
+    {{attendance_leave}}       Leave days
+    {{attendance_percentage}}  Attendance %
+    {{attendance_str}}         e.g. "145/180 (80%)"
+    {{total_days}}             Alias for attendance_total
+    {{present_days}}           Alias for attendance_present
+
+  SUBJECT SLUG TOKENS (auto-generated for every subject in DB)
+    Replace <slug> with the subject's auto-slug:
+      English      → eng     Hindi        → hin
+      Sanskrit     → san     Maths        → mat
+      Science      → sci     Social Sci.  → sst
+      EVS/Science  → evs     Computer     → comp
+      Drawing      → draw    P.E.         → pe
+
+    {{<slug>_max_th}}    Max marks (theory)
+    {{<slug>_max_pr}}    Max marks (practical)
+    {{<slug>_max_proj}}  Max marks (project)
+    {{<slug>_obt_th}}    Obtained (theory)
+    {{<slug>_obt_pr}}    Obtained (practical)
+    {{<slug>_obt_proj}}  Obtained (project)
+    {{<slug>_total}}     Total obtained (all types combined)
+    {{<slug>_grade}}     Grade
+    {{<slug>_remark}}    Remark
+
+    Term-specific slug tokens:
+    {{<slug>_term1_theory}}    Term 1 theory marks
+    {{<slug>_term1_practical}} Term 1 practical marks
+    {{<slug>_term1_project}}   Term 1 project marks
+    {{<slug>_term1_total}}     Term 1 total
+    {{<slug>_term2_theory}}    Term 2 theory marks
+    {{<slug>_term2_practical}} Term 2 practical marks
+    {{<slug>_term2_total}}     Term 2 total
+
+    Examples:
+      {{eng_max_th}}  {{eng_obt_th}}  {{eng_obt_pr}}  {{eng_total}}  {{eng_grade}}
+      {{mat_term1_theory}}  {{mat_term2_theory}}  {{mat_total}}
+      {{sci_obt_pr}}  {{sst_obt_th}}  {{comp_total}}
+
+  GRAND TOTAL ROW
+    {{gt_max_th}}    Grand max (theory)
+    {{gt_obt_th}}    Grand obtained (theory)
+    {{gt_total}}     Grand total
+    {{grandTotal}}   Same as gt_total
+    {{percentage}}   Overall percentage (0-100)
+    {{grade}}        Overall grade (A+/A/B+/B/C/D/E)
+    {{rank}}         Class rank
+
+  RESULT / REMARKS
+    {{result}}       PASS / FAIL / N/A
+    {{remark}}       Teacher's remark
+    {{remarksTerm1}} Term 1 remark
+    {{remarksTerm2}} Term 2 remark
+
+  SUBJECTS LOOP (preferred — fully dynamic, no hardcoding needed)
+    Fields available INSIDE the loop per subject item:
+
+    {{name}}          Subject name
+    {{max_theory}}    Max theory marks
+    {{max_practical}} Max practical marks
+    {{max_project}}   Max project marks
+    {{obt_theory}}    Obtained theory marks
+    {{obt_practical}} Obtained practical marks
+    {{obt_project}}   Obtained project marks
+    {{total}}         Total obtained (all types combined)
+    {{grade}}         Grade letter
+    {{remark}}        Remark
+
+    Nested term breakdown inside the loop:
+    {{term1.theory}}    Term 1 theory
+    {{term1.practical}} Term 1 practical
+    {{term1.project}}   Term 1 project
+    {{term1.total}}     Term 1 combined total
+    {{term2.theory}}    Term 2 theory
+    {{term2.practical}} Term 2 practical
+    {{term2.total}}     Term 2 combined total
+    {{grandObt}}        Overall total (both terms)
+
+    Simple loop (theory + practical + total):
+    {{#subjects}}
+      <tr>
+        <td>{{name}}</td>
+        <td>{{max_theory}}</td><td>{{max_practical}}</td>
+        <td>{{obt_theory}}</td><td>{{obt_practical}}</td>
+        <td>{{total}}</td>
+        <td>{{grade}}</td>
+        <td>{{remark}}</td>
+      </tr>
+    {{/subjects}}
+
+    Term-wise loop (term1 + term2 breakdown):
+    {{#subjects}}
+      <tr>
+        <td>{{name}}</td>
+        <td>{{term1.theory}}</td><td>{{term1.practical}}</td>
+        <td>{{term2.theory}}</td><td>{{term2.practical}}</td>
+        <td>{{grandObt}}</td>
+        <td>{{grade}}</td>
+      </tr>
+    {{/subjects}}
+
+  INDEX TOKENS (for positional subject access)
+    {{sub_1_name}}  {{sub_1_max_th}}  {{sub_1_obt_th}}  {{sub_1_total}}
+    {{sub_2_name}}  {{sub_2_max_th}}  {{sub_2_obt_th}}  {{sub_2_total}}
+    ... up to number of subjects
+
+  CO-SCHOLASTIC LOOP
+    {{#skills}}
+      <tr><td>{{name}}</td><td>{{grade}}</td></tr>
+    {{/skills}}
+
+  ══════════════════════════════════════════════════════════════════════
+-->
+
+<!-- TEMPLATE START — upload everything below this line -->
+<div style="font-family: 'Times New Roman', Times, serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+
+  <!-- School Header -->
+  <table width="100%" style="border-collapse: collapse; margin-bottom: 10px;">
+    <tr>
+      <td width="15%" style="text-align:center;">
+        <img src="{{logo}}" alt="School Logo" style="max-height: 80px; max-width: 80px;"
+             onerror="this.style.display='none'">
+      </td>
+      <td style="text-align:center;">
+        <div style="font-size:22px; font-weight:bold; color:#1a237e;">{{schoolName}}</div>
+        <div style="font-size:13px;">{{schoolAddress}}</div>
+        <div style="font-size:12px;">DISE: {{dise}} &nbsp;|&nbsp; Estd: {{estd}}</div>
+        <div style="font-size:13px; font-weight:bold; margin-top:4px;">
+          CERTIFICATE-CUM-MARKSHEET ({{className}})
+        </div>
+        <div style="font-size:12px;">Session: {{session}} ({{year_start}}–{{year_end}})</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Student Info -->
+  <table width="100%" style="border-collapse: collapse; border: 1px solid #000; margin-bottom: 8px; font-size: 13px;">
+    <tr style="background:#1a237e; color:#fff;">
+      <th style="padding:4px 8px; border:1px solid #000;">Scholar No.</th>
+      <th style="padding:4px 8px; border:1px solid #000;">Class</th>
+      <th style="padding:4px 8px; border:1px solid #000;">Roll No.</th>
+      <th style="padding:4px 8px; border:1px solid #000;">Attendance</th>
+      <th style="padding:4px 8px; border:1px solid #000;">Category</th>
+    </tr>
+    <tr style="text-align:center;">
+      <td style="padding:6px; border:1px solid #000;">{{scholarNo}}</td>
+      <td style="padding:6px; border:1px solid #000;">{{className}}</td>
+      <td style="padding:6px; border:1px solid #000;">{{rollNo}}</td>
+      <td style="padding:6px; border:1px solid #000;">{{attendance_present}}/{{attendance_total}} ({{attendance_percentage}}%)</td>
+      <td style="padding:6px; border:1px solid #000;">{{category}}</td>
+    </tr>
+  </table>
+
+  <!-- Parent & DOB -->
+  <table width="100%" style="font-size:13px; margin-bottom:8px;">
+    <tr>
+      <td width="50%">माता श्रीमती / Mother: <strong>{{motherName}}</strong></td>
+      <td width="50%">पिता श्री / Father: <strong>{{fatherName}}</strong></td>
+    </tr>
+    <tr>
+      <td colspan="2">
+        जन्म तिथि / Date of Birth: <strong>{{dob}}</strong>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Marks Table — DYNAMIC subjects loop -->
+  <table width="100%" style="border-collapse: collapse; font-size: 13px; margin-bottom: 8px;">
+    <thead>
+      <tr style="background:#1a237e; color:#fff; text-align:center;">
+        <th style="border:1px solid #000; padding:5px;" rowspan="2">Subject</th>
+        <th style="border:1px solid #000; padding:5px;" colspan="2">Max. Marks</th>
+        <th style="border:1px solid #000; padding:5px;" colspan="2">Marks Obtained</th>
+        <th style="border:1px solid #000; padding:5px;" rowspan="2">Total</th>
+        <th style="border:1px solid #000; padding:5px;" rowspan="2">Grade</th>
+        <th style="border:1px solid #000; padding:5px;" rowspan="2">Remark</th>
+      </tr>
+      <tr style="background:#1a237e; color:#fff; text-align:center;">
+        <th style="border:1px solid #000; padding:4px;">Theory</th>
+        <th style="border:1px solid #000; padding:4px;">Project</th>
+        <th style="border:1px solid #000; padding:4px;">Theory</th>
+        <th style="border:1px solid #000; padding:4px;">Project</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#subjects}}
+      <tr style="text-align:center;">
+        <td style="border:1px solid #000; padding:4px 8px; text-align:left;">{{name}}</td>
+        <td style="border:1px solid #000; padding:4px;">{{max_theory}}</td>
+        <td style="border:1px solid #000; padding:4px;">{{max_practical}}</td>
+        <td style="border:1px solid #000; padding:4px;">{{obt_theory}}</td>
+        <td style="border:1px solid #000; padding:4px;">{{obt_practical}}</td>
+        <td style="border:1px solid #000; padding:4px;"><strong>{{total}}</strong></td>
+        <td style="border:1px solid #000; padding:4px;">{{grade}}</td>
+        <td style="border:1px solid #000; padding:4px;">{{remark}}</td>
+      </tr>
+      {{/subjects}}
+      <!-- Grand Total row -->
+      <tr style="background:#e8eaf6; font-weight:bold; text-align:center;">
+        <td style="border:1px solid #000; padding:4px 8px; text-align:left;">GRAND TOTAL</td>
+        <td style="border:1px solid #000; padding:4px;">{{gt_max_th}}</td>
+        <td style="border:1px solid #000; padding:4px;">—</td>
+        <td style="border:1px solid #000; padding:4px;">{{gt_obt_th}}</td>
+        <td style="border:1px solid #000; padding:4px;">—</td>
+        <td style="border:1px solid #000; padding:4px;">{{grandTotal}}</td>
+        <td style="border:1px solid #000; padding:4px;">{{grade}}</td>
+        <td style="border:1px solid #000; padding:4px;"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Result summary -->
+  <table width="100%" style="font-size:13px; margin-bottom:8px;">
+    <tr>
+      <td>RESULT: <strong>{{result}}</strong></td>
+      <td>Percentage: <strong>{{percentage}}%</strong></td>
+      <td>Grade: <strong>{{grade}}</strong></td>
+      <td>Rank: <strong>{{rank}}</strong></td>
+    </tr>
+  </table>
+
+  <!-- Remarks -->
+  <div style="font-size:13px; margin-bottom:16px;">
+    <strong>Remark:</strong> {{remark}}
+  </div>
+
+  <!-- Signatures -->
+  <table width="100%" style="font-size:13px; margin-top:30px;">
+    <tr>
+      <td style="text-align:center;">Class Teacher</td>
+      <td style="text-align:center;">Parent / Guardian</td>
+      <td style="text-align:center;">Principal</td>
+    </tr>
+  </table>
+
+</div>
+<!-- TEMPLATE END -->

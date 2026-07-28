@@ -1,0 +1,481 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Co-Scholastic Marks Page  —  csk- prefix (matches CoScholasticMarks.jsx)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page shell ──────────────────────────────────────────────────────────── */
+.csk-page {
+  padding: 28px 32px;
+  max-width: 1300px;
+  margin: 0 auto;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  min-height: 80vh;
+}
+
+/* ── Header row ──────────────────────────────────────────────────────────── */
+.csk-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+}
+
+/* ── Header actions (mode toggle + save btn) ───────────────────────────────── */
+.csk-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ── Grade-mode toggle ──────────────────────────────────────────────────────── */
+.csk-mode-toggle {
+  display: flex;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+.csk-mode-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.csk-mode-btn:not(:last-child) {
+  border-right: 1.5px solid #e2e8f0;
+}
+.csk-mode-btn.active {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #fff;
+}
+
+/* ── Mode-info banner ───────────────────────────────────────────────────────── */
+.csk-mode-info {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 0.82rem;
+  color: #1d4ed8;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+
+.csk-title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 5px;
+  letter-spacing: -0.02em;
+}
+.csk-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.csk-template-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 99px;
+  border: 1px solid #c4b5fd;
+}
+
+/* ── Alert messages ──────────────────────────────────────────────────────── */
+.csk-alert {
+  border-radius: 10px;
+  padding: 13px 18px;
+  margin-bottom: 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.csk-alert-success { background: #dcfce7; color: #15803d; border: 1.5px solid #86efac; }
+.csk-alert-error   { background: #fee2e2; color: #dc2626; border: 1.5px solid #fca5a5; }
+.csk-alert-warn    { background: #fef9c3; color: #854d0e; border: 1.5px solid #fde047; }
+
+/* ── Filter row ──────────────────────────────────────────────────────────── */
+.csk-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  background: var(--card-bg, #f8fafc);
+  border: 1.5px solid var(--card-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-bottom: 26px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* Each filter column */
+.csk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 148px;
+}
+.csk-field-wide {
+  min-width: 270px;
+  flex: 1;
+}
+
+/* Labels */
+.csk-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-secondary, #475569);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.csk-auto-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 99px;
+  border: 1px solid #93c5fd;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.csk-badge-default {
+  background: #fef9c3;
+  color: #a16207;
+  border-color: #fde047;
+}
+
+/* ── Skills pill row (read-only — sourced from template) ───────────────────── */
+.csk-field-skills {
+  flex: 2;
+  min-width: 260px;
+}
+.csk-skill-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0 2px;
+}
+.csk-skill-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #c4b5fd;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 11px;
+  white-space: nowrap;
+}
+
+
+/* Inputs & selects */
+.csk-select,
+.csk-input {
+  border: 1.5px solid var(--card-border, #cbd5e1);
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 0.875rem;
+  background: var(--input-bg, #fff);
+  color: var(--text-primary, #1e293b);
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.csk-select:focus,
+.csk-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+.csk-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+/* Load button */
+.csk-load-btn {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  align-self: flex-end;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.csk-load-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  transform: translateY(-1px);
+}
+.csk-load-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Save button */
+.csk-save-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 26px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.32);
+}
+.csk-save-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+}
+.csk-save-btn:disabled {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ── Loading spinner ─────────────────────────────────────────────────────── */
+.csk-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.9rem;
+}
+.csk-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: csk-spin 0.7s linear infinite;
+}
+@keyframes csk-spin { to { transform: rotate(360deg); } }
+
+/* ── Not-a-class-teacher state ───────────────────────────────────────────── */
+.csk-not-assigned {
+  text-align: center;
+  padding: 80px 24px;
+}
+.csk-not-assigned-icon { font-size: 4rem; margin-bottom: 16px; }
+.csk-not-assigned h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 10px;
+}
+.csk-not-assigned p {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.csk-empty {
+  text-align: center;
+  padding: 72px 24px;
+  color: var(--text-secondary, #94a3b8);
+}
+.csk-empty-icon { font-size: 3.5rem; margin-bottom: 14px; }
+.csk-empty p    { font-size: 0.95rem; margin: 0; }
+.csk-empty h3 {
+  margin: 0 0 8px;
+  color: #1e293b;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.csk-empty-warning {
+  background: #fff7ed;
+  border: 1.5px solid #fed7aa;
+  border-radius: 16px;
+  color: #9a3412;
+  margin-bottom: 22px;
+}
+.csk-empty-warning .csk-empty-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffedd5;
+  color: #c2410c;
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+.csk-empty-warning p { color: #9a3412; }
+
+/* ── Grade table ─────────────────────────────────────────────────────────── */
+.csk-table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1.5px solid var(--card-border, #e2e8f0);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+}
+.csk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 560px;
+}
+
+/* Table head */
+.csk-table thead tr {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+}
+.csk-th {
+  padding: 14px 16px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  white-space: nowrap;
+  border: none;
+}
+.csk-th-fixed   { min-width: 50px; }
+.csk-th-student { text-align: left; min-width: 180px; }
+
+/* Split-mode header: one <th colSpan=2> per skill with T1/T2 sub-labels */
+.csk-th-split {
+  position: relative;
+  padding-bottom: 6px;
+}
+.csk-th-sub {
+  display: flex;
+  justify-content: space-around;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  opacity: 0.85;
+  letter-spacing: 0.04em;
+  border-top: 1px solid rgba(255,255,255,0.3);
+  padding-top: 4px;
+}
+.csk-th-sub span { flex: 1; text-align: center; }
+
+/* Split-mode body cell (narrower, lighter border) */
+.csk-td-split {
+  padding: 8px 6px;
+  border-left: 1px dashed #e2e8f0;
+}
+.csk-td-split:first-of-type { border-left: none; }
+
+
+/* Table rows */
+.csk-tr-even { background: var(--card-bg, #fff); }
+.csk-tr-odd  { background: #f8fafc; }
+.csk-table tbody tr {
+  border-bottom: 1px solid var(--card-border, #f1f5f9);
+  transition: background 0.15s;
+}
+.csk-table tbody tr:hover { background: #eff6ff; }
+.csk-table tbody tr:last-child { border-bottom: none; }
+
+/* Table cells */
+.csk-td {
+  padding: 10px 14px;
+  color: var(--text-primary, #1e293b);
+  vertical-align: middle;
+}
+.csk-td-center  { text-align: center; }
+.csk-td-student { text-align: left; }
+.csk-student-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text-primary, #1e293b);
+  white-space: nowrap;
+}
+
+/* ── Grade dropdown ──────────────────────────────────────────────────────── */
+.csk-grade-select {
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border: 2px solid #e2e8f0;
+  outline: none;
+  cursor: pointer;
+  min-width: 64px;
+  text-align: center;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  font-family: inherit;
+  appearance: auto;
+}
+.csk-grade-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+/* ── Table footer ────────────────────────────────────────────────────────── */
+.csk-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1.5px solid var(--card-border, #e2e8f0);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.csk-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  font-weight: 500;
+}
+.csk-readonly-badge {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 600;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 14px;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .csk-page     { padding: 16px; }
+  .csk-filters  { padding: 14px; gap: 10px; }
+  .csk-field    { min-width: 100%; }
+  .csk-field-wide { min-width: 100%; }
+  .csk-load-btn { width: 100%; }
+  .csk-title    { font-size: 1.3rem; }
+}

@@ -1,0 +1,307 @@
+.certificate-wrapper {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 14mm;
+  box-sizing: border-box;
+  color: #0f172a;
+}
+
+.certificate-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.certificate-title {
+  text-align: center;
+  font-weight: 700;
+  margin: 6px 0 10px;
+  font-size: 20px;
+}
+
+.certificate-certno {
+  text-align: right;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.certificate-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.certificate-row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 8px;
+  border-bottom: 1px solid #cbd5e1;
+  padding: 4px 0;
+}
+
+.certificate-label {
+  font-weight: 600;
+}
+
+.certificate-footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.certificate-page {
+  padding: 12px;
+}
+
+.config-page .panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.cfg-back-row { margin-bottom: 8px; }
+.cfg-back-link { color: #2563eb; font-weight: 600; text-decoration: none; }
+.cfg-header { margin-bottom: 12px; }
+.cfg-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin: 0; }
+.cfg-subtitle { margin: 6px 0 0; color: #6b7280; font-size: 0.95rem; }
+
+.cfg-tabs {
+  display: inline-flex;
+  padding: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  margin-bottom: 14px;
+  gap: 4px;
+}
+.cfg-tab {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-weight: 600;
+  color: #6b7280;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+.cfg-tab-active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.cfg-card {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+}
+.cfg-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 8px;
+  margin-bottom: 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.cfg-field-row:hover { background: #f8fafc; }
+.cfg-field-row-checked { background: rgba(37, 99, 235, 0.08); }
+.cfg-field-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.cfg-field-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+.cfg-key-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.cfg-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #2563eb;
+}
+
+.cfg-custom-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
+.cfg-input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  height: 38px;
+  padding: 0 10px;
+  outline: none;
+}
+.cfg-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+.cfg-select { background: #fff; }
+.cfg-required-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+}
+.cfg-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  background: #fff;
+  border-radius: 8px;
+  height: 38px;
+  min-width: 110px;
+  padding: 0 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+.cfg-add-btn:hover { background: rgba(37, 99, 235, 0.06); }
+
+.cfg-selected-card { margin-top: 12px; }
+.cfg-selected-row { border-bottom: 1px solid #f1f5f9; padding: 10px 6px; }
+.cfg-drag-handle { color: #9ca3af; font-size: 16px; width: 22px; text-align: center; }
+.cfg-selected-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.cfg-selected-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cfg-icon-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #475569;
+}
+.cfg-icon-btn:hover { background: #f3f4f6; }
+.cfg-remove-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 20px;
+  line-height: 1;
+}
+.cfg-remove-btn:hover { color: #ef4444; background: #fef2f2; }
+
+.cfg-switch-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.cfg-switch-input { display: none; }
+.cfg-switch-slider {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: #d1d5db;
+  transition: background 0.2s;
+}
+.cfg-switch-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+.cfg-switch-input:checked + .cfg-switch-slider { background: #22c55e; }
+.cfg-switch-input:checked + .cfg-switch-slider::after { transform: translateX(16px); }
+.cfg-switch-label { font-size: 12px; color: #6b7280; font-weight: 600; }
+
+.cfg-empty-state {
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  color: #6b7280;
+}
+.cfg-empty-icon { font-size: 24px; margin-bottom: 8px; }
+.cfg-loading { color: #6b7280; font-size: 14px; }
+.cfg-save-btn {
+  margin-top: 14px;
+  width: 100%;
+  height: 42px;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  background: #2563eb;
+  font-weight: 700;
+}
+.cfg-save-btn:hover { background: #1d4ed8; }
+
+.doc-form-field {
+  margin-bottom: 10px;
+}
+
+.doc-form-field input,
+.doc-form-field textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+@media print {
+  .doc-no-print,
+  nav,
+  aside,
+  .sidebar {
+    display: none !important;
+  }
+  .certificate-page {
+    padding: 0;
+  }
+  .certificate-wrapper {
+    margin: 0;
+    border: none;
+    box-shadow: none;
+  }
+}

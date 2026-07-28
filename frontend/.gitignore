@@ -1,0 +1,15 @@
+# Dependencies
+/node_modules
+
+# Build Output
+/dist
+/build
+
+# Environment & Secrets
+.env
+.env.*
+
+# Logs & Misc
+*.log
+.DS_Store
+coverage/

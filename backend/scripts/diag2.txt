@@ -1,0 +1,63 @@
+﻿DATABASE -- connected
+SCHOOLS:[
+  {
+    "_id": "69ca758dabc233bd7ef0c623",
+    "name": "Demo school 1",
+    "code": "DMSCL00010"
+  },
+  {
+    "_id": "69ca76e1abc233bd7ef0c62c",
+    "name": "Demo school 2",
+    "code": "DMSCL00001"
+  },
+  {
+    "_id": "69cd3df2cb8e735f68d3ef98",
+    "name": "Demo Public School",
+    "code": "DEMO2025"
+  }
+]
+SESSIONS:[
+  {
+    "_id": "69b4e2a4387849cfae35c683",
+    "name": "2026-2027",
+    "isActive": true
+  },
+  {
+    "_id": "69ba401051e4a064a325431e",
+    "name": "2025-26",
+    "isActive": true
+  },
+  {
+    "_id": "69ca7a353ae2c32203717c80",
+    "name": "2026-2027",
+    "isActive": true,
+    "schoolId": "69ca76e1abc233bd7ef0c62c"
+  },
+  {
+    "_id": "69cd3df5cb8e735f68d3f011",
+    "name": "2025-2026",
+    "isActive": true,
+    "schoolId": "69cd3df2cb8e735f68d3ef98"
+  }
+]
+ADMIN:{
+  "_id": "69b4d8788ab4a1d0538f443c",
+  "email": "admin@school.com",
+  "role": "admin",
+  "schoolId": "69cd3df2cb8e735f68d3ef98"
+}
+TEACHER:{
+  "_id": "69d0a8428f3d98b5203697c2",
+  "email": "rc_teacher@school.com",
+  "schoolId": "69cd3df2cb8e735f68d3ef98"
+}
+STUDENT_COUNTS:[
+  {
+    "_id": "69cd3df2cb8e735f68d3ef98",
+    "count": 18
+  },
+  {
+    "_id": null,
+    "count": 482
+  }
+]
