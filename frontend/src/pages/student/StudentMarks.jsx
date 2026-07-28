@@ -18,72 +18,122 @@ const StudentMarks = () => {
   }, {});
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-2">Marks & Results</h1>
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 pb-10">
+      
+      {/* Title */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Marks & Results</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">View your academic performance reports and exam results</p>
+      </div>
+
       {studentName && (
-        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-4 mb-6 border">
-          <div className="flex gap-6 text-sm">
-            <div><span className="text-gray-500">Name:</span> <span className="font-semibold text-gray-800">{studentName}</span></div>
-            <div><span className="text-gray-500">Roll No:</span> <span className="font-semibold text-gray-800">{rollNo}</span></div>
-          </div>
+        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-slate-500">
+          <div>Student Name: <span className="font-bold text-slate-800">{studentName}</span></div>
+          <div className="hidden sm:block text-slate-300">•</div>
+          <div>Roll No: <span className="font-bold text-slate-800 tabular-nums">{rollNo}</span></div>
         </div>
       )}
 
-      {isLoading && <div className="text-center py-8">Loading...</div>}
+      {isLoading && (
+        <div className="flex justify-center py-12">
+          <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
 
       {Object.values(grouped).map((group, i) => {
         const percentage = group.totalMax > 0 ? ((group.totalObtained / group.totalMax) * 100).toFixed(1) : 0;
         return (
-          <div key={i} className="bg-white rounded-xl shadow-sm border mb-6 overflow-hidden">
-            <div className="px-5 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b flex justify-between items-center">
+          <div key={i} className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden mb-6">
+            
+            {/* Exam Header Summary */}
+            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="font-semibold text-gray-800">{group.exam?.name}
-                  <span className="ml-2 text-sm text-gray-500 capitalize">({group.exam?.type?.replace('_', ' ')})</span>
-                </h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                    {group.exam?.name}
+                  </h3>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                    {group.exam?.type?.replace('_', ' ') || 'Exam'}
+                  </span>
+                </div>
                 {group.exam?.startDate && (
-                  <p className="text-xs text-gray-400">{new Date(group.exam.startDate).toLocaleDateString()} - {new Date(group.exam.endDate).toLocaleDateString()}</p>
+                  <p className="text-xs text-slate-400 mt-1 tabular-nums">
+                    {new Date(group.exam.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - {new Date(group.exam.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
                 )}
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-indigo-600">{percentage}%</div>
-                <div className="text-xs text-gray-500">{group.totalObtained}/{group.totalMax}</div>
+              <div className="text-left sm:text-right shrink-0">
+                <span className="text-xl sm:text-2xl font-extrabold text-indigo-600 block tracking-tight tabular-nums">
+                  {percentage}%
+                </span>
+                <span className="text-xs font-bold text-slate-400 mt-0.5 block tabular-nums">
+                  {group.totalObtained} / {group.totalMax} Marks
+                </span>
               </div>
             </div>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Subject</th>
-                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Teacher</th>
-                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Marks</th>
-                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Max</th>
-                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Status</th>
-                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.subjects.map((m, j) => {
-                  const passed = m.passingMarks ? m.marksObtained >= m.passingMarks : true;
-                  return (
-                    <tr key={j} className="border-t hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium">{m.subjectId?.name} <span className="text-xs text-gray-400">({m.subjectId?.code})</span></td>
-                      <td className="py-3 px-4 text-gray-600">{m.uploadedBy?.firstName} {m.uploadedBy?.lastName}</td>
-                      <td className="py-3 px-4 font-bold text-lg">{m.marksObtained}</td>
-                      <td className="py-3 px-4 text-gray-500">{m.maxMarks || '—'}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {passed ? 'Pass' : 'Fail'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-xs text-gray-400">{m.updatedAt ? new Date(m.updatedAt).toLocaleDateString() : '—'}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+
+            {/* Subjects Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/30 text-left text-xs text-slate-500 font-bold uppercase tracking-wider">
+                    <th className="py-3.5 px-5">Subject</th>
+                    <th className="py-3.5 px-5 hidden md:table-cell">Teacher</th>
+                    <th className="py-3.5 px-5 text-center">Marks</th>
+                    <th className="py-3.5 px-5 text-center">Max Marks</th>
+                    <th className="py-3.5 px-5 text-center">Status</th>
+                    <th className="py-3.5 px-5 hidden sm:table-cell">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {group.subjects.map((m, j) => {
+                    const passed = m.passingMarks ? m.marksObtained >= m.passingMarks : true;
+                    return (
+                      <tr key={j} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-3.5 px-5">
+                          <span className="font-semibold text-slate-800 block">
+                            {m.subjectId?.name}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mt-0.5">
+                            {m.subjectId?.code || '—'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-5 text-slate-500 text-xs hidden md:table-cell">
+                          {m.uploadedBy?.firstName} {m.uploadedBy?.lastName}
+                        </td>
+                        <td className="py-3.5 px-5 text-center font-bold text-slate-900 text-base tabular-nums">
+                          {m.marksObtained}
+                        </td>
+                        <td className="py-3.5 px-5 text-center text-slate-400 tabular-nums">
+                          {m.maxMarks || '—'}
+                        </td>
+                        <td className="py-3.5 px-5 text-center">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                            passed 
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}>
+                            {passed ? 'Pass' : 'Fail'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-5 text-slate-400 text-xs hidden sm:table-cell tabular-nums">
+                          {m.updatedAt ? new Date(m.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
       })}
-      {marks.length === 0 && !isLoading && <div className="text-center py-12 text-gray-500">No marks available yet</div>}
+
+      {marks.length === 0 && !isLoading && (
+        <div className="text-center py-16 text-slate-400">
+          <p className="text-sm font-medium">No marks available yet.</p>
+        </div>
+      )}
     </div>
   );
 };
