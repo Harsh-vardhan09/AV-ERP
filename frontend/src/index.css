@@ -281,14 +281,15 @@ body {
 }
 
 .erp-nav-item:hover {
-  background: var(--sidebar-hover-bg);
-  color: var(--sidebar-text-active);
+  background: #f8fafc;
+  color: #1e293b;
 }
 
 .erp-nav-item.active {
-  background: var(--sidebar-active-bg);
-  color: var(--sidebar-text-active);
-  border-left-color: var(--sidebar-active-accent);
+  background: #f1f5f9;
+  color: #4f46e5;
+  border-left-color: #4f46e5;
+  font-weight: 600;
 }
 
 .erp-nav-item svg {
