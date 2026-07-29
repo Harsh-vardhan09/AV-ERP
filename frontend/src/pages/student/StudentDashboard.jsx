@@ -85,18 +85,18 @@ const AttendanceDonutRing = ({ present = 0, total = 0 }) => {
       </div>
 
       {/* Legend & Stat Breakdowns */}
-      <div className="space-y-2 flex-1 w-full">
-        <div className="flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-emerald-50/80 border border-emerald-100/80">
+      <div className="space-y-2 shrink-0 w-full max-w-[200px]">
+        <div className="flex items-center justify-between p-1.5 px-3 rounded-xl bg-emerald-50/80 border border-emerald-100/80">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
             <span className="text-xs font-semibold text-emerald-900">Present</span>
           </div>
           <span className="text-xs font-bold text-emerald-700 tabular-nums">{present} days</span>
         </div>
 
-        <div className="flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-rose-50/80 border border-rose-100/80">
+        <div className="flex items-center justify-between p-1.5 px-3 rounded-xl bg-rose-50/80 border border-rose-100/80">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block shrink-0" />
             <span className="text-xs font-semibold text-rose-900">Absent</span>
           </div>
           <span className="text-xs font-bold text-rose-700 tabular-nums">{absent} days</span>

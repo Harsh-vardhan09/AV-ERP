@@ -186,34 +186,37 @@ const ReportCardManager = () => {
   const pendingCount = rows.filter((item) => item.status === 'pending').length;
 
   return (
-    <div className="rc-manager-page">
-      <div className="rc-manager-header">
+    <div className="max-w-6xl mx-auto space-y-4 px-2 sm:px-4 pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
         <div>
-          <h1 className="rc-title">Report Card Manager</h1>
-          <p className="rc-subtitle">Generate, track, and open report cards for the selected class.</p>
+          <h1 className="text-xl font-bold text-slate-900">Report Cards</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Manage and generate student academic performance reports</p>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            className="rc-primary-btn"
+            className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-xl transition cursor-pointer shadow-xs disabled:opacity-50"
             onClick={handleGenerate}
             disabled={!selectedClass || !selectedSession || isGenerating || !canGenerate}
             title={!canGenerate && blockReason ? blockReason : ''}
           >
             {isGenerating ? 'Generating...' : 'Generate For Class'}
           </button>
-          {!canGenerate && selectedClass && blockReason && (
-            <p className="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1.5 rounded border border-amber-200">
-              ⚠️ {blockReason}
-            </p>
-          )}
         </div>
       </div>
 
-      <div className="rc-filter-card">
-        <div className="rc-filter-grid">
+      {!canGenerate && selectedClass && blockReason && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-semibold text-amber-800">
+          {blockReason}
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
-            <label className="rc-label">Session</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Session</label>
             <select
               value={selectedSession}
               onChange={(event) => {
@@ -221,7 +224,7 @@ const ReportCardManager = () => {
                 setSelectedClass('');
                 setSelectedSection('');
               }}
-              className="rc-select"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400"
               disabled={isTeacher && classTeacherAssignments.length <= 1}
             >
               <option value="">Select Session</option>
@@ -239,14 +242,14 @@ const ReportCardManager = () => {
           </div>
 
           <div>
-            <label className="rc-label">Class</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Class</label>
             <select
               value={selectedClass}
               onChange={(event) => {
                 setSelectedClass(event.target.value);
                 setSelectedSection('');
               }}
-              className="rc-select"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400"
             >
               <option value="">Select Class</option>
               {classes.map((item) => (
@@ -256,11 +259,11 @@ const ReportCardManager = () => {
           </div>
 
           <div>
-            <label className="rc-label">Section</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Section</label>
             <select
               value={selectedSection}
               onChange={(event) => setSelectedSection(event.target.value)}
-              className="rc-select"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400"
               disabled={!selectedClass}
             >
               <option value="">All Sections</option>
@@ -271,82 +274,116 @@ const ReportCardManager = () => {
           </div>
 
           <div>
-            <label className="rc-label">Search</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Search</label>
             <input
               type="text"
               placeholder="Search by name or roll no..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="rc-select"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400"
               disabled={!selectedClass || !selectedSession}
             />
           </div>
         </div>
       </div>
 
-      <div className="rc-stat-row">
-        <div className="rc-stat-card">
-          <span>Total</span>
-          <strong>{rows.length}</strong>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-4 gap-3">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <span className="text-[11px] font-semibold text-slate-500">Total</span>
+          <strong className="block text-base font-bold text-slate-900 mt-0.5 tabular-nums">{rows.length}</strong>
         </div>
-        <div className="rc-stat-card">
-          <span>Generated</span>
-          <strong>{generatedCount}</strong>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <span className="text-[11px] font-semibold text-slate-500">Generated</span>
+          <strong className="block text-base font-bold text-slate-900 mt-0.5 tabular-nums">{generatedCount}</strong>
         </div>
-        <div className="rc-stat-card">
-          <span>Finalized</span>
-          <strong>{finalizedCount}</strong>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <span className="text-[11px] font-semibold text-slate-500">Finalized</span>
+          <strong className="block text-base font-bold text-slate-900 mt-0.5 tabular-nums">{finalizedCount}</strong>
         </div>
-        <div className="rc-stat-card">
-          <span>Pending</span>
-          <strong>{pendingCount}</strong>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <span className="text-[11px] font-semibold text-slate-500">Pending</span>
+          <strong className="block text-base font-bold text-slate-900 mt-0.5 tabular-nums">{pendingCount}</strong>
         </div>
       </div>
 
-      <div className="rc-table-card">
+      {/* Main List Container */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
         {isFetching ? (
-          <div className="rc-empty">Loading report cards...</div>
+          <div className="flex justify-center py-14">
+            <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          </div>
         ) : rows.length === 0 ? (
-          <div className="rc-empty">No students found for this selection.</div>
+          <div className="text-center py-12 text-slate-400 text-xs">No students found for this selection.</div>
         ) : (
-          <div className="rc-table-wrap">
-            <table className="rc-manager-table">
-              <thead>
-                <tr>
-                  <th>Roll No</th>
-                  <th>Student</th>
-                  <th>Section</th>
-                  <th>Status</th>
-                  <th>Updated</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.studentId}>
-                    <td>{row.rollNo || '-'}</td>
-                    <td>{row.firstName} {row.lastName}</td>
-                    <td>{row.sectionName || '-'}</td>
-                    <td>
-                      <span className={STATUS_CLASS[row.status] || STATUS_CLASS.pending}>
-                        {STATUS_LABELS[row.status] || STATUS_LABELS.pending}
+          <>
+            {/* Mobile Card View (Phones) */}
+            <div className="block sm:hidden divide-y divide-slate-100">
+              {rows.map((row) => (
+                <div key={row.studentId} className="p-3.5 space-y-2 hover:bg-slate-50/50 transition">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-slate-900">{row.firstName} {row.lastName}</span>
+                    <span className="text-[11px] font-semibold text-slate-500">Roll: {row.rollNo || '-'}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                    <span>Sec: <strong className="text-slate-800">{row.sectionName || '-'}</strong></span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-full text-[10px] font-bold uppercase">
+                        {STATUS_LABELS[row.status] || 'Pending'}
                       </span>
-                    </td>
-                    <td>{row.updatedAt ? new Date(row.updatedAt).toLocaleDateString() : '-'}</td>
-                    <td>
                       <button
                         type="button"
-                        className="rc-link-btn"
+                        className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50"
                         onClick={() => handleOpen(row.studentId)}
                       >
-                        Open Report Card
+                        Open
                       </button>
-                    </td>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold text-left">
+                    <th className="py-2.5 px-4">Roll No</th>
+                    <th className="py-2.5 px-4">Student</th>
+                    <th className="py-2.5 px-4">Section</th>
+                    <th className="py-2.5 px-4">Status</th>
+                    <th className="py-2.5 px-4">Updated</th>
+                    <th className="py-2.5 px-4 text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                  {rows.map((row) => (
+                    <tr key={row.studentId} className="hover:bg-slate-50/50 transition">
+                      <td className="py-3 px-4 font-semibold text-slate-800">{row.rollNo || '-'}</td>
+                      <td className="py-3 px-4 font-bold text-slate-900">{row.firstName} {row.lastName}</td>
+                      <td className="py-3 px-4">{row.sectionName || '-'}</td>
+                      <td className="py-3 px-4">
+                        <span className="px-2.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-full text-[10px] font-bold uppercase">
+                          {STATUS_LABELS[row.status] || 'Pending'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-slate-500">{row.updatedAt ? new Date(row.updatedAt).toLocaleDateString() : '-'}</td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          type="button"
+                          className="px-3 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-xs"
+                          onClick={() => handleOpen(row.studentId)}
+                        >
+                          Open Report Card
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

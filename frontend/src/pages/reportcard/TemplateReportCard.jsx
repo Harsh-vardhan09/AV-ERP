@@ -363,38 +363,33 @@ const TemplateReportCard = () => {
 
   const toggleStudent = id => setSelectedStudents(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
   const toggleAll = () => {
-    const ids = students.map(s => s.studentId);  // plain string per ReportCardManager
+    const ids = students.map(s => s.studentId);
     setSelectedStudents(selectedStudents.length === ids.length ? [] : ids);
   };
 
   /* ── Render ── */
   return (
-    <div style={{ padding:'28px 32px', maxWidth:1100, margin:'0 auto', fontFamily:'Inter,system-ui,sans-serif' }}>
+    <div className="max-w-6xl mx-auto space-y-4 px-2 sm:px-4 pb-12">
 
       {/* Header */}
-      <div style={{ marginBottom:28 }}>
-        <h1 style={{ margin:0, fontSize:26, fontWeight:800, color:'#0f172a', letterSpacing:'-0.5px' }}>
-          📋 Template Report Cards
-        </h1>
-        <p style={{ margin:'6px 0 0', color:'#64748b', fontSize:14 }}>
-          Preview and download HTML-template-based report cards. All data is fetched live from the database.
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900">Template Report Cards</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Preview and generate academic report cards using assigned templates</p>
+        </div>
       </div>
 
       {/* Filters */}
-      <div style={{
-        background:'#fff', borderRadius:14, padding:24,
-        boxShadow:'0 2px 12px rgba(0,0,0,0.07)', border:'1px solid #e5e7eb', marginBottom:24,
-      }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:16 }}>
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
 
-          {/* Session — shown for all non-teacher staff when sessions data exists */}
+          {/* Session */}
           {isStaff && !isTeacher && (
             <div>
-              <label htmlFor="trc-session" style={lbl}>Academic Session</label>
-              <select id="trc-session" style={sel} value={selectedSession}
+              <label htmlFor="trc-session" className="block text-xs font-semibold text-slate-700 mb-1">Session</label>
+              <select id="trc-session" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400" value={selectedSession}
                 onChange={e => setSelectedSession(e.target.value)}>
-                <option value="">-- Select Session --</option>
+                <option value="">Select Session</option>
                 {allSessions.map(s => (
                   <option key={s._id} value={s._id}>{s.year || s.name}{s.isActive ? ' (Active)' : ''}</option>
                 ))}
@@ -402,15 +397,15 @@ const TemplateReportCard = () => {
             </div>
           )}
 
-          {/* Class — shown for all staff */}
+          {/* Class */}
           {isStaff && (
             <div>
-              <label htmlFor="trc-class" style={lbl}>Class</label>
-              <select id="trc-class" style={sel} value={selectedClass}
+              <label htmlFor="trc-class" className="block text-xs font-semibold text-slate-700 mb-1">Class</label>
+              <select id="trc-class" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400" value={selectedClass}
                 aria-busy={classesLoading}
                 onChange={e => setSelectedClass(e.target.value)}
                 disabled={(!isTeacher && !selectedSession) || classesLoading}>
-                <option value="">{classesLoading ? 'Loading…' : '-- Select Class --'}</option>
+                <option value="">{classesLoading ? 'Loading…' : 'Select Class'}</option>
                 {classes.map(c => (
                   <option key={c._id} value={c._id}>{c.className || c.name}</option>
                 ))}
@@ -418,11 +413,11 @@ const TemplateReportCard = () => {
             </div>
           )}
 
-          {/* Section — shown for all staff */}
+          {/* Section */}
           {isStaff && (
             <div>
-              <label htmlFor="trc-section" style={lbl}>Section</label>
-              <select id="trc-section" style={sel} value={selectedSection}
+              <label htmlFor="trc-section" className="block text-xs font-semibold text-slate-700 mb-1">Section</label>
+              <select id="trc-section" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400" value={selectedSection}
                 aria-busy={sectionsLoading}
                 onChange={e => setSelectedSection(e.target.value)}
                 disabled={!selectedClass || sectionsLoading}>
@@ -435,240 +430,182 @@ const TemplateReportCard = () => {
           )}
 
           <div>
-            <label htmlFor="trc-exam-type" style={lbl}>Exam Type</label>
-            <select id="trc-exam-type" style={sel} value={examType} onChange={e => setExamType(e.target.value)}>
+            <label htmlFor="trc-exam-type" className="block text-xs font-semibold text-slate-700 mb-1">Exam Type</label>
+            <select id="trc-exam-type" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400" value={examType} onChange={e => setExamType(e.target.value)}>
               {EXAM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
 
           <div>
-            <label htmlFor="trc-template" style={lbl}>Template</label>
-            <select id="trc-template" style={sel} value={selectedTemplate}
+            <label htmlFor="trc-template" className="block text-xs font-semibold text-slate-700 mb-1">Template</label>
+            <select id="trc-template" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400" value={selectedTemplate}
               aria-busy={templatesLoading}
               onChange={e => { setSelectedTemplate(e.target.value); setAutoMatchedTemplate(null); }}>
-              <option value="">{templatesLoading ? 'Loading…' : '-- Auto (class-matched) --'}</option>
+              <option value="">{templatesLoading ? 'Loading…' : 'Auto (class-matched)'}</option>
               {templates.map(t => (
                 <option key={t._id} value={t._id}>
-                  {t.name}{t.classGroupName ? ` [${t.classGroupName}]` : ''}{t.isDefault ? ' ★' : ''}
+                  {t.name}{t.classGroupName ? ` [${t.classGroupName}]` : ''}{t.isDefault ? ' (Default)' : ''}
                 </option>
               ))}
             </select>
-            {/* Auto-match info badge — shown when class is selected and resolver found a template */}
-            {autoMatchedTemplate && selectedClass && (
-              <div style={{
-                marginTop: 6, padding: '6px 10px',
-                background: '#eff6ff', border: '1px solid #bfdbfe',
-                borderRadius: 7, fontSize: 12, color: '#1d4ed8',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <span style={{ fontSize: 14 }}>
-                  {autoMatchedTemplate.matchReason === 'exact_class' ? '🎯'
-                   : autoMatchedTemplate.matchReason === 'class_range' ? '📚'
-                   : '🌐'}
-                </span>
-                <span>
-                  <strong>Auto Matched:</strong> {autoMatchedTemplate.name}
-                  {autoMatchedTemplate.groupName ? ` (${autoMatchedTemplate.groupName})` : ''}
-                  {' — '}
-                  <span style={{ color: '#64748b' }}>
-                    {autoMatchedTemplate.matchReason === 'exact_class' ? 'Exact class match'
-                     : autoMatchedTemplate.matchReason === 'class_range' ? 'Class range match'
-                     : 'Global default'}
-                  </span>
-                </span>
-              </div>
-            )}
           </div>
+        </div>
 
-          <div>
-            <label htmlFor="trc-search" style={lbl}>Search</label>
-            <input id="trc-search" style={sel} type="text" placeholder="Name or roll no…"
+        {/* Search */}
+        <div className="pt-1">
+          <div className="relative">
+            <input id="trc-search" className="w-full border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400" type="text" placeholder="Search student name or roll no…"
               aria-label="Search students by name or roll number"
               value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
           </div>
         </div>
-
-        {templates.length === 0 && selectedSession && (
-          <div style={{
-            marginTop:14, padding:'10px 14px', background:'#fef9c3',
-            border:'1px solid #fde047', borderRadius:8, color:'#854d0e', fontSize:13,
-          }}>
-            ⚠️ No active templates found. Ask a Super Admin to upload and assign a template to your school.
-          </div>
-        )}
-
-        {students.length > 0 && (
-          <div style={{ marginTop:10, fontSize:12, color:'#94a3b8' }}>
-            Academic Year: <strong>{academicYear}</strong>
-          </div>
-        )}
       </div>
 
-      {/* Student Table */}
+      {/* Student List & Actions Container */}
       {selectedClass && selectedSession ? (
-        <div style={{
-          background:'#fff', borderRadius:14,
-          boxShadow:'0 2px 12px rgba(0,0,0,0.07)', border:'1px solid #e5e7eb', overflow:'hidden',
-        }}>
-          {/* ── Query error banner ── */}
-          {studentsError && (
-            <div role="alert" style={{
-              padding:'12px 20px', background:'#fef2f2', borderBottom:'1px solid #fecaca',
-              color:'#b91c1c', fontSize:13, display:'flex', alignItems:'center', gap:8,
-            }}>
-              ⚠️ Failed to load students. Check your connection and try refreshing.
-              <button onClick={refetchList}
-                style={{ marginLeft:'auto', background:'#b91c1c', color:'#fff', border:'none',
-                  borderRadius:6, padding:'4px 12px', fontSize:12, cursor:'pointer', fontWeight:600 }}>
-                Retry
-              </button>
-            </div>
-          )}
-          {/* ── Students loading skeleton ── */}
-          {studentsLoading && (
-            <div aria-busy="true" aria-label="Loading students…" style={{
-              padding:'48px 24px', textAlign:'center', color:'#94a3b8',
-            }}>
-              <div style={{
-                width:32, height:32, border:'3px solid #e5e7eb',
-                borderTop:'3px solid #6366f1', borderRadius:'50%',
-                animation:'spin 0.7s linear infinite', margin:'0 auto 12px',
-                display:'inline-block',
-              }}/>
-              <div style={{ fontWeight:600, color:'#64748b' }}>Loading students…</div>
-              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-            </div>
-          )}
-          {/* Table toolbar */}
-          <div style={{
-            padding:'14px 22px', borderBottom:'1px solid #f1f5f9',
-            display:'flex', alignItems:'center', justifyContent:'space-between',
-            background:'#f8fafc', flexWrap:'wrap', gap:10,
-          }}>
-            <div style={{ fontWeight:700, fontSize:15, color:'#0f172a' }}>
+        <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
+          
+          {/* Header Action Bar */}
+          <div className="p-3.5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="text-xs font-bold text-slate-900">
               {students.length} Student{students.length !== 1 ? 's' : ''}
               {selectedStudents.length > 0 && (
-                <span style={{ color:'#6366f1', marginLeft:8, fontWeight:500, fontSize:13 }}>
+                <span className="text-indigo-600 ml-2 font-semibold">
                   ({selectedStudents.length} selected)
                 </span>
               )}
             </div>
-            <button id="trc-bulk-btn"
+            <button
               disabled={generatingFor === 'bulk' || students.length === 0}
               onClick={handleBulkGenerate}
-              style={{
-                background: generatingFor === 'bulk'
-                  ? '#e0e7ff' : 'linear-gradient(135deg,#6366f1,#4f46e5)',
-                color: generatingFor === 'bulk' ? '#6366f1' : '#fff',
-                border:'none', borderRadius:8, padding:'8px 20px',
-                fontWeight:600, fontSize:13, cursor:'pointer',
-                boxShadow:'0 2px 8px rgba(99,102,241,0.25)',
-              }}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-xl transition cursor-pointer shadow-xs disabled:opacity-50"
             >
-              {generatingFor === 'bulk' ? '⏳ Generating…'
-                : selectedStudents.length > 0 ? `⬇ Download ${selectedStudents.length} PDFs`
-                : '⬇ Generate All PDFs'}
+              <span>
+                {generatingFor === 'bulk' ? 'Generating...'
+                  : selectedStudents.length > 0 ? `Download ${selectedStudents.length} Reports`
+                  : 'Generate All Reports'}
+              </span>
             </button>
           </div>
 
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse' }}>
-              <thead>
-                <tr style={{ background:'#f8fafc' }}>
-                  <th style={th}>
-                    <input type="checkbox"
-                      checked={selectedStudents.length === students.length && students.length > 0}
-                      onChange={toggleAll} style={{ cursor:'pointer' }} />
-                  </th>
-                  <th style={th}>Roll No</th>
-                  <th style={th}>Student Name</th>
-                  <th style={th}>Section</th>
-                  <th style={th}>Last Generated</th>
-                  <th style={th}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.length === 0 ? (
-                  <tr><td colSpan={6} style={{ textAlign:'center', padding:48, color:'#94a3b8' }}>
-                    <div style={{ fontSize:36 }}>📂</div>
-                    <div style={{ marginTop:8, fontWeight:600 }}>No students found</div>
-                    <div style={{ fontSize:13, marginTop:4 }}>
-                      {searchTerm ? 'Try a different search.' : 'Select a class and section above.'}
-                    </div>
-                  </td></tr>
-                ) : students.map(row => {
-                  // Flat fields per ReportCardManager: row.studentId (plain string), row.firstName, row.lastName
+          {studentsLoading ? (
+            <div className="flex justify-center py-14">
+              <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : students.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 text-xs">
+              No students found for selected criteria.
+            </div>
+          ) : (
+            <>
+              {/* Mobile Card View (Phones) */}
+              <div className="block sm:hidden divide-y divide-slate-100">
+                {students.map(row => {
                   const sid   = row.studentId;
                   const sname = `${row.firstName || ''} ${row.lastName || ''}`.trim() || 'Student';
                   const roll  = row.rollNo || '—';
                   const sec   = row.sectionName || '—';
-                  const lastGen = row.updatedAt
-                    ? new Date(row.updatedAt).toLocaleDateString('en-IN',
-                        { day:'2-digit', month:'short', year:'numeric' })
-                    : '—';
                   const isThis = generatingFor === sid;
 
                   return (
-                    <tr key={sid} style={{
-                      borderBottom:'1px solid #f1f5f9',
-                      background: selectedStudents.includes(sid) ? '#f0f9ff' : '#fff',
-                    }}>
-                      <td style={td}>
-                      <input type="checkbox" checked={selectedStudents.includes(sid)}
-                          onChange={() => toggleStudent(sid)} style={{ cursor:'pointer' }} />
-                      </td>
-                      <td style={{ ...td, fontWeight:600, color:'#374151' }}>{roll}</td>
-                      <td style={{ ...td, fontWeight:600, color:'#0f172a' }}>{sname}</td>
-                      <td style={td}>{sec}</td>
-                      <td style={{ ...td, color:'#64748b', fontSize:13 }}>{lastGen}</td>
-                      <td style={td}>
-                        <div style={{ display:'flex', gap:8 }}>
-                          <button id={`trc-preview-${sid}`}
+                    <div key={sid} className="p-3.5 space-y-2 hover:bg-slate-50/50 transition">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" checked={selectedStudents.includes(sid)}
+                            onChange={() => toggleStudent(sid)} className="accent-indigo-600" />
+                          <span className="font-bold text-xs text-slate-900">{sname}</span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-slate-500">Roll: {roll}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                        <span>Section: <strong className="text-slate-800">{sec}</strong></span>
+                        <div className="flex items-center gap-2">
+                          <button
                             onClick={() => setPreviewStudent({ _id: sid, name: sname })}
                             disabled={!academicYear}
-                            style={{
-                              background:'#f0f9ff', color:'#0284c7',
-                              border:'1px solid #bae6fd', borderRadius:7,
-                              padding:'5px 12px', fontSize:12, fontWeight:600, cursor:'pointer',
-                            }}>
-                            👁 Preview
+                            className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            Preview
                           </button>
-                          <button id={`trc-dl-${sid}`}
+                          <button
                             onClick={() => handleGenerate(sid, sname)}
                             disabled={isThis || !academicYear}
-                            style={{
-                              background: isThis ? '#f3f4f6' : 'linear-gradient(135deg,#10b981,#059669)',
-                              color: isThis ? '#6b7280' : '#fff',
-                              border:'none', borderRadius:7,
-                              padding:'5px 12px', fontSize:12, fontWeight:600,
-                              cursor: isThis ? 'not-allowed' : 'pointer',
-                              boxShadow: isThis ? 'none' : '0 2px 6px rgba(16,185,129,0.25)',
-                            }}>
-                            {isThis ? '⏳' : '⬇ PDF'}
+                            className="px-2.5 py-1 bg-slate-900 text-white rounded-lg text-xs font-semibold disabled:opacity-50"
+                          >
+                            {isThis ? '...' : 'PDF'}
                           </button>
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </div>
+
+              {/* Desktop Data Table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold text-left">
+                      <th className="py-2.5 px-4 w-10">
+                        <input type="checkbox"
+                          checked={selectedStudents.length === students.length && students.length > 0}
+                          onChange={toggleAll} className="accent-indigo-600" />
+                      </th>
+                      <th className="py-2.5 px-4">Roll No</th>
+                      <th className="py-2.5 px-4">Student Name</th>
+                      <th className="py-2.5 px-4">Section</th>
+                      <th className="py-2.5 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                    {students.map(row => {
+                      const sid   = row.studentId;
+                      const sname = `${row.firstName || ''} ${row.lastName || ''}`.trim() || 'Student';
+                      const roll  = row.rollNo || '—';
+                      const sec   = row.sectionName || '—';
+                      const isThis = generatingFor === sid;
+
+                      return (
+                        <tr key={sid} className="hover:bg-slate-50/50 transition">
+                          <td className="py-3 px-4">
+                            <input type="checkbox" checked={selectedStudents.includes(sid)}
+                              onChange={() => toggleStudent(sid)} className="accent-indigo-600" />
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-slate-800">{roll}</td>
+                          <td className="py-3 px-4 font-bold text-slate-900">{sname}</td>
+                          <td className="py-3 px-4">{sec}</td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => setPreviewStudent({ _id: sid, name: sname })}
+                                disabled={!academicYear}
+                                className="px-3 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-xs"
+                              >
+                                Preview
+                              </button>
+                              <button
+                                onClick={() => handleGenerate(sid, sname)}
+                                disabled={isThis || !academicYear}
+                                className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs disabled:opacity-50"
+                              >
+                                {isThis ? 'Generating…' : 'Download PDF'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
         </div>
       ) : (
-        <div style={{
-          background:'#fff', borderRadius:14, padding:'56px 24px',
-          textAlign:'center', border:'1px solid #e5e7eb',
-          boxShadow:'0 2px 12px rgba(0,0,0,0.06)',
-        }}>
-          <div style={{ fontSize:52, marginBottom:16 }}>🎓</div>
-          <div style={{ fontWeight:700, fontSize:18, color:'#0f172a', marginBottom:8 }}>
-            Select a Session &amp; Class to get started
-          </div>
-          <div style={{ color:'#64748b', fontSize:14, maxWidth:440, margin:'0 auto' }}>
-            All marks, subjects, student info, and school logo will be fetched live
-            from the database and rendered into the template assigned by your Super Admin.
-          </div>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-10 text-center shadow-xs">
+          <p className="font-bold text-slate-900 text-sm">Select Session & Class</p>
+          <p className="text-xs text-slate-400 mt-1">Choose an academic session and class above to view student report cards</p>
         </div>
       )}
 
@@ -686,11 +623,5 @@ const TemplateReportCard = () => {
     </div>
   );
 };
-
-/* ── Shared micro-styles ── */
-const lbl = { display:'block', fontSize:12, fontWeight:600, color:'#374151', marginBottom:5, letterSpacing:'0.3px' };
-const sel = { width:'100%', padding:'8px 12px', border:'1.5px solid #e5e7eb', borderRadius:8, fontSize:13, color:'#0f172a', background:'#fff', fontFamily:'inherit' };
-const th  = { padding:'11px 16px', textAlign:'left', fontSize:12, fontWeight:700, color:'#374151', textTransform:'uppercase', letterSpacing:'0.4px', borderBottom:'2px solid #e5e7eb' };
-const td  = { padding:'12px 16px', fontSize:13.5, verticalAlign:'middle' };
 
 export default TemplateReportCard;

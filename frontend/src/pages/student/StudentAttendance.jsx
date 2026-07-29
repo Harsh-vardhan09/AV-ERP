@@ -218,40 +218,65 @@ const StudentAttendance = () => {
             <p className="text-sm font-medium">No attendance records found for this period.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/30 text-left text-xs text-slate-500 font-bold uppercase tracking-wider">
-                  <th className="py-3.5 px-5">Date</th>
-                  <th className="py-3.5 px-5">Subject</th>
-                  <th className="py-3.5 px-5 hidden sm:table-cell">Teacher</th>
-                  <th className="py-3.5 px-5 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {filtered.map((a, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3.5 px-5 text-slate-800 whitespace-nowrap tabular-nums">{fmtDate(a.date)}</td>
-                    <td className="py-3.5 px-5 text-slate-700">
-                      {a.attendanceType === 'hall' ? (
-                        <span className="text-indigo-600 font-semibold">Hall Attendance</span>
-                      ) : (
-                        a.subject?.name || '—'
-                      )}
-                    </td>
-                    <td className="py-3.5 px-5 text-slate-400 text-xs hidden sm:table-cell">
-                      {a.teacher ? `${a.teacher.firstName} ${a.teacher.lastName}` : '—'}
-                    </td>
-                    <td className="py-3.5 px-5 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusConfig[a.status]?.cls || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                        {statusConfig[a.status]?.label || a.status}
-                      </span>
-                    </td>
+          <>
+            {/* Mobile Card List View */}
+            <div className="block sm:hidden divide-y divide-slate-100">
+              {filtered.map((a, i) => (
+                <div key={i} className="p-3.5 space-y-2 hover:bg-slate-50/50 transition">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-slate-900 tabular-nums">{fmtDate(a.date)}</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusConfig[a.status]?.cls || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                      {statusConfig[a.status]?.label || a.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                    <span className="font-medium text-slate-700">
+                      {a.attendanceType === 'hall' ? 'Hall Attendance' : (a.subject?.name || '—')}
+                    </span>
+                    {a.teacher && (
+                      <span className="text-[11px] text-slate-400">{a.teacher.firstName} {a.teacher.lastName}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/30 text-left text-xs text-slate-500 font-bold uppercase tracking-wider">
+                    <th className="py-3.5 px-5">Date</th>
+                    <th className="py-3.5 px-5">Subject</th>
+                    <th className="py-3.5 px-5">Teacher</th>
+                    <th className="py-3.5 px-5 text-center">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {filtered.map((a, i) => (
+                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3.5 px-5 text-slate-800 whitespace-nowrap tabular-nums">{fmtDate(a.date)}</td>
+                      <td className="py-3.5 px-5 text-slate-700">
+                        {a.attendanceType === 'hall' ? (
+                          <span className="text-indigo-600 font-semibold">Hall Attendance</span>
+                        ) : (
+                          a.subject?.name || '—'
+                        )}
+                      </td>
+                      <td className="py-3.5 px-5 text-slate-400 text-xs">
+                        {a.teacher ? `${a.teacher.firstName} ${a.teacher.lastName}` : '—'}
+                      </td>
+                      <td className="py-3.5 px-5 text-center">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusConfig[a.status]?.cls || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                          {statusConfig[a.status]?.label || a.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -7,33 +7,29 @@ import {
   useSaveCoScholasticMarksMutation,
 } from '../../redux/api/teacherApi';
 import { useGetSessionsQuery } from '../../redux/api/adminApi';
-import './CoScholasticMarks.css';
+import { Save, Check, AlertCircle, Sparkles, BookOpen } from 'lucide-react';
 
-// ── Default skill list (used when the skills API returns no results) ─────────
 const DEFAULT_SKILLS = ['Discipline', 'Activity', 'Games', 'Drawing', 'Music'];
 
-// ── Grade colour map ──────────────────────────────────────────────────────────
 const GRADE_META = {
-  'A+': { bg: '#d1fae5', color: '#065f46' },
-  A:   { bg: '#dcfce7', color: '#15803d' },
-  B:   { bg: '#dbeafe', color: '#1d4ed8' },
-  C:   { bg: '#fef9c3', color: '#a16207' },
-  D:   { bg: '#ffedd5', color: '#c2410c' },
-  E:   { bg: '#fee2e2', color: '#b91c1c' },
-  '':  { bg: '#f1f5f9', color: '#94a3b8' },
+  'A+': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  A:   'bg-emerald-50 text-emerald-700 border-emerald-200',
+  B:   'bg-indigo-50 text-indigo-700 border-indigo-200',
+  C:   'bg-amber-50 text-amber-700 border-amber-200',
+  D:   'bg-orange-50 text-orange-700 border-orange-200',
+  E:   'bg-rose-50 text-rose-700 border-rose-200',
+  '':  'bg-slate-100 text-slate-500 border-slate-200',
 };
 const GRADE_OPTIONS = ['', 'A+', 'A', 'B', 'C', 'D', 'E'];
 
-// ── Grade select cell ─────────────────────────────────────────────────────────
 function GradeCell({ value, onChange, disabled }) {
   const meta = GRADE_META[value] || GRADE_META[''];
   return (
     <select
-      className="csk-grade-select"
+      className={`px-2 py-1 rounded-lg text-xs font-bold border outline-none cursor-pointer transition ${meta} disabled:opacity-50`}
       value={value}
       disabled={disabled}
       onChange={e => onChange(e.target.value)}
-      style={{ background: meta.bg, color: meta.color }}
     >
       {GRADE_OPTIONS.map(opt => (
         <option key={opt} value={opt}>{opt || '—'}</option>
@@ -42,15 +38,12 @@ function GradeCell({ value, onChange, disabled }) {
   );
 }
 
-// ── Grade-mode toggle ─────────────────────────────────────────────────────────
 const MODES = [
   { key: 'combined', label: 'Combined Grade' },
   { key: 'split',    label: 'T1 / T2 Split'  },
 ];
 
 export default function CoScholasticMarks() {
-
-  /* ── Data hooks ─────────────────────────────────────────────────────────── */
   const { data: ctData }       = useGetMyClassTeacherQuery();
   const { data: myData }       = useGetMyAssignmentsQuery();
   const { data: sessionsData } = useGetSessionsQuery();
@@ -59,7 +52,6 @@ export default function CoScholasticMarks() {
   const subjectAssignments = myData?.data  || [];
   const sessions           = sessionsData?.data || [];
 
-  // De-duplicate classes from both sources
   const classMap = new Map();
   [...ctAssignments, ...subjectAssignments].forEach(a => {
     if (a.classId?._id) classMap.set(String(a.classId._id), a.classId);
@@ -68,19 +60,16 @@ export default function CoScholasticMarks() {
     (a, b) => (a.numericOrder ?? 99) - (b.numericOrder ?? 99)
   );
 
-  // Class-teacher lookup
   const ctByClass = new Map();
   ctAssignments.forEach(a => {
     if (a.classId?._id) ctByClass.set(String(a.classId._id), a);
   });
 
-  /* ── Filter state ─────────────────────────────────────────────────────── */
   const [selectedSession, setSelectedSession] = useState('');
   const [selectedClass,   setSelectedClass]   = useState('');
   const [selectedSection, setSelectedSection] = useState('');
   const [gradeMode,       setGradeMode]        = useState('combined');
 
-  // Section options
   const sectionMap = new Map();
   [...ctAssignments, ...subjectAssignments]
     .filter(a => selectedClass && String(a.classId?._id) === selectedClass)
@@ -90,14 +79,12 @@ export default function CoScholasticMarks() {
     });
   const sectionOptions = [...sectionMap.values()];
 
-  /* ── Auto-select active session ──────────────────────────────────────── */
   useEffect(() => {
     if (selectedSession || sessions.length === 0) return;
     const active = sessions.find(s => s.isActive);
     setSelectedSession(active?._id || sessions[0]?._id || '');
   }, [sessions]);
 
-  /* ── Auto-select first CT class ──────────────────────────────────────── */
   useEffect(() => {
     if (selectedClass || ctAssignments.length === 0) return;
     const first = ctAssignments[0];
@@ -107,7 +94,6 @@ export default function CoScholasticMarks() {
     }
   }, [ctAssignments]);
 
-  /* ── When class changes, reset section ──────────────────────────────── */
   const handleClassChange = (classId) => {
     setSelectedClass(classId);
     setSelectedSection('');
@@ -121,7 +107,6 @@ export default function CoScholasticMarks() {
     if (unique.length === 1) setSelectedSection(String(unique[0]._id));
   };
 
-  /* ── Skills — fetched from template (NOT manual input) ───────────────── */
   const {
     data:      skillsData,
     isLoading: skillsLoading,
@@ -130,17 +115,14 @@ export default function CoScholasticMarks() {
     { skip: !selectedClass }
   );
 
-  // Skills come from the template API — fall back to DEFAULT_SKILLS if API returns nothing
-  const rawSkills    = skillsData?.skills;
+  const rawSkills      = skillsData?.skills;
   const templateSkills = (Array.isArray(rawSkills) && rawSkills.length > 0)
     ? rawSkills
     : DEFAULT_SKILLS;
   const templateName   = skillsData?.templateName || '';
-  const skillsSource   = skillsData?.source || '';   // 'database' | 'template_loop' | 'template' | 'defaults'
-  // skillsReady: just wait for the query to finish — never block on skill count
+  const skillsSource   = skillsData?.source || '';
   const skillsReady    = !skillsLoading;
 
-  /* ── Load handler ───────────────────────────────────────────────────── */
   const [loadParams, setLoadParams] = useState(null);
   const [errorMsg,   setErrorMsg]   = useState('');
 
@@ -166,11 +148,10 @@ export default function CoScholasticMarks() {
       classId:   selectedClass,
       ...(selectedSection ? { sectionId: selectedSection } : {}),
       ...(selectedSession ? { session:   selectedSession } : {}),
-      skills:    templateSkills.join(','),   // ← always template-driven
+      skills:    templateSkills.join(','),
     });
   };
 
-  /* ── Local grade state ─────────────────────────────────────────────── */
   const [grades, setGrades] = useState({});
   const [dirty,  setDirty]  = useState(false);
 
@@ -207,7 +188,6 @@ export default function CoScholasticMarks() {
     setDirty(true);
   };
 
-  /* ── Save handler ──────────────────────────────────────────────────── */
   const [saveMarks, { isLoading: saving }] = useSaveCoScholasticMarksMutation();
   const [saveMsg, setSaveMsg] = useState('');
 
@@ -216,7 +196,7 @@ export default function CoScholasticMarks() {
     const entries = [];
     students.forEach(st => {
       const sid = String(st.studentId);
-      templateSkills.forEach(skill => {          // ← only template skills, never extra
+      templateSkills.forEach(skill => {
         const g = grades[sid]?.[skill] || {};
         entries.push({
           studentId: sid,
@@ -234,72 +214,86 @@ export default function CoScholasticMarks() {
         ...(selectedSession ? { session:   selectedSession } : {}),
         entries,
       }).unwrap();
-      setSaveMsg('✓ Grades saved successfully!');
+      setSaveMsg('Grades saved successfully!');
       setDirty(false);
       refetch();
     } catch (err) {
-      setSaveMsg(`✗ ${err?.data?.message || 'Save failed. Please try again.'}`);
+      setSaveMsg(err?.data?.message || 'Save failed. Please try again.');
     }
   };
 
   const isCtForSelectedClass = ctByClass.has(selectedClass);
 
-  /* ── Render ─────────────────────────────────────────────────────────── */
   return (
-    <div className="csk-page">
-
-      {/* ── Header ── */}
-      <div className="csk-header">
+    <div className="max-w-6xl mx-auto space-y-4 px-2 sm:px-4 pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
         <div>
-          <h1 className="csk-title">Co-Scholastic Marks</h1>
-          <p className="csk-subtitle">
-            Co-scholastic grades are linked to your school's report card template.
+          <h1 className="text-xl font-bold text-slate-900">Co-Scholastic Marks</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Co-scholastic grades linked to school report card template
             {templateName && (
-              <span className="csk-template-badge">📋 {templateName}</span>
+              <span className="ml-2 px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-[10px] font-bold border border-slate-200">
+                {templateName}
+              </span>
             )}
           </p>
         </div>
-        <div className="csk-header-actions">
-          {/* Grade-mode toggle */}
-          <div className="csk-mode-toggle" role="group" aria-label="Grade entry mode">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
             {MODES.map(m => (
               <button
                 key={m.key}
-                className={`csk-mode-btn${gradeMode === m.key ? ' active' : ''}`}
                 onClick={() => setGradeMode(m.key)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  gradeMode === m.key ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
               >
                 {m.label}
               </button>
             ))}
           </div>
           {dirty && isCtForSelectedClass && (
-            <button className="csk-save-btn" onClick={handleSave} disabled={saving}>
-              {saving ? '⏳ Saving…' : '💾 Save All Grades'}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>{saving ? 'Saving…' : 'Save All'}</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Alerts ── */}
+      {/* Alerts */}
       {saveMsg && (
-        <div className={`csk-alert ${saveMsg.startsWith('✓') ? 'csk-alert-success' : 'csk-alert-error'}`}>
-          {saveMsg}
+        <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-3 text-xs font-semibold text-emerald-800 flex items-center gap-2">
+          <Check className="w-4 h-4 text-emerald-600" />
+          <span>{saveMsg}</span>
         </div>
       )}
-      {errorMsg && <div className="csk-alert csk-alert-error">{errorMsg}</div>}
+      {errorMsg && (
+        <div className="bg-rose-50 border border-rose-200/80 rounded-xl p-3 text-xs font-semibold text-rose-800 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-600" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
       {selectedClass && !isCtForSelectedClass && (
-        <div className="csk-alert csk-alert-warn">
-          ⚠️ Only the designated class teacher can enter co-scholastic marks.
+        <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3 text-xs font-semibold text-amber-800">
+          Note: Only designated class teachers can edit co-scholastic grades for this class.
         </div>
       )}
 
-      {/* ── Filter row (no manual skills input) ── */}
-      <div className="csk-filters">
-
-        {/* SESSION */}
-        <div className="csk-field">
-          <label className="csk-label">SESSION</label>
-          <select className="csk-select" value={selectedSession} onChange={e => setSelectedSession(e.target.value)}>
+      {/* Filter Row */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">Session</label>
+          <select
+            value={selectedSession}
+            onChange={e => setSelectedSession(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400"
+          >
             <option value="">-- Select Session --</option>
             {sessions.map(s => (
               <option key={s._id} value={s._id}>{s.name}{s.isActive ? ' (Active)' : ''}</option>
@@ -307,10 +301,13 @@ export default function CoScholasticMarks() {
           </select>
         </div>
 
-        {/* CLASS */}
-        <div className="csk-field">
-          <label className="csk-label">CLASS *</label>
-          <select className="csk-select" value={selectedClass} onChange={e => handleClassChange(e.target.value)}>
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">Class *</label>
+          <select
+            value={selectedClass}
+            onChange={e => handleClassChange(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400"
+          >
             <option value="">-- Select Class --</option>
             {allClasses.map(cls => (
               <option key={cls._id} value={String(cls._id)}>
@@ -318,13 +315,15 @@ export default function CoScholasticMarks() {
               </option>
             ))}
           </select>
-          {allClasses.length === 0 && <span className="csk-hint">No classes assigned yet</span>}
         </div>
 
-        {/* SECTION */}
-        <div className="csk-field">
-          <label className="csk-label">SECTION</label>
-          <select className="csk-select" value={selectedSection} onChange={e => setSelectedSection(e.target.value)}>
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">Section</label>
+          <select
+            value={selectedSection}
+            onChange={e => setSelectedSection(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400"
+          >
             <option value="">All Sections</option>
             {sectionOptions.map(s => (
               <option key={String(s._id)} value={String(s._id)}>{s.name}</option>
@@ -332,107 +331,88 @@ export default function CoScholasticMarks() {
           </select>
         </div>
 
-        {/* SKILLS PILL ROW — read-only, sourced from template */}
-        {selectedClass && (
-          <div className="csk-field csk-field-skills">
-            <label className="csk-label">
-              SKILLS FROM TEMPLATE
-              {skillsSource === 'template'
-                ? <span className="csk-auto-badge">auto-detected</span>
-                : <span className="csk-auto-badge csk-badge-default">defaults</span>
-              }
-            </label>
-            <div className="csk-skill-pills">
-              {skillsLoading
-                ? <span className="csk-hint">Loading skills…</span>
-                : templateSkills.length > 0
-                  ? templateSkills.map(s => <span key={s} className="csk-skill-pill">{s}</span>)
-                  : <span className="csk-hint">No skills detected — check your template</span>
-              }
-            </div>
-          </div>
-        )}
-
         <button
-          className="csk-load-btn"
           onClick={handleLoad}
           disabled={isFetching || !selectedClass || !skillsReady}
+          className="w-full bg-slate-900 text-white py-1.5 rounded-xl text-xs font-semibold hover:bg-slate-800 transition cursor-pointer disabled:opacity-40 shadow-xs"
         >
-          {isFetching ? '⏳ Loading…' : 'Load Students'}
+          {isFetching ? 'Loading…' : 'Load Students'}
         </button>
       </div>
 
-      {/* ── Table / states ── */}
+      {/* Main Content Area */}
       {isFetching ? (
-        <div className="csk-loading">
-          <div className="csk-spinner" />
-          <p>Fetching students…</p>
-        </div>
-      ) : students.length === 0 && loadParams && !errorMsg ? (
-        <div className="csk-empty">
-          <div className="csk-empty-icon">🔍</div>
-          <p>No students found.<br />Check that students are enrolled in this class &amp; session.</p>
+        <div className="flex justify-center py-14">
+          <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : students.length === 0 ? (
-        <div className="csk-empty">
-          <div className="csk-empty-icon">🎓</div>
-          <p>Select a class and click <strong>Load Students</strong> to begin.</p>
+        <div className="text-center py-12 text-slate-400 text-xs bg-white border border-slate-200/80 rounded-2xl">
+          Select class and click Load Students to evaluate co-scholastic grades.
         </div>
       ) : (
-        <>
-          <div className="csk-mode-info">
-            {gradeMode === 'split'
-              ? '📊 T1 / T2 Split Mode — enter separate Term 1 and Term 2 grades for each skill.'
-              : '📋 Combined Mode — enter a single overall grade per skill.'}
+        <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
+          {/* Mobile Card View */}
+          <div className="block sm:hidden divide-y divide-slate-100">
+            {students.map((st, idx) => {
+              const sid = String(st.studentId);
+              const stName = st.name || `${st.firstName || ''} ${st.lastName || ''}`.trim() || '—';
+              return (
+                <div key={sid} className="p-3.5 space-y-2 hover:bg-slate-50/50 transition">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-slate-900">{stName}</span>
+                    <span className="text-[11px] font-semibold text-slate-500">Roll: {st.rollNo || '—'}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    {templateSkills.map(skill => {
+                      const g = grades[sid]?.[skill] || { grade: '', t1Grade: '', t2Grade: '' };
+                      return (
+                        <div key={skill} className="flex items-center justify-between bg-slate-50 p-2 rounded-xl">
+                          <span className="text-[10px] font-semibold text-slate-600">{skill}</span>
+                          <GradeCell
+                            value={g.grade}
+                            disabled={!isCtForSelectedClass}
+                            onChange={v => handleGradeChange(sid, skill, 'grade', v)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="csk-table-wrap">
-            <table className="csk-table">
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
               <thead>
-                <tr>
-                  <th className="csk-th csk-th-fixed">#</th>
-                  <th className="csk-th csk-th-student">Student</th>
-                  <th className="csk-th">Roll No</th>
+                <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold text-left">
+                  <th className="py-2.5 px-4 w-12">#</th>
+                  <th className="py-2.5 px-4">Student</th>
+                  <th className="py-2.5 px-4">Roll No</th>
                   {templateSkills.map(skill => (
-                    gradeMode === 'split' ? (
-                      <th key={skill} className="csk-th csk-th-split" colSpan={2}>
-                        {skill}
-                        <div className="csk-th-sub"><span>T1</span><span>T2</span></div>
-                      </th>
-                    ) : (
-                      <th key={skill} className="csk-th">{skill}</th>
-                    )
+                    <th key={skill} className="py-2.5 px-4 text-center">{skill}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
                 {students.map((st, idx) => {
-                  const sid    = String(st.studentId);
+                  const sid = String(st.studentId);
                   const stName = st.name || `${st.firstName || ''} ${st.lastName || ''}`.trim() || '—';
                   return (
-                    <tr key={sid} className={idx % 2 === 0 ? 'csk-tr-even' : 'csk-tr-odd'}>
-                      <td className="csk-td csk-td-center">{idx + 1}</td>
-                      <td className="csk-td csk-td-student">
-                        <div className="csk-student-name">{stName}</div>
-                      </td>
-                      <td className="csk-td csk-td-center">{st.rollNo || '—'}</td>
+                    <tr key={sid} className="hover:bg-slate-50/50 transition">
+                      <td className="py-3 px-4 text-slate-400">{idx + 1}</td>
+                      <td className="py-3 px-4 font-bold text-slate-900">{stName}</td>
+                      <td className="py-3 px-4 text-slate-600">{st.rollNo || '—'}</td>
                       {templateSkills.map(skill => {
                         const g = grades[sid]?.[skill] || { grade: '', t1Grade: '', t2Grade: '' };
-                        return gradeMode === 'split' ? (
-                          <React.Fragment key={skill}>
-                            <td className="csk-td csk-td-center csk-td-split">
-                              <GradeCell value={g.t1Grade} disabled={!isCtForSelectedClass}
-                                onChange={v => handleGradeChange(sid, skill, 't1Grade', v)} />
-                            </td>
-                            <td className="csk-td csk-td-center csk-td-split">
-                              <GradeCell value={g.t2Grade} disabled={!isCtForSelectedClass}
-                                onChange={v => handleGradeChange(sid, skill, 't2Grade', v)} />
-                            </td>
-                          </React.Fragment>
-                        ) : (
-                          <td key={skill} className="csk-td csk-td-center">
-                            <GradeCell value={g.grade} disabled={!isCtForSelectedClass}
-                              onChange={v => handleGradeChange(sid, skill, 'grade', v)} />
+                        return (
+                          <td key={skill} className="py-3 px-4 text-center">
+                            <GradeCell
+                              value={g.grade}
+                              disabled={!isCtForSelectedClass}
+                              onChange={v => handleGradeChange(sid, skill, 'grade', v)}
+                            />
                           </td>
                         );
                       })}
@@ -442,21 +422,7 @@ export default function CoScholasticMarks() {
               </tbody>
             </table>
           </div>
-
-          <div className="csk-footer">
-            <span className="csk-count">
-              {students.length} student{students.length !== 1 ? 's' : ''} loaded
-              {marksData?.sessionName ? ` · ${marksData.sessionName}` : ''}
-            </span>
-            {isCtForSelectedClass ? (
-              <button className="csk-save-btn" onClick={handleSave} disabled={saving || !dirty}>
-                {saving ? '⏳ Saving…' : dirty ? '💾 Save All Grades' : '✓ All Saved'}
-              </button>
-            ) : (
-              <span className="csk-readonly-badge">👁 View Only — not class teacher</span>
-            )}
-          </div>
-        </>
+        </div>
       )}
     </div>
   );

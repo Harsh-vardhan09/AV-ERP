@@ -81,9 +81,9 @@ const ActionMenu = ({ teacher, onDelete, navigate }) => {
   return (
     <>
       <button ref={btnRef} onClick={open}
-        className="w-8 h-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
+        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer">
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0z" />
+          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z" />
         </svg>
       </button>
       {pos && (
@@ -163,151 +163,178 @@ export default function AllTeachers() {
     } catch (e) { toast.error(e?.data?.message || 'Error'); } finally { setTogglingId(null); }
   };
 
+  const th = 'px-3 py-2.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap bg-slate-50 border-r border-slate-200/80 last:border-r-0';
+  const td = 'px-3 py-3 text-sm align-middle border-r border-slate-100 last:border-r-0';
+
   return (
-    <div>
+    <div className="max-w-7xl mx-auto space-y-4 px-2 sm:px-4 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Teachers</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Total: <strong>{pagination.total ?? 0}</strong>
+          <h1 className="text-xl font-bold text-slate-900">Teachers</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Total Staff: <strong className="text-slate-800 tabular-nums">{pagination.total ?? 0}</strong>
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-1 min-w-[260px] max-w-lg">
-          <div className="relative flex-1">
-            <input value={searchInput} onChange={e => handleSearch(e.target.value)}
-              placeholder="Search by name, employee ID, phone…"
-              className="w-full border border-gray-300 rounded-md pl-9 pr-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-            <svg className="w-4 h-4 absolute left-2.5 top-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          {search && <button onClick={() => { setSearch(''); setSearchInput(''); }} className="text-xs text-gray-500 underline">Clear</button>}
+        <div className="relative flex-1 min-w-[200px] sm:w-64">
+          <input value={searchInput} onChange={e => handleSearch(e.target.value)}
+            placeholder="Search teacher, ID, phone…"
+            className="w-full border border-slate-200/80 bg-white rounded-xl pl-8 pr-7 py-1.5 text-xs font-medium text-slate-800 outline-none focus:border-slate-400 shadow-xs" />
+          <svg className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          {search && (
+            <button onClick={() => { setSearch(''); setSearchInput(''); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">×</button>
+          )}
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+      <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs flex items-center justify-between gap-3">
         <select value={sessionId} onChange={e=>{setSessionId(e.target.value);setPage(1);}}
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 min-w-[150px]">
+          className="border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400 min-w-[150px]">
           <option value="">All Sessions</option>
           {sessions.map(s=><option key={s._id} value={s._id}>{s.name} {s.isActive ? '(Active)' : ''}</option>)}
         </select>
         {sessionId && (
-          <button onClick={()=>{setSessionId('');}} className="text-xs text-gray-500 underline hover:text-blue-600">Clear filter</button>
+          <button onClick={()=>{setSessionId('');}} className="text-xs font-semibold text-slate-500 hover:text-slate-900">Clear filter</button>
         )}
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      {/* Main Container */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
         {isLoading ? (
           <div className="flex justify-center py-14">
-            <div className="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : teachers.length === 0 ? (
-          <div className="text-center py-14 text-gray-400">
-            <svg className="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <p className="text-sm">No teachers found</p>
+          <div className="text-center py-14 text-slate-400">
+            <p className="text-xs font-medium">No teachers found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className={th} style={{ width: 40 }}>#</th>
-                  <th className={th}>Biometric Code</th>
-                  <th className={th} style={{ minWidth: 220 }}>Teacher Details</th>
-                  <th className={th} style={{ minWidth: 180 }}>Assigned Classes &amp; Sections</th>
-                  <th className={th}>Joining Time</th>
-                  <th className={th}>Status</th>
-                  <th className={th} style={{ width: 48 }}>Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {teachers.map((t, idx) => {
-                  const name  = `${t.firstName || ''} ${t.lastName || ''}`.trim();
-                  const email = t.userId?.email || t.email || '—';
-                  const phone = t.userId?.phone || t.phone || '—';
-                  const username = t.userId?.username || t.teacherId || t.employeeId || '—';
-                  return (
-                    <tr key={t._id} className="hover:bg-gray-50 transition-colors">
-                      <td className={`${td} text-gray-400 text-xs`}>{(page - 1) * 20 + idx + 1}</td>
-
-                      {/* Biometric Code */}
-                      <td className={td}>
-                        <span className="font-mono text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                          {t.teacherId || t.employeeId || '—'}
-                        </span>
-                      </td>
-
-                      {/* Teacher Details */}
-                      <td className={td}>
-                        <div className="flex items-start gap-2 min-w-[200px]">
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center text-xs font-bold shrink-0">
-                            {(t.firstName?.[0] || '').toUpperCase()}{(t.lastName?.[0] || '').toUpperCase()}
-                          </div>
-                          <div>
-                            <button onClick={() => navigate(`/admin/teachers/${t._id}`)}
-                              className="font-semibold text-blue-600 hover:underline text-left leading-tight text-sm">
-                              {name}
-                            </button>
-                            <div className="text-xs text-gray-500 mt-0.5">{email}</div>
-                            {phone !== '—' && <div className="text-xs text-gray-500">📞 {phone}</div>}
-                            {t.designation && <div className="text-xs text-gray-400 italic">{t.designation}</div>}
-                          </div>
+          <>
+            {/* Mobile Card List View (Phone Viewport) */}
+            <div className="block sm:hidden divide-y divide-slate-100">
+              {teachers.map((t) => {
+                const name = `${t.firstName || ''} ${t.lastName || ''}`.trim();
+                return (
+                  <div key={t._id} className="p-3.5 space-y-2 hover:bg-slate-50/50 transition">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                          {(t.firstName?.[0] || '').toUpperCase()}{(t.lastName?.[0] || '').toUpperCase()}
                         </div>
-                      </td>
-
-                      {/* Assigned Classes */}
-                      <td className={td}>
-                        <div className="flex flex-wrap gap-1">
-                          {(t.assignedClasses || []).length === 0
-                            ? <span className="text-xs text-gray-400">—</span>
-                            : (t.assignedClasses || []).slice(0, 6).map((a, i) => (
-                              <span key={i} className={`px-1.5 py-0.5 rounded text-xs font-medium border ${badgeColor(i)}`}>
-                                {a.label}
-                              </span>
-                            ))
-                          }
-                          {(t.assignedClasses || []).length > 6 && (
-                            <span className="text-xs text-gray-400">+{t.assignedClasses.length - 6}</span>
-                          )}
+                        <div>
+                          <button onClick={() => navigate(`/admin/teachers/${t._id}`)} className="font-bold text-xs text-slate-900 hover:text-indigo-600 text-left block">
+                            {name}
+                          </button>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            {t.designation || 'Teacher'}
+                          </span>
                         </div>
-                      </td>
+                      </div>
+                      <StatusToggle teacher={t} onToggle={handleToggle} isLoading={togglingId === t._id} />
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                      <span>ID: <strong className="text-slate-800">{t.teacherId || t.employeeId || '—'}</strong></span>
+                      <button
+                        onClick={() => navigate(`/admin/teachers/${t._id}`)}
+                        className="text-xs font-bold text-indigo-600"
+                      >
+                        View Profile →
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                      {/* Joining Time */}
-                      <td className={`${td} text-xs text-gray-500 whitespace-nowrap`}>{fmt(t.joiningDate)}</td>
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className={th} style={{ width: 40 }}>#</th>
+                    <th className={th}>ID Code</th>
+                    <th className={th} style={{ minWidth: 200 }}>Teacher Details</th>
+                    <th className={th} style={{ minWidth: 180 }}>Assigned Classes &amp; Sections</th>
+                    <th className={th}>Joining Date</th>
+                    <th className={th}>Status</th>
+                    <th className={th} style={{ width: 48 }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {teachers.map((t, idx) => {
+                    const name  = `${t.firstName || ''} ${t.lastName || ''}`.trim();
+                    const email = t.userId?.email || t.email || '—';
+                    const phone = t.userId?.phone || t.phone || '—';
+                    return (
+                      <tr key={t._id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className={`${td} text-slate-400 text-[11px]`}>{(page - 1) * 20 + idx + 1}</td>
 
-                      {/* Status Toggle */}
-                      <td className={td}>
-                        <StatusToggle teacher={t} onToggle={handleToggle} isLoading={togglingId === t._id} />
-                      </td>
+                        <td className={td}>
+                          <span className="font-mono text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-semibold border border-slate-200/80">
+                            {t.teacherId || t.employeeId || '—'}
+                          </span>
+                        </td>
 
-                      {/* Action */}
-                      <td className={td}>
-                        <ActionMenu teacher={t} navigate={navigate} onDelete={t => setDeleteModal(t)} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <td className={td}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                              {(t.firstName?.[0] || '').toUpperCase()}{(t.lastName?.[0] || '').toUpperCase()}
+                            </div>
+                            <div>
+                              <button onClick={() => navigate(`/admin/teachers/${t._id}`)}
+                                className="font-bold text-slate-900 hover:text-indigo-600 text-left leading-tight block">
+                                {name}
+                              </button>
+                              <div className="text-[11px] text-slate-400">{email}</div>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className={td}>
+                          <div className="flex flex-wrap gap-1">
+                            {(t.assignedClasses || []).length === 0
+                              ? <span className="text-[11px] text-slate-400">—</span>
+                              : (t.assignedClasses || []).slice(0, 6).map((a, i) => (
+                                <span key={i} className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/80">
+                                  {a.label}
+                                </span>
+                              ))
+                            }
+                          </div>
+                        </td>
+
+                        <td className={`${td} text-[11px] text-slate-500 whitespace-nowrap`}>{fmt(t.joiningDate)}</td>
+
+                        <td className={td}>
+                          <StatusToggle teacher={t} onToggle={handleToggle} isLoading={togglingId === t._id} />
+                        </td>
+
+                        <td className={td}>
+                          <ActionMenu teacher={t} navigate={navigate} onDelete={t => setDeleteModal(t)} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-            <span className="text-xs text-gray-500">
-              Page {pagination.page} of {pagination.totalPages} · {pagination.total} total
+          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+            <span className="text-xs text-slate-500 font-medium">
+              Page {pagination.page} of {pagination.totalPages}
             </span>
             <div className="flex gap-2">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="border border-gray-300 text-gray-600 px-3 py-1.5 rounded-md text-sm hover:bg-gray-50 disabled:opacity-40">← Prev</button>
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 shadow-xs cursor-pointer">← Prev</button>
               <button onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))} disabled={page === pagination.totalPages}
-                className="border border-gray-300 text-gray-600 px-3 py-1.5 rounded-md text-sm hover:bg-gray-50 disabled:opacity-40">Next →</button>
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 shadow-xs cursor-pointer">Next →</button>
             </div>
           </div>
         )}

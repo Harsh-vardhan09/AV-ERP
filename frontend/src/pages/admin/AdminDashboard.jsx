@@ -280,35 +280,24 @@ const AdminDashboard = () => {
   const activeCard = modal ? cards.find(c => c.type === modal) : null;
 
   return (
-    <div>
-      <h1 className="erp-page-title">Admin Dashboard</h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: 24 }}>Overview of your school at a glance</p>
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+      <div className="pt-1">
+        <h1 className="text-xl font-bold text-slate-900">Admin Dashboard</h1>
+      </div>
 
-      {/* Stat Cards — premium color-coded */}
-      <div className="dash-stat-grid">
+      {/* Stat Grid — Minimal Linear Style */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {cards.map((card, i) => (
           <div
             key={i}
             onClick={() => card.clickable && openPage(card.type)}
-            style={{
-              background: '#fff', borderRadius: 12, padding: '18px 20px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-              cursor: card.clickable ? 'pointer' : 'default',
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => { if (card.clickable) { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.10)'; e.currentTarget.style.borderColor = '#d1d5db'; }}}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#e5e7eb'; }}
+            className={`bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs transition ${
+              card.clickable ? 'cursor-pointer hover:border-slate-300 hover:bg-slate-50/50' : ''
+            }`}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{card.label}</p>
-                <p style={{ fontSize: card.isText ? 18 : 28, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1 }}>{card.value}</p>
-                {card.clickable && <p style={{ fontSize: 11, color: '#6366f1', marginTop: 8, fontWeight: 500 }}>View all →</p>}
-              </div>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', flexShrink: 0 }}>
-                {card.icon}
-              </div>
+            <div className="text-[11px] font-medium text-slate-400">{card.label}</div>
+            <div className={`font-bold text-slate-900 mt-1 ${card.isText ? 'text-sm' : 'text-xl'}`}>
+              {card.value}
             </div>
           </div>
         ))}
