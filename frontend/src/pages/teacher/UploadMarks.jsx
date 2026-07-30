@@ -11,6 +11,9 @@ import { useGetActiveSessionQuery } from '../../redux/api/adminApi';
 import toast from 'react-hot-toast';
 
 /* ─── Constants ─────────────────────────────────────────────── */
+const EMPTY_OBJECT = {};
+const EMPTY_ARRAY = [];
+
 const TABS = {
   MANUAL: 'manual',
   EXCEL: 'excel',
@@ -175,7 +178,7 @@ const UploadMarks = () => {
   const templateId = templateData?.data?.templateId;
   const templateName = templateData?.data?.templateName;
   const templateTier = templateData?.data?.tier;
-  const fieldMaxMap = templateData?.data?.fieldMaxMap || {};
+  const fieldMaxMap = templateData?.data?.fieldMaxMap || EMPTY_OBJECT;
   const totalMaxMarks = templateData?.data?.totalMaxMarks ?? 100;
 
   /**
@@ -210,7 +213,7 @@ const UploadMarks = () => {
    * Build dynamic marks fields from template schema
    */
   const dynamicMarksFields = useMemo(() => {
-    if (!templateSchema?.fields?.length) return [];
+    if (!templateSchema?.fields?.length) return EMPTY_ARRAY;
 
     const fields = templateSchema.fields
       .filter((f) => {
@@ -327,13 +330,18 @@ const UploadMarks = () => {
 
   const students = studentData?.data || [];
 
+  const dynamicFieldsKey = useMemo(
+    () => dynamicMarksFields.map((f) => f.key).join(','),
+    [dynamicMarksFields]
+  );
+
   /**
    * Initialize marks table when students or fields change
    */
   useEffect(() => {
     if (!students.length) {
-      setMarks([]);
-      setValidationErrors({});
+      setMarks((prev) => (prev.length === 0 ? prev : EMPTY_ARRAY));
+      setValidationErrors((prev) => (Object.keys(prev).length === 0 ? prev : EMPTY_OBJECT));
       return;
     }
 
@@ -359,8 +367,8 @@ const UploadMarks = () => {
     console.log('[UploadMarks] Fields mode:', isDynamic ? 'dynamic' : 'legacy');
 
     setMarks(rows);
-    setValidationErrors({});
-  }, [students, isDynamic, dynamicMarksFields]);
+    setValidationErrors((prev) => (Object.keys(prev).length === 0 ? prev : EMPTY_OBJECT));
+  }, [students, isDynamic, dynamicFieldsKey]);
 
   /**
    * Handle field value change

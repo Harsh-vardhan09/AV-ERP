@@ -1,132 +1,22 @@
-// import React from 'react';
-// import { useForm } from 'react-hook-form';
-// import { NavLink, useNavigate } from 'react-router-dom';
-// import { useLoginMutation } from '../redux/api/userApi';
-// import { useDispatch } from 'react-redux';
-// import { setUser } from '../redux/reducers/userreducer';
-// import toast from 'react-hot-toast';
-// import Loader from '../components/Loader';
-
-
-// const NewLogin = () => {
-//   const dispatch =useDispatch();
-
-//   const { register, handleSubmit, formState: { errors } } = useForm();
-//   const navigate = useNavigate();
-//   const [login, { isLoading, error }] = useLoginMutation();
-//   const onSubmit = async (data) => {
-//     const formData = new FormData();
-//     formData.append('email', data.email);
-//     formData.append('password', data.password);
-//     // formData.append('photo', data.photo[0]); 
-
-//     try {
-//       const result = await login(formData).unwrap();
-//       console.log("API Response:", result); // Response को console में check करें
-
-//       if (result?.token) {
-//         localStorage.setItem("token", result.token);
-//         console.log("Token Stored:", localStorage.getItem("token")); // Check करें token store हुआ या नहीं
-//         toast.success("Login successful");
-
-//         dispatch(setUser(result)); // Redux store में user को set करें
-//         navigate('/', { replace: true });
-//       } else {
-//         toast.error("Login failed: Token not received");
-//       }
-//     } catch (error) {
-//       console.error("Login Error:", error);
-//       toast.error(`Error during login: ${error.data?.message || "Something went wrong"}`);
-//     }
-
-
-//   };
-
-
-//   return (
-//     <div className="flex justify-center items-center h-screen">
-//       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-//         <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">Log In</h2>
-
-//         <form  onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-//           {/* Email Input */}
-//           <div>
-//             <label className="block text-gray-700 font-medium mb-2" htmlFor="email">Email Address</label>
-//             <input
-//               type="email"
-//               name="email"
-//               id="email"
-//               placeholder="Your Email Address"
-//               className={`w-full px-4 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400`}
-//               {...register('email', {
-//                 required: 'Email is required',
-//                 pattern: {
-//                   value: /\S+@\S+\.\S+/,
-//                   message: 'Invalid email address',
-//                 },
-//               })}
-//             />
-//             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
-//           </div>
-
-//           {/* Password Input */}
-//           <div>
-//             <label className="block text-gray-700 font-medium mb-2" htmlFor="password">Password</label>
-//             <input
-//               type="password"
-//               name="password"
-//               id="password"
-//               placeholder="Your Password"
-//               className={`w-full px-4 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400`}
-//               {...register('password', {
-//                 required: 'Password is required',
-//                 minLength: {
-//                   value: 6,
-//                   message: 'Password must be at least 6 characters',
-//                 },
-//               })}
-//             />
-//             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
-//           </div>
-//           {/* <div>
-//             <input type="file" name="photo" {...register('photo')} />
-//           </div> */}
-//           {/* Submit Button */}
-//           <button
-//             type="submit"
-//             className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition duration-300"
-//             disabled={isLoading} // Disable button when loading
-//           >
-//             {isLoading ? <Loader></Loader> : 'Log In'}
-//           </button>
-
-//           {/* Display error message */}
-//           {error && <p className="text-red-500 text-sm mt-2">Login failed. Please try again.</p>}
-//         </form>
-
-//         <div className="text-center mt-4">
-//           <NavLink to="/forgot-password" className="text-indigo-500 hover:text-indigo-700 transition duration-300">Forgot Password?</NavLink>
-//         </div>
-
-//         <div className="text-center mt-6 text-gray-500">
-//           Don't have an account? <NavLink to="/signup" className="text-indigo-500">Sign up</NavLink>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default NewLogin;
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useLoginMutation } from '../redux/api/userApi';
-import { authApi } from '../redux/api/userApi';
+import { 
+  Building2, 
+  User, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  ChevronDown, 
+  ArrowRight
+} from 'lucide-react';
+import { useLoginMutation, authApi } from '../redux/api/userApi';
 import { useDispatch } from 'react-redux';
 import { setUser, userlogout } from '../redux/reducers/userreducer';
 import toast from 'react-hot-toast';
 import Loader from '../components/Loader';
 import useOasesAuthStore from './oases/store/authStore';
+import BackgroundBeams from '../components/ui/background-beams';
 
 // ── Role options shown in the "Login as" dropdown ────────────────────────────
 const LOGIN_ROLES = [
@@ -188,18 +78,17 @@ const Login = () => {
         email:      data.email,
         password:   data.password,
         schoolCode: data.schoolCode,
-        role:       loginRole,   // Bug 1 Fix: send the selected role so backend can validate it
+        role:       loginRole,
       }).unwrap();
 
       if (result?.user) {
-        // Fix E: Clear any stale persisted state from a previous session before
-        // setting new user data — prevents old schoolId bleeding in.
+        // Clear any stale persisted state from a previous session
         dispatch(userlogout());
         dispatch(authApi.util.resetApiState());
 
         dispatch(setUser(result));
 
-        // ── OASES: if user has an OASES role, wire the OASES store + redirect ──
+        // ── OASES integration ──────────────────────────────────────────────
         if (result.user.oasesRole) {
           setOasesAuth(result.user, result.token);
           toast.success(`Welcome to OASES, ${result.user.firstName}!`);
@@ -208,7 +97,7 @@ const Login = () => {
         }
 
         // Normal ERP redirect
-        toast.success('Login successful');
+        toast.success('Login successful! Redirecting…');
         navigate(ERP_REDIRECTS[result.user.role] || '/', { replace: true });
       } else {
         toast.error('Login failed: unexpected server response');
@@ -222,33 +111,43 @@ const Login = () => {
   const togglePasswordVisibility = () => setShowPassword((p) => !p);
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 py-8 px-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">Welcome Back</h2>
+    <div className="relative flex justify-center items-center min-h-[100dvh] bg-slate-50 py-6 sm:py-10 px-3 sm:px-4 overflow-x-hidden font-sans">
+      {/* Background Animated Black Waves */}
+      <BackgroundBeams />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Main Login Form Card */}
+      <div className="bg-white/75 backdrop-blur-[25px] border border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.08)] p-6 sm:p-9 rounded-2xl w-full max-w-[420px] relative z-10 my-auto">
+
+        {/* Header Section */}
+        <div className="text-center mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            Welcome Back
+          </h2>
+          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-1">
+            Sign in to access your portal
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
 
           {/* ── Login as dropdown ─────────────────────────────────────── */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2" htmlFor="login-role">
-              Login as
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5" htmlFor="login-role">
+              Login As
             </label>
             <div className="relative">
               <select
                 id="login-role"
                 value={loginRole}
                 onChange={handleRoleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white text-gray-800 appearance-none cursor-pointer"
+                className="w-full pl-4 pr-10 py-2.5 bg-slate-50/80 border border-slate-300/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 text-sm font-medium appearance-none cursor-pointer transition duration-150"
               >
                 {LOGIN_ROLES.map((r) => (
                   <option key={r.value} value={r.value}>{r.label}</option>
                 ))}
               </select>
-              {/* Custom chevron */}
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+              <div className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-slate-400">
+                <ChevronDown className="w-4 h-4" />
               </div>
             </div>
             {loginRole === 'superadmin' && (
@@ -258,61 +157,79 @@ const Login = () => {
             )}
           </div>
 
-          {/* ── The following fields are only for school roles ─────── */}
-          {/* School Code Input */}
+          {/* ── School Code Input ───────────────────────────────────── */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2" htmlFor="schoolCode">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5" htmlFor="schoolCode">
               School Code
             </label>
-            <input
-              type="text"
-              id="schoolCode"
-              placeholder="Enter your school code (e.g. DPS2025)"
-              className={`w-full px-4 py-2 border ${
-                errors.schoolCode ? 'border-red-500' : 'border-gray-300'
-              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400`}
-              {...register('schoolCode', {
-                required: 'School code is required',
-              })}
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <Building2 className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                id="schoolCode"
+                placeholder="Ex: DEMO2025"
+                className={`w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border ${errors.schoolCode ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-300/80 focus:ring-indigo-500/20'
+                  } rounded-xl text-slate-900 text-sm font-medium placeholder:font-normal placeholder:text-slate-400/80 focus:outline-none focus:ring-2 focus:border-indigo-500 transition duration-150`}
+                {...register('schoolCode', {
+                  required: 'School code is required',
+                })}
+              />
+            </div>
             {errors.schoolCode && (
-              <p className="text-red-500 text-sm mt-1">{errors.schoolCode.message}</p>
+              <p className="text-red-500 text-xs font-medium mt-1.5">{errors.schoolCode.message}</p>
             )}
           </div>
 
-          {/* Email or Roll No Input */}
+          {/* ── Email or Roll No Input ──────────────────────────────── */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2" htmlFor="email">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5" htmlFor="email">
               Email or Roll No
             </label>
-            <input
-              type="text"
-              id="email"
-              placeholder="Email or Roll No"
-              className={`w-full px-4 py-2 border ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
-              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400`}
-              {...register('email', {
-                required: 'Email or Roll No is required'
-              })}
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <User className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                id="email"
+                placeholder="Ex: student1@school.com"
+                className={`w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border ${errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-300/80 focus:ring-indigo-500/20'
+                  } rounded-xl text-slate-900 text-sm font-medium placeholder:font-normal placeholder:text-slate-400/80 focus:outline-none focus:ring-2 focus:border-indigo-500 transition duration-150`}
+                {...register('email', {
+                  required: 'Email or Roll No is required'
+                })}
+              />
+            </div>
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+              <p className="text-red-500 text-xs font-medium mt-1.5">{errors.email.message}</p>
             )}
           </div>
 
-          {/* Password Input */}
+          {/* ── Password Input ──────────────────────────────────────── */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2" htmlFor="password">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600" htmlFor="password">
+                Password
+              </label>
+              <NavLink
+                to="/forgot-password"
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition duration-150"
+              >
+                Forgot password?
+              </NavLink>
+            </div>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <Lock className="w-4 h-4" />
+              </div>
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
-                placeholder="Enter your password"
-                className={`w-full px-4 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'
-                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400`}
+                placeholder="••••••••"
+                className={`w-full pl-10 pr-11 py-2.5 bg-slate-50/80 border ${errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-300/80 focus:ring-indigo-500/20'
+                  } rounded-xl text-slate-900 text-sm font-medium placeholder:font-normal placeholder:text-slate-400/80 focus:outline-none focus:ring-2 focus:border-indigo-500 transition duration-150`}
                 {...register('password', {
                   required: 'Password is required',
                   minLength: {
@@ -323,52 +240,46 @@ const Login = () => {
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer"
                 onClick={togglePasswordVisibility}
+                title={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? (
-                  <span className="material-icons text-sm">visibility_off</span>
-                ) : (
-                  <span className="material-icons text-sm">visibility</span>
-                )}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+              <p className="text-red-500 text-xs font-medium mt-1.5">{errors.password.message}</p>
             )}
           </div>
 
-          {/* Remember Me and Forgot Password */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
+          {/* ── Remember Me ────────────────────────────────────────── */}
+          <div className="flex items-center justify-between pt-0.5">
+            <label className="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer select-none">
               <input
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded cursor-pointer"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                Remember me
-              </label>
-            </div>
-            <NavLink
-              to="/forgot-password"
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              Forgot password?
-            </NavLink>
+              Remember this device
+            </label>
           </div>
 
-          {/* Submit Button */}
+          {/* ── Submit Button ───────────────────────────────────────── */}
           <button
             type="submit"
-            className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition duration-300 flex justify-center items-center"
+            className="group w-full py-3 px-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-semibold rounded-xl shadow-md shadow-purple-500/20 hover:-translate-y-[2px] hover:shadow-lg hover:shadow-purple-500/30 active:translate-y-0 transition-all duration-200 flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
-            {isLoading ? <Loader /> : 'Sign In'}
+            {isLoading ? (
+              <Loader />
+            ) : (
+              <>
+                Sign In <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+              </>
+            )}
           </button>
         </form>
-
 
       </div>
     </div>
@@ -376,4 +287,3 @@ const Login = () => {
 };
 
 export default Login;
-

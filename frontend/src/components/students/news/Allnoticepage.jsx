@@ -1,163 +1,7 @@
-// import React, { useState, useEffect } from "react";
-// import Noticebox from "./Noticebox";
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faBoxArchive } from '@fortawesome/free-solid-svg-icons';
-
-// const Allnoticepage = () => {
-//   const [Data, setData] = useState([]);
-  
-//   useEffect(() => {
-//     async function fetchNotice() {
-//       try {
-//         const response = await fetch(`${import.meta.env.VITE_PORT}/notice/getall`);
-//         if (response.ok) {
-//           const data = await response.json();
-//           setData(data.data);  
-//         } else {
-//           console.error("Failed to fetch notice data.");
-//         }
-//       } catch (error) {
-//         console.error("Error fetching notice data:", error);
-//       }
-//     }
-
-//     fetchNotice();
-//   }, []); 
-
-//   console.log(Data); 
-//   return (
-//     <div>
-//       <section className="main" id="main">
-//         <div>
-//           <h1 className="heading">
-//             NOTICE BOX
-//             <div className="cbox">
-//               <FontAwesomeIcon icon={faBoxArchive} />
-//             </div>
-//           </h1>
-//           <div className="complaints" id="complaints">
-//             {
-//               Data.map((notice) => {
-//                 console.log("rendering : ", notice);
-//                 return <Noticebox key={notice.id} data={notice} />;
-//               })
-//             }
-//           </div>
-//         </div>
-//       </section>
-//             <style jsx>{`
-//                 *{
-//                     padding: 0;
-//                     margin: 0;
-//                 }
-//                 body {
-//                     background-color: #FEF9F2;
-//                 }
-//                 .main {
-//                     height: 100vh;
-//                     padding: 0;
-//                     margin: 0;
-//                     font-family: Arial, Helvetica, sans-serif;
-//                     display: flex;
-//                     flex-direction: column;
-//                     align-items: center;
-//                     background-color: #FEF9F2;
-//                 }
-//                 h2{
-//                     margin-bottom: 50px;
-//                     font-size: 1.5rem;
-//                 }
-//                 h1{
-//                     font-size: 3rem;
-//                 }
-//                 .heading {
-//                     width: 100svw;
-//                     background-color: #C9E9D2;
-//                     padding-top: 30px;
-//                     margin-top: 0;
-//                     font-size: 2.5rem;
-//                     display: flex;
-//                     justify-content: center;
-//                     text-align: center;
-//                 }
-//                 .notice-title{
-//                     width: 95%;
-//                     display: flex;
-//                     font-size:2.5rem;
-//                     justify-content: center;
-//                     align-items: center;
-//                     margin: 10px;
-//                     margin-bottom: 20px;
-//                     text-overflow: ellipsis;
-//                     overflow: hidden;
-//                 }
-//                 .complaint-heading {
-//                     width: 100%;
-//                     display: flex;
-//                     justify-content: center;
-//                     align-items: center;
-//                     height: 52px;
-//                     text-overflow: ellipsis;
-//                     overflow: hidden;
-//                     margin: 0px;
-//                 }
-//                 .cbox {
-//                     height: 80px;
-//                     width: 80px;
-//                     color: black;
-//                     position: relative;
-//                     animation: khisakja 1s ease-in-out 2;
-//                 }
-//                 .complaints {
-//                     display: flex;
-//                     flex-wrap: wrap;
-//                     justify-content: center;
-//                 }
-//                 .complaint {
-//                     border: 1px solid rgba(0, 0, 0, 0.432);
-//                     border-radius: 5px;
-//                     padding: 10px;
-//                     width: 300px;
-//                     margin: 10px;
-//                     box-shadow: 2px 5px 5px 0 rgba(0, 0, 0, 0.132);
-//                     background-color: lightblue;
-//                     position: relative;
-//                 }
-//                 .more{
-//                     margin:20px;
-//                 }
-//                 .complaint:hover {
-//                     transform: scale(1.03);
-//                     transition: 0.3s;
-//                 }
-//                 @keyframes khisakja {
-//                     0% { transform: rotateZ(30deg); }
-//                     25% { transform: rotateZ(-30deg); }
-//                     50% { transform: rotateZ(30deg); }
-//                     75% { transform: rotateZ(-30deg); }
-//                     100% { transform: rotateZ(0deg); }
-//                 }
-//                 @media (max-width: 550px) {
-//                     .heading{
-//                         font-size: 1.5rem;
-//                         text-align: left;
-//                     }
-//                     .add-button{
-//                         top: 60px;
-//                         right: 10px;
-//                     }
-//                 }
-//             `}</style>
-//     </div>
-//     );
-// }
-// export default Allnoticepage;
 import React, { useState, useEffect } from "react";
-import Noticebox from "./Noticebox";
-import {  useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBoxArchive, faBell, faSpinner, faFilter, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from 'react-router-dom';
+import { useGetStudentNoticesQuery } from '../../../redux/api/studentApi';
+import { Filter, Search, X, Bell, Calendar, ChevronDown, Check } from 'lucide-react';
 
 const Allnoticepage = () => {
   const [notices, setNotices] = useState([]);
@@ -165,322 +9,245 @@ const Allnoticepage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const navigate = useNavigate();
-  
-  // Mock categories - replace with your actual categories from data
+
+  const { data: rtkData, isLoading: rtkLoading, error: rtkError } = useGetStudentNoticesQuery();
+
   const categories = ["Academic", "Events", "Administrative", "Urgent"];
-  
+
   useEffect(() => {
+    if (rtkData) {
+      const list = rtkData.data || rtkData || [];
+      if (Array.isArray(list)) {
+        setNotices(list);
+        setIsLoading(false);
+        return;
+      }
+    }
+
     async function fetchNotices() {
       setIsLoading(true);
       try {
         const response = await fetch(`${import.meta.env.VITE_PORT}/notice/getall`);
         if (response.ok) {
           const data = await response.json();
-          setNotices(data.data);
+          setNotices(data.data || []);
           setError(null);
         } else {
-          setError("Failed to fetch notices. Please try again later.");
+          setError("Failed to fetch notices");
         }
-      } catch (error) {
-        setError("Error connecting to server. Please check your connection.");
-        console.error("Error fetching notice data:", error);
+      } catch (err) {
+        setError("Error connecting to server");
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchNotices();
-  }, []);
+    if (!rtkLoading && !rtkData) {
+      fetchNotices();
+    } else if (!rtkLoading) {
+      setIsLoading(false);
+    }
+  }, [rtkData, rtkLoading]);
 
-  // Clear search term
   const clearSearch = () => {
     setSearchTerm("");
   };
 
-  // Filter notices based on search term and category
   const filteredNotices = notices.filter(notice => {
-    const matchesSearch = notice.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         notice.content?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === "all" || notice.category === filterCategory;
+    const title = notice.title || notice.heading || "";
+    const content = notice.content || notice.description || "";
+    const category = notice.category || "General";
+
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === "all" || category.toLowerCase() === filterCategory.toLowerCase();
+    
     return matchesSearch && matchesCategory;
   });
 
-  // Category styling configurations
-  const categoryConfig = {
-    "urgent": {
-      color: "border-rose-500",
-      bgActive: "bg-rose-500",
-      iconBg: "bg-rose-100",
-      iconColor: "text-rose-600"
-    },
-    "academic": {
-      color: "border-indigo-500",
-      bgActive: "bg-indigo-500",
-      iconBg: "bg-indigo-100",
-      iconColor: "text-indigo-600"
-    },
-    "events": {
-      color: "border-emerald-500",
-      bgActive: "bg-emerald-500",
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600"
-    },
-    "administrative": {
-      color: "border-amber-500",
-      bgActive: "bg-amber-500",
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600"
-    },
-    "all": {
-      bgActive: "bg-violet-600",
-    }
-  };
-
-  const getCategoryStyle = (category) => {
-    const config = categoryConfig[category.toLowerCase()] || {};
-    
-    if (filterCategory === category) {
-      return `${config.bgActive || 'bg-violet-600'} text-white shadow-md`;
-    }
-    
-    return `bg-white border text-slate-700 hover:bg-slate-50 ${config.color || 'border-slate-200'}`;
+  const getCategoryBadgeStyle = (cat) => {
+    const categoryLower = (cat || "").toLowerCase();
+    if (categoryLower === "urgent") return "bg-rose-50 text-rose-700 border-rose-200";
+    if (categoryLower === "academic") return "bg-indigo-50 text-indigo-700 border-indigo-200";
+    if (categoryLower === "events") return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    if (categoryLower === "administrative") return "bg-amber-50 text-amber-700 border-amber-200";
+    return "bg-slate-100 text-slate-700 border-slate-200";
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans">
-      {/* Header with animated gradient background */}
-      <motion.header 
-        className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 py-8 sm:py-12 px-6 shadow-lg"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
-          <motion.div 
-            className="flex items-center gap-3 mb-2"
-            whileHover={{ scale: 1.05 }}
-          >
-            <motion.div
-              animate={{ rotate: [0, -5, 5, -5, 5, 0] }}
-              transition={{ 
-                repeat: Infinity, 
-                repeatDelay: 5,
-                duration: 0.5 
-              }}
-              className="bg-white/20 p-3 rounded-full backdrop-blur-sm"
-            >
-              <FontAwesomeIcon icon={faBell} className="text-2xl text-white drop-shadow-md" />
-            </motion.div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">Notice Board</h1>
-          </motion.div>
-          <p className="text-purple-100 text-base sm:text-lg font-medium">Stay updated with important announcements</p>
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 pb-10">
+      
+      {/* Header Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            Notice Board
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Stay updated with official school announcements and events
+          </p>
         </div>
-      </motion.header>
 
-      {/* Filters Section */}
-      <motion.div 
-        className="bg-white shadow-lg rounded-xl mx-4 sm:mx-auto max-w-6xl w-auto sm:w-full -mt-6 z-10 px-5 sm:px-8 py-6 flex flex-col md:flex-row md:items-center gap-4 justify-between"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-      >
-        <div className="relative flex-1 min-w-0">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FontAwesomeIcon icon={faSearch} className="text-violet-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search notices..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-10 py-3 bg-slate-50 border-none rounded-lg focus:ring-2 focus:ring-violet-500 transition-all duration-200 focus:bg-white shadow-sm"
-          />
-          {searchTerm && (
-            <button 
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
-              onClick={clearSearch}
-            >
-              <FontAwesomeIcon icon={faTimes} />
-            </button>
-          )}
-        </div>
-        
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <span className="flex items-center text-slate-500 font-medium">
-            <FontAwesomeIcon icon={faFilter} className="mr-2 text-violet-500" />
-            Filter:
-          </span>
-          <div className="flex flex-wrap gap-2">
-            <motion.button
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${getCategoryStyle("all")}`}
-              onClick={() => setFilterCategory("all")}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              All
-            </motion.button>
-            
-            {categories.map(category => (
-              <motion.button
-                key={category}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all border-l-4 ${getCategoryStyle(category)}`}
-                onClick={() => setFilterCategory(category)}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
+        {/* Pro Search & Filter Action Toolbar */}
+        <div className="flex items-center gap-2 relative">
+          
+          {/* Search Box */}
+          <div className="relative flex-1 sm:w-64">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search notices..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white border border-slate-200/80 focus:border-indigo-500 rounded-xl pl-9 pr-8 py-2 text-xs font-semibold text-slate-700 outline-none shadow-xs transition"
+            />
+            {searchTerm && (
+              <button 
+                onClick={clearSearch}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
-                {category}
-              </motion.button>
-            ))}
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
+
+          {/* Pro Filter Toggle Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFilterDropdown(prev => !prev)}
+              className={`flex items-center gap-2 border rounded-xl px-3 py-2 text-xs font-bold shadow-xs transition cursor-pointer ${
+                filterCategory !== 'all' 
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
+                  : 'bg-white border-slate-200/80 hover:border-slate-300 text-slate-700'
+              }`}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span>Filter</span>
+              {filterCategory !== 'all' && (
+                <span className="w-2 h-2 rounded-full bg-indigo-600 inline-block" />
+              )}
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showFilterDropdown ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Filter Dropdown Options */}
+            {showFilterDropdown && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-lg p-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">
+                  Filter by Category
+                </div>
+                
+                <button
+                  onClick={() => { setFilterCategory("all"); setShowFilterDropdown(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition ${
+                    filterCategory === "all" ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span>All Categories</span>
+                  {filterCategory === "all" && <Check className="w-3.5 h-3.5 text-indigo-600" />}
+                </button>
+
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => { setFilterCategory(cat); setShowFilterDropdown(false); }}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition ${
+                      filterCategory.toLowerCase() === cat.toLowerCase() ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{cat}</span>
+                    {filterCategory.toLowerCase() === cat.toLowerCase() && <Check className="w-3.5 h-3.5 text-indigo-600" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
-      </motion.div>
+      </div>
 
       {/* Main Content Area */}
-      <main className="flex-1 px-4 sm:px-6 py-8 max-w-6xl mx-auto w-full">
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div 
-              key="loading"
-              className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-md text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div 
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="mb-6 text-violet-500"
-              >
-                <FontAwesomeIcon icon={faSpinner} className="text-5xl" />
-              </motion.div>
-              <p className="text-lg font-medium text-slate-600">Loading notices...</p>
-            </motion.div>
-          ) : error ? (
-            <motion.div 
-              key="error"
-              className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-md text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <p className="text-lg font-medium text-rose-500 mb-4">{error}</p>
-              <motion.button 
-                onClick={() => window.location.reload()}
-                className="px-5 py-2.5 bg-violet-600 text-white font-medium rounded-lg transition-all hover:bg-violet-700 shadow-md"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Try Again
-              </motion.button>
-            </motion.div>
-          ) : filteredNotices.length === 0 ? (
-            <motion.div 
-              key="empty"
-              className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-md text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-slate-300 mb-6"
-              >
-                <FontAwesomeIcon icon={faBoxArchive} className="text-6xl" />
-              </motion.div>
-              <h3 className="text-xl font-medium text-slate-700 mb-2">No notices found</h3>
-              {searchTerm && <p className="text-slate-500">Try adjusting your search terms</p>}
-              {filterCategory !== "all" && <p className="text-slate-500">Try changing your category filter</p>}
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="content"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="mb-4 text-slate-500 text-sm">
-                <p>Showing {filteredNotices.length} {filteredNotices.length === 1 ? 'notice' : 'notices'}</p>
-              </div>
-              <motion.div 
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  visible: {
-                    transition: {
-                      staggerChildren: 0.07
-                    }
-                  }
-                }}
-              >
-                {filteredNotices.map((notice, index) => (
-                  <motion.div
-                    key={notice.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 20 },
-                      visible: { opacity: 1, y: 0 }
-                    }}
-                    transition={{ 
-                      duration: 0.4,
-                      delay: index * 0.05 
-                    }}
-                    whileHover={{ 
-                      y: -5, 
-                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)", 
-                      transition: { duration: 0.2 } 
-                    }}
-                    className="bg-white rounded-xl overflow-hidden shadow-md border border-slate-100"
-                  >
-                    <div className="p-6">
-                      <div className={`inline-block mb-3 px-3 py-1 rounded-full text-xs font-semibold 
-                        ${notice.category === "Urgent" ? "bg-rose-100 text-rose-700" : 
-                          notice.category === "Academic" ? "bg-indigo-100 text-indigo-700" :
-                          notice.category === "Events" ? "bg-emerald-100 text-emerald-700" :
-                          "bg-amber-100 text-amber-700"}`}
-                      >
-                        {notice.category || "General"}
-                      </div>
-                      <h3 className="text-lg font-bold mb-2 text-slate-800">{notice.title}</h3>
-                      <p className="text-slate-600 line-clamp-3">{notice.content}</p>
-                      <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
-                        <span className="text-xs text-slate-500">{notice.date || "No date"}</span>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-3 py-1 text-sm font-medium text-violet-600 hover:text-violet-700"
-                          onClick={() => navigate("/fullnotice/:id")}
-                        >
-                          Read more
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-
-      {/* Footer */}
-      <motion.footer 
-        className="bg-gradient-to-r from-slate-800 to-slate-900 text-slate-300 py-6 mt-8 text-center text-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        <div className="max-w-6xl mx-auto px-4">
-          <p className="text-slate-400">© {new Date().getFullYear()} Notice Board System</p>
-          <div className="mt-2 flex justify-center space-x-4">
-            <a href="#" className="text-violet-400 hover:text-violet-300 transition-colors">Help</a>
-            <a href="#" className="text-violet-400 hover:text-violet-300 transition-colors">Privacy</a>
-            <a href="#" className="text-violet-400 hover:text-violet-300 transition-colors">Terms</a>
+      {isLoading ? (
+        <div className="flex justify-center py-16">
+          <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : error && notices.length === 0 ? (
+        <div className="text-center py-12 text-rose-500 font-semibold text-sm">
+          {error}
+        </div>
+      ) : filteredNotices.length === 0 ? (
+        /* Empty State on Page (No Container Div Box, scaled for PC) */
+        <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 text-center space-y-5 px-4">
+          <img 
+            src="/undraw_pin-to-board_eoie.svg" 
+            alt="No notices available" 
+            className="h-36 sm:h-28 w-auto opacity-75 object-contain grayscale"
+          />
+          <div>
+            <p className="font-bold text-slate-700 text-sm">No notices found</p>
+            <p className="text-xs text-slate-400 mt-1.5">
+              {searchTerm || filterCategory !== 'all' 
+                ? "Try adjusting your search terms or category filter" 
+                : "There are currently no active announcements on the notice board"}
+            </p>
           </div>
         </div>
-      </motion.footer>
+      ) : (
+        <div className="space-y-4">
+          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Showing {filteredNotices.length} {filteredNotices.length === 1 ? 'notice' : 'notices'}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredNotices.map((notice, idx) => {
+              const id = notice._id || notice.id || idx;
+              const title = notice.title || notice.heading || "Announcement";
+              const content = notice.content || notice.description || "";
+              const date = notice.createdAt || notice.date;
+              const category = notice.category || "General";
+
+              return (
+                <div 
+                  key={id}
+                  className="bg-white border border-slate-200/80 hover:border-slate-300 rounded-2xl p-5 shadow-xs transition duration-200 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getCategoryBadgeStyle(category)}`}>
+                        {category}
+                      </span>
+                      {date && (
+                        <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 tabular-nums">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="text-base font-bold text-slate-900 line-clamp-2 leading-snug mb-2">
+                      {title}
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
+                      {content}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
+                    <button
+                      onClick={() => navigate(`/fullnotice/${id}`)}
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition cursor-pointer"
+                    >
+                      Read full notice →
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

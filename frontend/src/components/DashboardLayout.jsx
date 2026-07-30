@@ -761,7 +761,7 @@ const DashboardLayout = () => {
           <span style={{
             margin: 0, fontSize: 10, fontWeight: 700,
             letterSpacing: '2px', textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.80)', textAlign: 'center',
+            color: '#64748b', textAlign: 'center',
             lineHeight: 1.4, display: 'block'
           }}>
             UNIFIED CAMPUS
@@ -964,101 +964,110 @@ const DashboardLayout = () => {
               {profileOpen && (
                 <div id="topbar-profile-panel" style={{
                   position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                  width: 280, background: 'var(--card-bg)',
-                  border: '1px solid var(--card-border)', borderRadius: 12,
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 100,
+                  width: 290, background: '#ffffff',
+                  border: '1px solid #cbd5e1', borderRadius: 16,
+                  boxShadow: '0 10px 30px -5px rgba(15, 23, 42, 0.12)', zIndex: 100,
                   overflow: 'hidden', animation: 'fadeSlideDown 0.18s ease'
                 }}>
                   {/* Profile header */}
                   <div style={{
-                    padding: '16px', background: 'linear-gradient(135deg, var(--color-primary) 0%, #7c3aed 100%)',
+                    padding: '16px', background: '#f8fafc',
+                    borderBottom: '1px solid #e2e8f0',
                     display: 'flex', alignItems: 'center', gap: 12
                   }}>
                     <div style={{
                       width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-                      background: 'rgba(255,255,255,0.2)',
-                      border: '2px solid rgba(255,255,255,0.4)',
+                      background: '#4f46e5',
+                      border: '2px solid #e0e7ff',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 18, fontWeight: 700, color: '#fff'
+                      fontSize: 18, fontWeight: 700, color: '#ffffff'
                     }}>
                       {user?.firstName?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div style={{
-                        fontWeight: 700, fontSize: 14, color: '#fff',
+                        fontWeight: 700, fontSize: 15, color: '#0f172a',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                       }}>
                         {user?.firstName} {user?.lastName}
                       </div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: '#64748b', marginTop: 1 }}>
                         {roleLabels[role]}
                       </div>
                     </div>
                     <button onClick={() => setProfileOpen(false)}
                       style={{
-                        marginLeft: 'auto', background: 'rgba(255,255,255,0.15)',
-                        border: 'none', borderRadius: 6, color: '#fff',
-                        width: 24, height: 24, display: 'flex', alignItems: 'center',
+                        marginLeft: 'auto', background: '#e2e8f0',
+                        border: 'none', borderRadius: 8, color: '#64748b',
+                        width: 26, height: 26, display: 'flex', alignItems: 'center',
                         justifyContent: 'center', cursor: 'pointer', flexShrink: 0
                       }}>
-                      <MdClose size={14} />
+                      <MdClose size={15} />
                     </button>
                   </div>
 
                   {/* Profile details */}
-                  <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {user?.email && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <MdEmail size={15} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ padding: 6, borderRadius: 8, background: '#eef2ff', color: '#4f46e5', display: 'flex', flexShrink: 0 }}>
+                          <MdEmail size={16} />
+                        </div>
                         <div>
                           <div style={{
-                            fontSize: 10, color: 'var(--text-muted)', fontWeight: 600,
+                            fontSize: 10, color: '#94a3b8', fontWeight: 700,
                             textTransform: 'uppercase', letterSpacing: '0.5px'
                           }}>Email</div>
                           <div style={{
-                            fontSize: 13, color: 'var(--text-primary)', fontWeight: 500,
+                            fontSize: 13, color: '#0f172a', fontWeight: 600,
                             wordBreak: 'break-all'
                           }}>{user.email}</div>
                         </div>
                       </div>
                     )}
                     {user?.phone && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <MdPhone size={15} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ padding: 6, borderRadius: 8, background: '#eef2ff', color: '#4f46e5', display: 'flex', flexShrink: 0 }}>
+                          <MdPhone size={16} />
+                        </div>
                         <div>
                           <div style={{
-                            fontSize: 10, color: 'var(--text-muted)', fontWeight: 600,
+                            fontSize: 10, color: '#94a3b8', fontWeight: 700,
                             textTransform: 'uppercase', letterSpacing: '0.5px'
                           }}>Phone</div>
-                          <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>
+                          <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 600 }}>
                             {user.phone}
                           </div>
                         </div>
                       </div>
                     )}
                     {school?.name && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <MdBusiness size={15} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ padding: 6, borderRadius: 8, background: '#eef2ff', color: '#4f46e5', display: 'flex', flexShrink: 0 }}>
+                          <MdBusiness size={16} />
+                        </div>
                         <div>
                           <div style={{
-                            fontSize: 10, color: 'var(--text-muted)', fontWeight: 600,
+                            fontSize: 10, color: '#94a3b8', fontWeight: 700,
                             textTransform: 'uppercase', letterSpacing: '0.5px'
                           }}>School</div>
-                          <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>
+                          <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 600 }}>
                             {school.name}
                           </div>
                         </div>
                       </div>
                     )}
                     {user?.role && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <MdPerson size={15} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ padding: 6, borderRadius: 8, background: '#eef2ff', color: '#4f46e5', display: 'flex', flexShrink: 0 }}>
+                          <MdPerson size={16} />
+                        </div>
                         <div>
                           <div style={{
-                            fontSize: 10, color: 'var(--text-muted)', fontWeight: 600,
+                            fontSize: 10, color: '#94a3b8', fontWeight: 700,
                             textTransform: 'uppercase', letterSpacing: '0.5px'
                           }}>Role</div>
-                          <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>
+                          <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 600 }}>
                             {roleLabels[role]}
                           </div>
                         </div>
@@ -1067,14 +1076,14 @@ const DashboardLayout = () => {
                   </div>
 
                   {/* Divider + Logout */}
-                  <div style={{ borderTop: '1px solid var(--card-border)', padding: '10px 16px' }}>
+                  <div style={{ borderTop: '1px solid #e2e8f0', padding: '12px 16px', background: '#fafafa' }}>
                     <button onClick={handleLogout} style={{
-                      width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '8px 12px', borderRadius: 8, border: 'none',
-                      background: 'rgba(239,68,68,0.08)', color: '#ef4444',
-                      cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'background 0.15s'
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      padding: '10px 14px', borderRadius: 10, border: '1px solid #fecdd3',
+                      background: '#fff1f2', color: '#e11d48',
+                      cursor: 'pointer', fontWeight: 700, fontSize: 13, transition: 'all 0.15s'
                     }}>
-                      <MdLogout size={15} /> Logout
+                      <MdLogout size={16} /> Logout
                     </button>
                   </div>
                 </div>
