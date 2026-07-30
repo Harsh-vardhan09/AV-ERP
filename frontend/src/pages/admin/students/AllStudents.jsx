@@ -251,9 +251,9 @@ const ActionMenu = ({ s, onAction, navigate }) => {
   return (
     <>
       <button ref={btnRef} onClick={open}
-        className="w-8 h-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
+        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer">
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0z"/>
+          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z"/>
         </svg>
       </button>
 
@@ -383,11 +383,11 @@ export default function AllStudents() {
     try { await suspend({ id:modal.student._id, ...suspendForm }).unwrap(); toast.success('Suspended'); closeModal(); } catch(e) { toast.error(e?.data?.message||'Error'); }
   };
 
-  const th = "px-3 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap bg-gray-50 border-r border-gray-200 last:border-r-0";
-  const td = "px-3 py-3 text-sm align-middle border-r border-gray-100 last:border-r-0";
+  const th = "px-3 py-2.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap bg-slate-50 border-r border-slate-200/80 last:border-r-0";
+  const td = "px-3 py-3 text-sm align-middle border-r border-slate-100 last:border-r-0";
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto space-y-4 px-2 sm:px-4 pb-12">
       {/* Hidden file input for photo upload */}
       <input
         ref={photoInputRef}
@@ -397,58 +397,58 @@ export default function AllStudents() {
         onChange={handleFileChange}
       />
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">All Students</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Total Students: <strong>{pagination.total ?? 0}</strong></p>
+          <h1 className="text-xl font-bold text-slate-900">All Students</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Total Records: <strong className="text-slate-800 tabular-nums">{pagination.total ?? 0}</strong></p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
           {/* Download button */}
           <button onClick={() => setShowExport(true)}
-            className="flex items-center gap-1.5 border border-green-600 text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            className="inline-flex items-center gap-1.5 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer">
+            <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
-            Download List
+            <span>Export List</span>
           </button>
           {/* Search bar */}
-          <div className="flex items-center gap-2 flex-1 min-w-[280px] max-w-lg">
-            <div className="relative flex-1">
-              <input value={searchInput} onChange={e => handleSearch(e.target.value)}
-                placeholder="Search by name, father name, mobile, admission no…"
-                className="w-full border border-gray-300 rounded-md pl-9 pr-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-              <svg className="w-4 h-4 absolute left-2.5 top-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-            </div>
-            {search && <button onClick={()=>{setSearch('');setSearchInput('');}} className="text-xs text-gray-500 underline">Clear</button>}
+          <div className="relative flex-1 min-w-[200px] sm:w-64">
+            <input value={searchInput} onChange={e => handleSearch(e.target.value)}
+              placeholder="Search student, roll, admin no…"
+              className="w-full border border-slate-200/80 bg-white rounded-xl pl-8 pr-7 py-1.5 text-xs font-medium text-slate-800 outline-none focus:border-slate-400 shadow-xs" />
+            <svg className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            {search && (
+              <button onClick={()=>{setSearch('');setSearchInput('');}} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">×</button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+      <div className="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs grid grid-cols-2 sm:grid-cols-6 gap-2.5 items-center">
         {/* Session */}
         <select value={sessionId} onChange={e=>{setSessionId(e.target.value);setPage(1);}}
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 min-w-[150px]">
+          className="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400">
           <option value="">All Sessions</option>
           {sessions.map(s=><option key={s._id} value={s._id}>{s.name} {s.isActive ? '(Active)' : ''}</option>)}
         </select>
         {/* Class */}
         <select value={classId} onChange={e=>{setClassId(e.target.value);setSectionId('');setPage(1);}}
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 min-w-[130px]">
+          className="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400">
           <option value="">All Classes</option>
-          {classes.map(c=><option key={c._id} value={c._id}>{c.name}</option>)}
+          {classes.map(c=><option key={c._id} value={c._id}>Class {c.name}</option>)}
         </select>
         {/* Section */}
         <select value={sectionId} onChange={e=>{setSectionId(e.target.value);setPage(1);}} disabled={!classId}
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 min-w-[130px]">
+          className="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400 disabled:opacity-50">
           <option value="">All Sections</option>
           {sections.map(s=><option key={s._id} value={s._id}>{s.name}</option>)}
         </select>
         {/* Gender */}
         <select value={genderFilter} onChange={e=>{setGenderFilter(e.target.value);setPage(1);}}
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 min-w-[120px]">
+          className="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400">
           <option value="">All Genders</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
@@ -456,171 +456,167 @@ export default function AllStudents() {
         </select>
         {/* Category */}
         <select value={categoryFilter} onChange={e=>{setCategoryFilter(e.target.value);setPage(1);}}
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 min-w-[130px]">
+          className="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400">
           <option value="">All Categories</option>
           {['General','OBC','SC','ST','EWS'].map(c=><option key={c} value={c}>{c}</option>)}
         </select>
         {/* Sort */}
-        <div className="flex items-center gap-1.5 ml-auto">
-          <span className="text-xs text-gray-500 whitespace-nowrap">Sort by:</span>
+        <div className="flex items-center gap-1 col-span-2 sm:col-span-1">
           <select value={sortBy} onChange={e=>{setSortBy(e.target.value);setPage(1);}}
-            className="border border-gray-300 rounded-md px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            className="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400">
             <option value="firstName">Name</option>
             <option value="rollNo">Roll No</option>
-            <option value="admissionNumber">Admission No</option>
-            <option value="createdAt">Recently Added</option>
-            <option value="dateOfBirth">Date of Birth</option>
+            <option value="admissionNumber">Admin No</option>
+            <option value="createdAt">Recent</option>
           </select>
           <button
             onClick={()=>setSortOrder(o=>o==='asc'?'desc':'asc')}
             title={sortOrder === 'asc' ? 'Sort Descending' : 'Sort Ascending'}
-            className="border border-gray-300 rounded-md px-2 py-1.5 text-sm hover:bg-gray-50 transition-colors"
+            className="border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors"
           >
-            {sortOrder === 'asc' ? '↑ A-Z' : '↓ Z-A'}
+            {sortOrder === 'asc' ? '↑' : '↓'}
           </button>
         </div>
-        {/* Clear */}
-        {(sessionId || classId || sectionId || categoryFilter || genderFilter) && (
-          <button onClick={()=>{setSessionId('');setClassId('');setSectionId('');setCategoryFilter('');setGenderFilter('');setPage(1);}} className="text-xs text-gray-500 underline hover:text-blue-600">Clear filters</button>
-        )}
-        {selected.size > 0 && (
-          <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full font-semibold">{selected.size} selected</span>
-        )}
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      {/* Main Container */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
         {isLoading ? (
-          <div className="flex justify-center py-14"><div className="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/></div>
+          <div className="flex justify-center py-14"><div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"/></div>
         ) : students.length === 0 ? (
-          <div className="text-center py-14 text-gray-400">
-            <svg className="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <p className="text-sm">No students found</p>
+          <div className="text-center py-14 text-slate-400">
+            <p className="text-xs font-medium">No students found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto" style={{overflowY:'visible'}}>
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className={th} style={{width:36}}><input type="checkbox" checked={allSel} onChange={toggleAll} className="accent-blue-600"/></th>
-                  <th className={th} style={{width:40}}>#</th>
-                  <SortTh label="Admission No." field="admissionNumber" sortBy={sortBy} sortOrder={sortOrder} onSort={f=>{setSortBy(f);setSortOrder(o=> sortBy===f ? (o==='asc'?'desc':'asc') : 'asc');setPage(1);}} />
-                  <SortTh label="Roll No."      field="rollNo"          sortBy={sortBy} sortOrder={sortOrder} onSort={f=>{setSortBy(f);setSortOrder(o=> sortBy===f ? (o==='asc'?'desc':'asc') : 'asc');setPage(1);}} />
-                  <SortTh label="Student"       field="firstName"       sortBy={sortBy} sortOrder={sortOrder} onSort={f=>{setSortBy(f);setSortOrder(o=> sortBy===f ? (o==='asc'?'desc':'asc') : 'asc');setPage(1);}} style={{minWidth:220}} />
-                  <th className={th}>Class / Section</th>
-                  <th className={th} style={{minWidth:160}}>Father Details</th>
-                  <th className={th} style={{minWidth:140}}>Mother Details</th>
-                  <SortTh label="DOB / Gender" field="dateOfBirth" sortBy={sortBy} sortOrder={sortOrder} onSort={f=>{setSortBy(f);setSortOrder(o=> sortBy===f ? (o==='asc'?'desc':'asc') : 'asc');setPage(1);}} />
-                  <th className={th}>Blood Group / Category</th>
-                  <th className={th}>Status</th>
-                  <SortTh label="Created At" field="createdAt" sortBy={sortBy} sortOrder={sortOrder} onSort={f=>{setSortBy(f);setSortOrder(o=> sortBy===f ? (o==='asc'?'desc':'asc') : 'asc');setPage(1);}} style={{minWidth:130}} />
-                  <th className={th} style={{minWidth:130}}>Updated At</th>
-                  <th className={th} style={{width:48}}>Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {students.map((s, idx) => (
-                  <tr key={s._id} className={`hover:bg-gray-50 transition-colors ${selected.has(s._id)?'bg-blue-50':''}`}>
-                    <td className={td}>
-                      <input type="checkbox" checked={selected.has(s._id)} onChange={()=>toggleOne(s._id)} className="accent-blue-600"/>
-                    </td>
-                    <td className={`${td} text-gray-400 text-xs`}>{(page-1)*20+idx+1}</td>
-
-                    {/* Admission No */}
-                    <td className={td}>
-                      <span className="font-medium text-gray-700">{s.admissionNumber || '—'}</span>
-                      {s.scholarNo && <div className="text-xs text-gray-400 mt-0.5">Scholar: {s.scholarNo}</div>}
-                    </td>
-
-                    {/* Roll No */}
-                    <td className={`${td} font-medium text-gray-700`}>{s.rollNo || '—'}</td>
-
-                    {/* Student card */}
-                    <td className={td}>
-                      <div className="flex items-center gap-2 min-w-[200px]">
-                        <Avatar
-                          s={s}
-                          onPhotoClick={() => handlePhotoClick(s)}
-                          isUploading={uploadingId === s._id}
-                        />
-                        <div>
-                          <button onClick={()=>navigate(`/admin/students/${s._id}`)}
-                            className="font-semibold text-blue-600 hover:underline text-left leading-tight">
-                            {s.fullName || `${s.firstName} ${s.lastName}`}
-                          </button>
-                          <div className="text-xs text-gray-500 mt-0.5">{s.email || '—'}</div>
-                          {s.phone && <div className="text-xs text-gray-500">📞 {s.phone}</div>}
-                        </div>
+          <>
+            {/* Mobile Card List View (Phone Viewport) */}
+            <div className="block sm:hidden divide-y divide-slate-100">
+              {students.map((s) => (
+                <div key={s._id} className="p-3.5 space-y-2 hover:bg-slate-50/50 transition">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar s={s} onPhotoClick={() => handlePhotoClick(s)} isUploading={uploadingId === s._id} />
+                      <div>
+                        <button onClick={()=>navigate(`/admin/students/${s._id}`)} className="font-bold text-xs text-slate-900 hover:text-indigo-600 text-left block">
+                          {s.fullName || `${s.firstName} ${s.lastName}`}
+                        </button>
+                        <span className="text-[11px] font-semibold text-slate-500">
+                          {s.className || 'Unassigned'}{s.sectionName ? ` — ${s.sectionName}` : ''}
+                        </span>
                       </div>
-                    </td>
+                    </div>
+                    <StatusBadge status={s.status}/>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                    <span>Admin: <strong className="text-slate-800">{s.admissionNumber || '—'}</strong></span>
+                    <span>Roll: <strong className="text-slate-800">{s.rollNo || '—'}</strong></span>
+                    <button
+                      onClick={()=>navigate(`/admin/students/${s._id}`)}
+                      className="text-xs font-bold text-indigo-600"
+                    >
+                      View →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-                    {/* Class / Section */}
-                    <td className={td}>
-                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs font-medium">
-                        {s.className || '—'}{s.sectionName ? ` — ${s.sectionName}` : ''}
-                      </span>
-                    </td>
-
-                    {/* Father */}
-                    <td className={td}>
-                      <div className="min-w-[150px]">
-                        <div className="font-medium text-gray-800 text-xs">{s.parentDetails?.father?.name || s.parentName || '—'}</div>
-                        <div className="text-gray-500 text-xs">{s.parentDetails?.father?.phone || s.parentPhone || ''}</div>
-                        {s.parentDetails?.father?.occupation && <div className="text-gray-400 text-xs">{s.parentDetails.father.occupation}</div>}
-                      </div>
-                    </td>
-
-                    {/* Mother */}
-                    <td className={td}>
-                      <div className="min-w-[130px]">
-                        <div className="font-medium text-gray-800 text-xs">{s.parentDetails?.mother?.name || '—'}</div>
-                        <div className="text-gray-500 text-xs">{s.parentDetails?.mother?.phone || ''}</div>
-                      </div>
-                    </td>
-
-                    {/* DOB / Gender */}
-                    <td className={td}>
-                      <div className="text-xs text-gray-700">{s.dateOfBirth ? new Date(s.dateOfBirth).toLocaleDateString('en-IN') : '—'}</div>
-                      <div className="text-xs text-gray-500 capitalize mt-0.5">{s.gender || '—'}</div>
-                    </td>
-
-                    {/* Blood / Category */}
-                    <td className={td}>
-                      {s.bloodGroup && <span className="px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded text-xs font-medium">{s.bloodGroup}</span>}
-                      <div className="text-xs text-gray-500 mt-0.5">{s.category || '—'}</div>
-                    </td>
-
-                    {/* Status */}
-                    <td className={td}><StatusBadge status={s.status}/></td>
-
-                    {/* Created At */}
-                    <td className={`${td} text-xs text-gray-500 whitespace-nowrap`}>{fmt(s.createdAt)}</td>
-
-                    {/* Updated At */}
-                    <td className={`${td} text-xs text-gray-500 whitespace-nowrap`}>{fmt(s.updatedAt)}</td>
-
-                    {/* Actions */}
-                    <td className={td}>
-                      <ActionMenu s={s} navigate={navigate} onAction={(type, student) => setModal({type, student})} />
-                    </td>
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto" style={{overflowY:'visible'}}>
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className={th} style={{width:36}}><input type="checkbox" checked={allSel} onChange={toggleAll} className="accent-indigo-600"/></th>
+                    <th className={th} style={{width:40}}>#</th>
+                    <SortTh label="Admission No." field="admissionNumber" sortBy={sortBy} sortOrder={sortOrder} onSort={f=>{setSortBy(f);setSortOrder(o=> sortBy===f ? (o==='asc'?'desc':'asc') : 'asc');setPage(1);}} />
+                    <SortTh label="Roll No."      field="rollNo"          sortBy={sortBy} sortOrder={sortOrder} onSort={f=>{setSortBy(f);setSortOrder(o=> sortBy===f ? (o==='asc'?'desc':'asc') : 'asc');setPage(1);}} />
+                    <SortTh label="Student"       field="firstName"       sortBy={sortBy} sortOrder={sortOrder} onSort={f=>{setSortBy(f);setSortOrder(o=> sortBy===f ? (o==='asc'?'desc':'asc') : 'asc');setPage(1);}} style={{minWidth:200}} />
+                    <th className={th}>Class / Section</th>
+                    <th className={th} style={{minWidth:140}}>Father Details</th>
+                    <th className={th} style={{minWidth:120}}>Mother Details</th>
+                    <SortTh label="DOB / Gender" field="dateOfBirth" sortBy={sortBy} sortOrder={sortOrder} onSort={f=>{setSortBy(f);setSortOrder(o=> sortBy===f ? (o==='asc'?'desc':'asc') : 'asc');setPage(1);}} />
+                    <th className={th}>Status</th>
+                    <th className={th} style={{width:48}}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {students.map((s, idx) => (
+                    <tr key={s._id} className={`hover:bg-slate-50/50 transition-colors ${selected.has(s._id)?'bg-indigo-50/30':''}`}>
+                      <td className={td}>
+                        <input type="checkbox" checked={selected.has(s._id)} onChange={()=>toggleOne(s._id)} className="accent-indigo-600"/>
+                      </td>
+                      <td className={`${td} text-slate-400 text-[11px]`}>{(page-1)*20+idx+1}</td>
+
+                      <td className={td}>
+                        <span className="font-semibold text-slate-800">{s.admissionNumber || '—'}</span>
+                      </td>
+
+                      <td className={`${td} font-semibold text-slate-800`}>{s.rollNo || '—'}</td>
+
+                      <td className={td}>
+                        <div className="flex items-center gap-2">
+                          <Avatar
+                            s={s}
+                            onPhotoClick={() => handlePhotoClick(s)}
+                            isUploading={uploadingId === s._id}
+                          />
+                          <div>
+                            <button onClick={()=>navigate(`/admin/students/${s._id}`)}
+                              className="font-bold text-slate-900 hover:text-indigo-600 text-left leading-tight block">
+                              {s.fullName || `${s.firstName} ${s.lastName}`}
+                            </button>
+                            <div className="text-[11px] text-slate-400">{s.email || '—'}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className={td}>
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[11px] font-semibold border border-slate-200/80">
+                          {s.className || '—'}{s.sectionName ? ` — ${s.sectionName}` : ''}
+                        </span>
+                      </td>
+
+                      <td className={td}>
+                        <div className="text-[11px]">
+                          <div className="font-semibold text-slate-800">{s.parentDetails?.father?.name || s.parentName || '—'}</div>
+                          <div className="text-slate-400">{s.parentDetails?.father?.phone || s.parentPhone || ''}</div>
+                        </div>
+                      </td>
+
+                      <td className={td}>
+                        <div className="text-[11px]">
+                          <div className="font-semibold text-slate-800">{s.parentDetails?.mother?.name || '—'}</div>
+                          <div className="text-slate-400">{s.parentDetails?.mother?.phone || ''}</div>
+                        </div>
+                      </td>
+
+                      <td className={td}>
+                        <div className="text-[11px] text-slate-700">{s.dateOfBirth ? new Date(s.dateOfBirth).toLocaleDateString('en-IN') : '—'}</div>
+                        <div className="text-[10px] text-slate-400 capitalize">{s.gender || '—'}</div>
+                      </td>
+
+                      <td className={td}><StatusBadge status={s.status}/></td>
+
+                      <td className={td}>
+                        <ActionMenu s={s} navigate={navigate} onAction={(type, student) => setModal({type, student})} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-            <span className="text-xs text-gray-500">Page {pagination.page} of {pagination.totalPages} · {pagination.total} total</span>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+            <span className="text-xs text-slate-500 font-medium">Page {pagination.page} of {pagination.totalPages}</span>
             <div className="flex gap-2">
               <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}
-                className={`${btn2} disabled:opacity-40`}>← Prev</button>
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 shadow-xs cursor-pointer">← Prev</button>
               <button onClick={()=>setPage(p=>Math.min(pagination.totalPages,p+1))} disabled={page===pagination.totalPages}
-                className={`${btn2} disabled:opacity-40`}>Next →</button>
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 shadow-xs cursor-pointer">Next →</button>
             </div>
           </div>
         )}

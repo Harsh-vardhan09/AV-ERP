@@ -1,8 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 // Base API URL from environment variables
-const API_URL = `${import.meta.env.VITE_PORT}/api/v1/user/`;
-const SCHOOL_API_URL = `${import.meta.env.VITE_PORT}/api/v1/school/`;
+const BASE_URL = import.meta.env.VITE_PORT || import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = `${BASE_URL}/api/v1/user/`;
+const SCHOOL_API_URL = `${BASE_URL}/api/v1/school/`;
 
 // Configuring the base query
 const baseQuery = fetchBaseQuery({

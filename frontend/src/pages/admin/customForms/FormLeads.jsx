@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MdArrowBack, MdPerson } from 'react-icons/md';
 import { useGetFormLeadsQuery } from '../../../redux/api/customFormApi';
+import { ArrowLeft, User, Search } from 'lucide-react';
 
 const FormLeads = () => {
   const { id } = useParams();
@@ -17,22 +17,20 @@ const FormLeads = () => {
 
   const fmt = (d) => {
     if (!d) return '—';
-    return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-      + ' ' + new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
   const statusBadge = (s) => {
     const cfg = {
-      new:       { bg: '#eff6ff', color: '#1d4ed8', label: 'New' },
-      contacted: { bg: '#fef3c7', color: '#92400e', label: 'Contacted' },
-      converted: { bg: '#f0fdf4', color: '#15803d', label: 'Converted' },
-      rejected:  { bg: '#fef2f2', color: '#b91c1c', label: 'Rejected' },
+      new:       'bg-indigo-50 text-indigo-700 border-indigo-200',
+      contacted: 'bg-amber-50 text-amber-700 border-amber-200',
+      converted: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      rejected:  'bg-rose-50 text-rose-700 border-rose-200',
     };
     const c = cfg[s] || cfg.new;
-    return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: c.bg, color: c.color }}>{c.label}</span>;
+    return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${c}`}>{s}</span>;
   };
 
-  // Build column headers from enabled predefined fields or custom fields
   const formFields = form
     ? (form.fieldMode === 'predefined'
         ? (form.predefinedFields || []).filter(f => f.enabled).map(f => ({ key: f.fieldKey, label: f.fieldName }))
@@ -40,24 +38,28 @@ const FormLeads = () => {
     : [];
 
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif" }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => navigate('/admin/custom-forms')}
-            style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <MdArrowBack size={18} />
+    <div className="max-w-6xl mx-auto space-y-4 px-2 sm:px-4 pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/admin/custom-forms')}
+            className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition cursor-pointer text-slate-700 shadow-xs"
+          >
+            <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', margin: 0 }}>
+            <h1 className="text-xl font-bold text-slate-900">
               Form Leads {form ? `— ${form.title}` : ''}
             </h1>
-            <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>All submissions for this form.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Submissions collected from this custom form</p>
           </div>
         </div>
 
-        {/* Filter by status */}
-        <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}
-          style={{ padding: '8px 14px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13, outline: 'none' }}>
+        <select
+          value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}
+          className="w-full sm:w-auto border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400"
+        >
           <option value="">All Statuses</option>
           <option value="new">New</option>
           <option value="contacted">Contacted</option>
@@ -66,97 +68,109 @@ const FormLeads = () => {
         </select>
       </div>
 
-      {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 20 }}>
-        {[
-          { label: 'Total Leads', value: pagination.total ?? 0, color: '#6366f1' },
-          { label: 'New', value: leads.filter(l => l.status === 'new').length, color: '#3b82f6' },
-          { label: 'Contacted', value: leads.filter(l => l.status === 'contacted').length, color: '#f59e0b' },
-          { label: 'Converted', value: leads.filter(l => l.status === 'converted').length, color: '#22c55e' },
-        ].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}>
-            <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{s.label}</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.value}</div>
-          </div>
-        ))}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <span className="text-[11px] font-semibold text-slate-500">Total Leads</span>
+          <strong className="block text-base font-bold text-slate-900 mt-0.5 tabular-nums">{pagination.total ?? 0}</strong>
+        </div>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <span className="text-[11px] font-semibold text-slate-500">New</span>
+          <strong className="block text-base font-bold text-indigo-600 mt-0.5 tabular-nums">{leads.filter(l => l.status === 'new').length}</strong>
+        </div>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <span className="text-[11px] font-semibold text-slate-500">Contacted</span>
+          <strong className="block text-base font-bold text-amber-600 mt-0.5 tabular-nums">{leads.filter(l => l.status === 'contacted').length}</strong>
+        </div>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <span className="text-[11px] font-semibold text-slate-500">Converted</span>
+          <strong className="block text-base font-bold text-emerald-600 mt-0.5 tabular-nums">{leads.filter(l => l.status === 'converted').length}</strong>
+        </div>
       </div>
 
-      {/* Table */}
-      <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.05)' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#374151', whiteSpace: 'nowrap' }}>#</th>
-                {formFields.slice(0, 5).map(f => (
-                  <th key={f.key} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#374151', whiteSpace: 'nowrap' }}>{f.label}</th>
-                ))}
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#374151', whiteSpace: 'nowrap' }}>Status</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#374151', whiteSpace: 'nowrap' }}>Submitted At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>
-                    {Array.from({ length: formFields.slice(0, 5).length + 3 }).map((__, j) => (
-                      <td key={j} style={{ padding: '14px 16px' }}>
-                        <div style={{ height: 14, background: '#f1f5f9', borderRadius: 6, width: j === 1 ? 140 : 80, animation: 'pulse 1.5s infinite' }} />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : leads.length === 0 ? (
-                <tr>
-                  <td colSpan={formFields.slice(0, 5).length + 3} style={{ padding: '52px 16px', textAlign: 'center', color: '#9ca3af' }}>
-                    <div style={{ fontSize: 40, marginBottom: 10 }}>📭</div>
-                    <div style={{ fontWeight: 600, color: '#374151', marginBottom: 4 }}>No leads yet</div>
-                    <div style={{ fontSize: 12 }}>Share your form link to start receiving enquiries.</div>
-                  </td>
-                </tr>
-              ) : (
-                leads.map((lead, idx) => {
-                  const fields = lead.fields instanceof Object ? lead.fields : {};
-                  return (
-                    <tr key={lead._id} style={{ borderBottom: '1px solid #f1f5f9' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#fafbff'}
-                      onMouseLeave={e => e.currentTarget.style.background = ''}>
-                      <td style={{ padding: '14px 16px', color: '#6b7280' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <MdPerson size={14} color="#fff" />
-                          </div>
-                          {(page - 1) * 20 + idx + 1}
+      {/* Main Container */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
+        {isLoading ? (
+          <div className="flex justify-center py-14">
+            <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : leads.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 text-xs">
+            No leads received for this form yet.
+          </div>
+        ) : (
+          <>
+            {/* Mobile Card View */}
+            <div className="block sm:hidden divide-y divide-slate-100">
+              {leads.map((lead, idx) => {
+                const fields = lead.fields instanceof Object ? lead.fields : {};
+                const firstVal = formFields[0] ? String(fields[formFields[0].key] ?? '—') : `Submission #${idx + 1}`;
+                return (
+                  <div key={lead._id} className="p-3.5 space-y-2 hover:bg-slate-50/50 transition">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900">{firstVal}</span>
+                      {statusBadge(lead.status)}
+                    </div>
+                    <div className="text-xs text-slate-500 space-y-1">
+                      {formFields.slice(1, 4).map(f => (
+                        <div key={f.key} className="flex justify-between">
+                          <span>{f.label}:</span>
+                          <strong className="text-slate-800">{String(fields[f.key] ?? '—')}</strong>
                         </div>
-                      </td>
-                      {formFields.slice(0, 5).map(f => (
-                        <td key={f.key} style={{ padding: '14px 16px', color: '#374151', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {String(fields[f.key] ?? fields.get?.(f.key) ?? '—')}
-                        </td>
                       ))}
-                      <td style={{ padding: '14px 16px' }}>{statusBadge(lead.status)}</td>
-                      <td style={{ padding: '14px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>{fmt(lead.submittedAt || lead.createdAt)}</td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold text-left">
+                    <th className="py-2.5 px-4 w-12">#</th>
+                    {formFields.slice(0, 5).map(f => (
+                      <th key={f.key} className="py-2.5 px-4">{f.label}</th>
+                    ))}
+                    <th className="py-2.5 px-4">Status</th>
+                    <th className="py-2.5 px-4 text-right">Submitted At</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                  {leads.map((lead, idx) => {
+                    const fields = lead.fields instanceof Object ? lead.fields : {};
+                    return (
+                      <tr key={lead._id} className="hover:bg-slate-50/50 transition">
+                        <td className="py-3 px-4 text-slate-400">{(page - 1) * 20 + idx + 1}</td>
+                        {formFields.slice(0, 5).map(f => (
+                          <td key={f.key} className="py-3 px-4 max-w-[180px] truncate text-slate-900 font-semibold">
+                            {String(fields[f.key] ?? fields.get?.(f.key) ?? '—')}
+                          </td>
+                        ))}
+                        <td className="py-3 px-4">{statusBadge(lead.status)}</td>
+                        <td className="py-3 px-4 text-right text-slate-500">{fmt(lead.submittedAt || lead.createdAt)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
 
         {pagination.totalPages > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderTop: '1px solid #f1f5f9' }}>
-            <span style={{ fontSize: 13, color: '#6b7280' }}>Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, pagination.total)} of {pagination.total}</span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
-                style={{ padding: '6px 14px', borderRadius: 7, border: '1px solid #e5e7eb', background: '#fff', fontSize: 13, cursor: page === 1 ? 'not-allowed' : 'pointer', color: page === 1 ? '#d1d5db' : '#374151' }}>Previous</button>
-              <button disabled={page === pagination.totalPages} onClick={() => setPage(p => p + 1)}
-                style={{ padding: '6px 14px', borderRadius: 7, border: '1px solid #e5e7eb', background: '#fff', fontSize: 13, cursor: page === pagination.totalPages ? 'not-allowed' : 'pointer', color: page === pagination.totalPages ? '#d1d5db' : '#374151' }}>Next</button>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs">
+            <span className="text-slate-500 font-medium">Page {pagination.page} of {pagination.totalPages}</span>
+            <div className="flex gap-2">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                className="border border-slate-200 text-slate-700 px-3 py-1 rounded-xl font-semibold hover:bg-slate-50 disabled:opacity-40">Previous</button>
+              <button onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))} disabled={page === pagination.totalPages}
+                className="border border-slate-200 text-slate-700 px-3 py-1 rounded-xl font-semibold hover:bg-slate-50 disabled:opacity-40">Next</button>
             </div>
           </div>
         )}
       </div>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
     </div>
   );
 };
