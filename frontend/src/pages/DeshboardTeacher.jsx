@@ -1,7 +1,22 @@
 import React, { useMemo, useState } from "react";
+import { NavLink } from "react-router-dom";
 import { Bar, Doughnut } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { useSelector } from "react-redux";
+import {
+  MdDashboard,
+  MdAssignment,
+  MdUploadFile,
+  MdBook,
+  MdDescription,
+  MdCheckCircle,
+  MdGridView,
+  MdOutlineAutoStories,
+  MdReceipt,
+  MdSparkles,
+  MdChevronRight
+} from "react-icons/md";
+import { FaCalendarCheck, FaChalkboardTeacher, FaUserGraduate } from "react-icons/fa";
 import {
   useGetMyClassTeacherQuery,
   useGetMyAssignmentsQuery,
@@ -170,7 +185,7 @@ const TeacherAnalyticsDashboard = () => {
   const hasNoAssignment = classTeacherAssignments.length === 0;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-100 p-4 md:p-8 pb-32">
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* ── Header ── */}
@@ -393,6 +408,247 @@ const TeacherAnalyticsDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* ── All Teacher Features & Modules (Fedena ERP Horizontal List Layout) ── */}
+        <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-teal-50 text-teal-600 rounded-lg">
+                <FaChalkboardTeacher size={18} />
+              </div>
+              <h2 className="text-lg font-bold text-gray-800">
+                All Teacher Modules & Shortcuts
+              </h2>
+            </div>
+            <span className="text-xs font-semibold text-gray-400">14 Modules</span>
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <NavLink
+              to="/teacher/dashboard"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-teal-50 text-teal-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdDashboard size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Dashboard</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Home Analytics & Overview</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/attendance"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <FaCalendarCheck size={18} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Take Attendance</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Mark Daily Class Attendance</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/assignments"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdAssignment size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Assignments</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Create & Manage Homework</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/marks"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdUploadFile size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Upload Marks</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Submit Exam & Test Scores</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/tests"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <FaChalkboardTeacher size={18} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">My Tests</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Class Tests & Schedules</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/materials"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-sky-50 text-sky-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdBook size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Knowledge Center</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Upload Notes & Study Files</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/leave"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdDescription size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">My Leave</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Self Leave Applications</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/student-leaves"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdCheckCircle size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Student Leaves</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Review & Approve Student Leaves</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/my-students"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-teal-50 text-teal-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <FaUserGraduate size={18} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">My Students</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Class Student Roster</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/co-scholastic"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdCheckCircle size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Co-Scholastic</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Activity & Conduct Grades</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/report-cards"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdDescription size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Report Cards</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Generate Student Cards</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/template-report-cards"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-violet-50 text-violet-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdGridView size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Template Report Cards</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Dynamic Card Templates</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/oases"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdOutlineAutoStories size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">OASES Evaluation</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">My Copy Evaluation</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+
+            <NavLink
+              to="/teacher/payroll/my-payslips"
+              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <MdReceipt size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">My Payslips</h4>
+                  <p className="text-xs text-gray-500 font-medium truncate">Salary Statements</p>
+                </div>
+              </div>
+              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </NavLink>
+          </div>
+        </div>
 
         {/* ── Footer ── */}
         <div className="text-center text-gray-400 text-xs pb-4">

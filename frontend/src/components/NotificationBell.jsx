@@ -153,7 +153,7 @@ const NotificationBell = () => {
             position: 'absolute',
             top: 'calc(100% + 8px)',
             right: 0,
-            width: 340,
+            width: 'min(340px, calc(100vw - 24px))',
             background: 'var(--color-background-primary, #fff)',
             border: '1px solid var(--color-border-tertiary, #E5E7EB)',
             borderRadius: 12,
