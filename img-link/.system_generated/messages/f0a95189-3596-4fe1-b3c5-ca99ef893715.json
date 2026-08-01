@@ -1,0 +1,1 @@
+{"id":"f0a95189-3596-4fe1-b3c5-ca99ef893715","recipient":"c9481750-c96f-4753-add1-46a25099471d","sender":"c9481750-c96f-4753-add1-46a25099471d/task-203","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"2026-07-09T14:32:39.151047600Z","renderDetails":{"messageTitle":"Schedule timer: Timer has expired"},"content":"Check if Get-ChildItem for redis-server finished - check 2"}

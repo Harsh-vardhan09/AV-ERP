@@ -56,7 +56,6 @@
   },
   "scripts": {
     "dev": "vite",
-    "start": "vite",
     "build": "vite build",
     "test": "react-scripts test",
     "preview": "vite preview",
