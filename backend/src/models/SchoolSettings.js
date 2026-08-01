@@ -32,6 +32,16 @@ const schoolSettingsSchema = new mongoose.Schema({
     default: () => ({ ...DEFAULT_MODULES }),
   },
 
+  // ── Report card template selection (school-wide) ─────────────────────────
+  // The ONE template a school admin has chosen for report cards.
+  // Consumed by templateResolver as a priority below class-specific targeting,
+  // so a school-wide pick never overrides a per-class template.
+  selectedReportTemplateId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ReportTemplate',
+    default: null,
+  },
+
   // Multi-tenancy — one settings doc per school
   schoolId: {
     type: mongoose.Schema.Types.ObjectId,

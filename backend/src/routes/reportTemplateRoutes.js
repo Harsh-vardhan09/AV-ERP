@@ -10,30 +10,38 @@ const router = express.Router();
 // Module guard
 router.use(checkModuleAccess('report_cards'));
 
-// Template CRUD routes
-router.post('/', varifyToken, authorize('admin'), reportTemplateController.createTemplate);
+/**
+ * SCHOOL-FACING TEMPLATE ROUTES — READ + SELECT ONLY.
+ *
+ * Report card templates are authored by Super Admins and shared globally; see
+ * routes/superAdminRoutes.js (`/api/super-admin/templates/*`). A school admin
+ * browses the gallery and adopts one via the /selection endpoints, which write
+ * SchoolSettings.selectedReportTemplateId and nothing else.
+ *
+ * The create / update / delete / clone / set-default / extract-fields /
+ * validate / preview endpoints that used to live here have MOVED to super
+ * admin — a school admin can no longer mutate template content.
+ */
+
+// ── Browse ───────────────────────────────────────────────────────────────────
+// Returns global templates plus this school's own legacy (pre-split) templates.
 router.get('/', varifyToken, authorize('admin', 'teacher'), reportTemplateController.getTemplates);
 router.get('/stats', varifyToken, authorize('admin'), reportTemplateController.getStats);
 
 // ── Class-Group Template Resolution ──────────────────────────────────────────
 // MUST be placed BEFORE /:id routes to avoid Express wildcard conflicts.
-// GET /for-class?classId=xxx&examType=annual → resolves best template for a class
 router.get('/for-class', varifyToken, authorize('admin', 'teacher'), reportTemplateController.getTemplateForClass);
 
-router.get('/:id', varifyToken, authorize('admin', 'teacher'), reportTemplateController.getTemplate);
-router.put('/:id', varifyToken, authorize('admin'), reportTemplateController.updateTemplate);
-router.delete('/:id', varifyToken, authorize('admin'), reportTemplateController.deleteTemplate);
+// ── School-wide template selection ───────────────────────────────────────────
+// Also BEFORE /:id — otherwise Express reads "selection" as a template id.
+router.get('/selection', varifyToken, authorize('admin', 'teacher'), reportTemplateController.getSelection);
+router.put('/selection', varifyToken, authorize('admin'), reportTemplateController.setSelection);
 
-// Template utility routes
-router.post('/extract-fields', varifyToken, authorize('admin', 'teacher'), reportTemplateController.extractFields);
-router.post('/validate', varifyToken, authorize('admin', 'teacher'), reportTemplateController.validateTemplate);
-router.post('/preview', varifyToken, authorize('admin', 'teacher'), reportTemplateController.previewTemplate);
-router.put('/:id/set-default', varifyToken, authorize('admin'), reportTemplateController.setDefault);
-router.post('/:id/clone', varifyToken, authorize('admin'), reportTemplateController.cloneTemplate);
+router.get('/:id', varifyToken, authorize('admin', 'teacher'), reportTemplateController.getTemplate);
 
 // ── Template-Driven Marks Form API ───────────────────────────────────────────
-// GET /api/report-templates/:id/fields?examId=...&classId=...
-// Returns fields grouped by subject for dynamic teacher form generation
+// GET /api/v1/report-templates/:id/fields?examId=...&classId=...
+// Returns fields grouped by subject for dynamic teacher form generation.
 router.get('/:id/fields', varifyToken, authorize('admin', 'teacher'), superAdminController.getTemplateFields);
 
 module.exports = router;

@@ -1,0 +1,229 @@
+<!--
+  CBSE Two-Term Scholastic Report Card
+  Token dialect matches seedDemo.js / sample_report_card.html exactly:
+  simple meta+derived tokens, dot-notation namespace access, a subjects loop
+  for scholastic rows, and co_scholastic_a / _b / _c loops for the three parts.
+  NOTE: never write literal token braces in this comment — the parser renders
+  comments too, so examples here would be resolved and reported as missing.
+  Inline CSS only — no external assets, A4 print-safe.
+-->
+<div class="rc">
+
+  <!-- ── Header ───────────────────────────────────────────────────────── -->
+  <table class="hdr">
+    <tr>
+      <td class="hdr-logo">{{school-logo}}</td>
+      <td class="hdr-name">{{school-name}}</td>
+      <td class="hdr-board">{{board-logo}}</td>
+    </tr>
+  </table>
+
+  <!-- ── Title block ──────────────────────────────────────────────────── -->
+  <div class="title">ACADEMIC REPORT</div>
+  <div class="subtitle">ACADEMIC SESSION : {{session}}</div>
+  <div class="subtitle">CLASS : {{class}}</div>
+
+  <!-- ── Student info ─────────────────────────────────────────────────── -->
+  <table class="info">
+    <tr>
+      <td class="lbl">Name Of Student</td><td class="sep">:</td><td class="val">{{student-name}}</td>
+      <td class="lbl2">Roll No.</td><td class="sep">:</td><td class="val2">{{rollNo}}</td>
+      <td class="photo" rowspan="4"><div class="photo-box">{{student-photo}}</div></td>
+    </tr>
+    <tr>
+      <td class="lbl">Father's Name</td><td class="sep">:</td><td class="val">{{father-name}}</td>
+      <td class="lbl2">Admission No.</td><td class="sep">:</td><td class="val2">{{admissionNumber}}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Mother's Name</td><td class="sep">:</td><td class="val">{{mother-name}}</td>
+      <td class="lbl2">Date Of Birth</td><td class="sep">:</td><td class="val2">{{dob}}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Address</td><td class="sep">:</td><td class="val" colspan="4">{{address}}</td>
+    </tr>
+  </table>
+
+  <!-- ── Scholastic ───────────────────────────────────────────────────── -->
+  <table class="sch">
+    <thead>
+      <tr>
+        <th class="y" rowspan="2">Scholastic</th>
+        <th class="y" colspan="5">Term I</th>
+        <th class="y" colspan="5">Term II</th>
+        <th class="y" colspan="2">Overall</th>
+      </tr>
+      <tr>
+        <th class="g">Per Test</th><th class="g">N.B</th><th class="g">S.E</th>
+        <th class="g">Half Yearly</th><th class="g">Total</th>
+        <th class="g">Per Test</th><th class="g">N.B</th><th class="g">S.E</th>
+        <th class="g">Yearly Exam</th><th class="g">Total</th>
+        <th class="g">Grand Total</th><th class="g" rowspan="2">Grade</th>
+      </tr>
+      <tr>
+        <th class="g sub">Subject</th>
+        <th class="g">10</th><th class="g">5</th><th class="g">5</th><th class="g">80</th><th class="g">100</th>
+        <th class="g">10</th><th class="g">5</th><th class="g">5</th><th class="g">80</th><th class="g">100</th>
+        <th class="g">200</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#subjects}}
+      <tr>
+        <td class="subj">{{name}}</td>
+        <td>{{t1_pertest}}</td><td>{{t1_nb}}</td><td>{{t1_se}}</td><td>{{t1_halfyearly}}</td><td>{{t1_total}}</td>
+        <td>{{t2_pertest}}</td><td>{{t2_nb}}</td><td>{{t2_se}}</td><td>{{t2_yearly}}</td><td>{{t2_total}}</td>
+        <td>{{grandtotal}}</td><td>{{grade}}</td>
+      </tr>
+      {{/subjects}}
+    </tbody>
+  </table>
+
+  <!-- ── Summary strip ────────────────────────────────────────────────── -->
+  <table class="summary">
+    <tr>
+      <td class="pk">ATTENDANCE</td><td class="bx">{{attendance.str}}</td>
+      <td class="pk">OVERALL TOTAL</td><td class="bx">{{total-marks}}</td>
+      <td class="pk">OVERALL PERCENTAGE</td><td class="bx">{{percentage}}%</td>
+      <td class="pk">OVERALL GRADE</td><td class="bx">{{overall-grade}}</td>
+    </tr>
+  </table>
+
+  <table class="result">
+    <tr><td class="pk res-lbl">RESULT:</td><td class="bx res-val">{{result}}</td></tr>
+  </table>
+
+  <!-- ── Co-scholastic: Part A left, Parts B + C stacked right ────────── -->
+  <table class="co-wrap">
+    <tr>
+      <td class="co-col">
+        <table class="co">
+          <tr><th class="y">Co-Scholastic (Part - A)</th><th class="y gr">Grade</th></tr>
+          {{#co_scholastic_a}}
+          <tr><td class="co-name">{{name}}</td><td class="co-grade">{{grade}}</td></tr>
+          {{/co_scholastic_a}}
+        </table>
+      </td>
+      <td class="co-col">
+        <table class="co">
+          <tr><th class="y">Co-Scholastic (Part - B)</th><th class="y gr">Grade</th></tr>
+          {{#co_scholastic_b}}
+          <tr><td class="co-name">{{name}}</td><td class="co-grade">{{grade}}</td></tr>
+          {{/co_scholastic_b}}
+        </table>
+        <table class="co co-gap">
+          <tr><th class="y">Co-Scholastic (Part - C)</th><th class="y gr">Grade</th></tr>
+          {{#co_scholastic_c}}
+          <tr><td class="co-name">{{name}}</td><td class="co-grade">{{grade}}</td></tr>
+          {{/co_scholastic_c}}
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ── Instructions + grading legend ────────────────────────────────── -->
+  <div class="instr-rule"></div>
+  <div class="instr-title">Instructions</div>
+  <div class="instr-text">
+    Grading scale for scholastic areas: Grades are awarded on a 8-points grading scale as follows-
+  </div>
+  <table class="legend">
+    <tr>
+      <th class="y">Marks Range In (%)</th>
+      <td>91-100</td><td>81-90</td><td>71-80</td><td>61-70</td>
+      <td>51-60</td><td>41-50</td><td>33-40</td><td>0-32</td>
+    </tr>
+    <tr>
+      <th class="y">Grade</th>
+      <td>A1</td><td>A2</td><td>B1</td><td>B2</td>
+      <td>C1</td><td>C2</td><td>D</td><td>E</td>
+    </tr>
+  </table>
+
+  <!-- ── Signatures ───────────────────────────────────────────────────── -->
+  <table class="sign">
+    <tr>
+      <td>Signature Of Class Teacher</td>
+      <td>Signature Of Principal</td>
+      <td>Signature Of Guardian</td>
+    </tr>
+  </table>
+
+</div>
+
+<style>
+  .rc { font-family: Calibri, Carlito, Arial, sans-serif; color:#000; font-size:11px;
+        border:2px solid #000; padding:10px 12px; box-sizing:border-box; }
+  .rc table { border-collapse:collapse; width:100%; }
+  .rc td, .rc th { border:none; }
+
+  /* Header */
+  .hdr td { vertical-align:middle; padding:0; }
+  .hdr-logo  { width:130px; text-align:left; }
+  .hdr-logo img { max-height:100px !important; max-width:120px !important; }
+  .hdr-name  { text-align:center; font-size:30px; font-weight:bold; letter-spacing:.5px;
+               line-height:1.05; font-family:Arial, sans-serif; }
+  .hdr-board { width:110px; text-align:right; }
+
+  /* Title */
+  .title    { text-align:center; font-size:22px; font-weight:bold; margin-top:14px; }
+  .subtitle { text-align:center; font-size:13px; font-weight:bold; margin-top:2px; }
+
+  /* Student info */
+  .info { margin-top:10px; font-size:12px; }
+  .info td { padding:1px 2px; vertical-align:top; }
+  .lbl  { width:130px; }
+  .lbl2 { width:105px; padding-left:14px !important; }
+  .sep  { width:8px; }
+  .val  { border-bottom:0; min-width:200px; }
+  .val2 { min-width:110px; }
+  .photo     { width:120px; }
+  .photo-box { width:110px; height:80px; border:1px solid #999; overflow:hidden;
+               margin-left:auto; background:#f3f0ec; }
+
+  /* Scholastic table */
+  .sch { margin-top:8px; font-size:11px; }
+  .sch th, .sch td { border:1px solid #000; text-align:center; padding:3px 2px; }
+  .sch .y   { background:#fdeeb8; font-weight:bold; }
+  .sch .g   { background:#cdeedd; font-weight:bold; }
+  .sch .sub { background:#cdeedd; text-align:center; }
+  .sch .subj{ text-align:left; font-weight:bold; padding-left:5px; }
+  .sch tbody td { font-weight:bold; }
+
+  /* Summary strip */
+  .summary { margin-top:12px; font-size:11px; table-layout:fixed; }
+  .summary td { border:1px solid #000; padding:4px 5px; font-weight:bold; text-align:center; }
+  .summary .pk { background:#fbe0d6; text-align:left; }
+  .summary .bx { background:#fff; }
+
+  /* Needs .rc prefix — plain .result loses to `.rc table { width:100% }` and
+     the box then overflows the card border. */
+  .rc table.result { margin-top:10px; width:58%; margin-left:42%; font-size:11px; }
+  .result td { border:1px solid #000; padding:4px 6px; font-weight:bold; }
+  .result .res-lbl { background:#fbe0d6; width:65%; }
+  .result .res-val { text-align:center; }
+
+  /* Co-scholastic */
+  .co-wrap { margin-top:14px; }
+  .co-wrap > tbody > tr > .co-col { width:50%; vertical-align:top; padding:0 6px; border:none; }
+  .co { font-size:11px; }
+  .co-gap { margin-top:10px; }
+  .co th, .co td { border:1px solid #000; padding:3px 6px; }
+  .co .y  { background:#fdeeb8; font-weight:bold; text-align:left; }
+  .co .gr { text-align:center; width:80px; }
+  .co-name  { font-weight:bold; }
+  .co-grade { text-align:center; }
+
+  /* Instructions + legend */
+  .instr-rule  { border-top:1px solid #000; margin-top:18px; }
+  .instr-title { text-align:center; font-weight:bold; font-size:12px; margin-top:6px; }
+  .instr-text  { font-weight:bold; font-size:11px; margin-top:6px; }
+  .legend { margin-top:5px; font-size:11px; }
+  .legend th, .legend td { border:1px solid #000; text-align:center; padding:3px 4px; font-weight:bold; }
+  .legend .y { background:#fdeeb8; }
+
+  /* Signatures */
+  .sign { margin-top:40px; font-size:12px; }
+  .sign td { text-align:center; font-weight:bold; padding-top:6px; }
+
+  @media print { .rc { border:2px solid #000; } }
+</style>

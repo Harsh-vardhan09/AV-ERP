@@ -18,6 +18,7 @@ const {
   sanitizeDynamicMarks,
 } = require('../utils/marksValidation');
 const { canGenerateReport } = require('../utils/reportCardValidation');
+const { getExamReadiness } = require('../services/marksReadinessService');
 const logger = require('../utils/logger');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
@@ -1458,6 +1459,89 @@ exports.getClassReportCards = async (req, res) => {
       },
     });
   } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Per-subject marks submission status for a class + exam.
+ * GET /api/v1/report-card/readiness?examId=&classId=&sectionId=&session=
+ *
+ * Omit examId to get readiness for every exam of the class in the session
+ * (used by the admin report-card screen to show which exams are blocking).
+ *
+ * ready === true means every subject configured for the class in that exam has
+ * marks submitted — the precondition for students viewing their report card.
+ */
+exports.getMarksReadiness = async (req, res) => {
+  try {
+    const { examId, classId, sectionId, session } = req.query;
+
+    if (!classId) {
+      return res.status(400).json({ success: false, message: 'classId is required' });
+    }
+
+    const sessionId = await resolveSessionId(session, req.schoolId);
+    if (!sessionId) {
+      return res.status(400).json({ success: false, message: 'Session not found. Activate a session first.' });
+    }
+
+    // Teachers only see classes they are assigned to.
+    if (req.user.role === 'teacher') {
+      const assignments = await ensureTeacherClassAccess(
+        req.user._id, classId, sessionId, req.schoolId, sectionId || null
+      );
+      if (!assignments.length) {
+        return res.status(403).json({ success: false, message: 'You are not assigned to this class.' });
+      }
+    }
+
+    const examFilter = { classIds: classId, session: sessionId, schoolId: req.schoolId };
+    if (examId) examFilter._id = examId;
+
+    const exams = await Exam.find(examFilter)
+      .select('name type startDate evaluationStatus evaluationLocked')
+      .sort({ startDate: 1, createdAt: 1 })
+      .lean();
+
+    if (!exams.length) {
+      return res.status(200).json({
+        success: true,
+        data: { exams: [], allReady: false, reason: 'No exams found for this class' },
+      });
+    }
+
+    const results = await Promise.all(
+      exams.map(async (exam) => ({
+        examId: exam._id,
+        examName: exam.name,
+        examType: exam.type,
+        evaluationStatus: exam.evaluationStatus || 'pending',
+        evaluationLocked: Boolean(exam.evaluationLocked),
+        ...(await getExamReadiness({
+          examId: exam._id,
+          classId,
+          sectionId: sectionId || null,
+          schoolId: req.schoolId,
+          sessionId,
+        })),
+      }))
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        exams: results,
+        // Exams with no configured subjects can never be "ready" — exclude them
+        // so an unconfigured exam doesn't permanently block the class.
+        allReady: results.filter(r => r.totalSubjects > 0).every(r => r.ready),
+        classId,
+        sectionId: sectionId || null,
+        session: sessionId,
+      },
+    });
+  } catch (error) {
+    logger.error('[ReportCard] getMarksReadiness error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

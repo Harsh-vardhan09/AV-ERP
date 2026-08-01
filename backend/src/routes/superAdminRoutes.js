@@ -38,7 +38,23 @@ router.get('/schools/:id/staff',  verifySuperAdmin, ctrl.getSchoolStaff);
 // POST /api/super-admin/schools/:id/staff   → create staff for any school
 router.post('/schools/:id/staff', verifySuperAdmin, ctrl.createStaffForSchool);
 
-// ─── REPORT TEMPLATE MANAGEMENT (Super Admin — cross-school) ─────────────────
+// ─── GLOBAL REPORT TEMPLATE AUTHORING (Super Admin) ──────────────────────────
+// These are the templates shared by EVERY school (isGlobal:true, schoolId:null).
+// School admins can only read them and adopt one — see reportTemplateRoutes.js.
+// Registered BEFORE /schools/* is irrelevant (different prefix), but the static
+// sub-paths must precede /templates/:id.
+const globalTpl = require('../controller/globalTemplateController');
+router.post  ('/templates/extract-fields', verifySuperAdmin, globalTpl.extractFields);
+router.post  ('/templates/preview',        verifySuperAdmin, globalTpl.previewGlobalTemplate);
+router.get   ('/templates',                verifySuperAdmin, globalTpl.listGlobalTemplates);
+router.post  ('/templates',                verifySuperAdmin, globalTpl.createGlobalTemplate);
+router.get   ('/templates/:id',            verifySuperAdmin, globalTpl.getGlobalTemplate);
+router.put   ('/templates/:id',            verifySuperAdmin, globalTpl.updateGlobalTemplate);
+router.delete('/templates/:id',            verifySuperAdmin, globalTpl.deleteGlobalTemplate);
+
+// ─── REPORT TEMPLATE MANAGEMENT (Super Admin — cross-school, legacy) ─────────
+// Per-school template upload. Kept for backward compatibility; new templates
+// should be authored globally via /templates above.
 // GET  /api/super-admin/schools/:id/templates          → list templates for a school
 router.get('/schools/:id/templates',                     verifySuperAdmin, ctrl.getSchoolTemplates);
 // POST /api/super-admin/schools/:id/templates          → upload template to a school

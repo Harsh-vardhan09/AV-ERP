@@ -13,7 +13,7 @@ import {
   useGenerateDynamicReportMutation,
   useGenerateBulkDynamicReportsMutation,
 } from '../../redux/api/dynamicReportApi';
-import { useGetReportTemplatesQuery, useGetTemplateForClassQuery } from '../../redux/api/reportTemplateApi';
+import { useGetReportTemplatesQuery, useGetTemplateForClassQuery, useGetTemplateSelectionQuery } from '../../redux/api/reportTemplateApi';
 import './reportCard.css';
 
 
@@ -153,7 +153,6 @@ const TemplateReportCard = () => {
   const [selectedSession,  setSelectedSession]  = useState('');
   const [selectedClass,    setSelectedClass]    = useState('');
   const [selectedSection,  setSelectedSection]  = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState('');
   const [examType,         setExamType]         = useState('annual');
   const [academicYear,     setAcademicYear]     = useState('');
   const [searchTerm,       setSearchTerm]       = useState('');
@@ -172,6 +171,8 @@ const TemplateReportCard = () => {
   const { data: sessionsData }      = useGetSessionsQuery(undefined, { skip: !isStaff || isTeacher });
   const { data: classTeacherData }  = useGetMyClassTeacherQuery(undefined, { skip: !isTeacher });
   const { data: templatesData, isLoading: templatesLoading }     = useGetReportTemplatesQuery({ isActive: true, templateType: examType });
+  // The school's standing choice — display only; the server resolves it again.
+  const { data: selectionData } = useGetTemplateSelectionQuery();
   // Classes: fetch when a session is selected (non-teacher staff); teachers get their own list
   const { data: classData,     isLoading: classesLoading }       = useGetClassesQuery(selectedSession, {
     skip: isTeacher || !selectedSession,
@@ -205,6 +206,7 @@ const TemplateReportCard = () => {
   const classTeacherAssigns = classTeacherData?.data || [];
   const templates           = templatesData?.data || [];
   const students            = reportCardsData?.data || [];
+  const selectedTemplateId  = selectionData?.data?.selectedTemplateId || '';
 
   const classes = useMemo(() => {
     if (!Array.isArray(isTeacher ? classTeacherAssigns : classData?.data)) return [];
@@ -263,20 +265,13 @@ const TemplateReportCard = () => {
     }
   }, [isTeacher, classTeacherAssigns]);
 
-  // Auto-select default template
-  useEffect(() => {
-    if (templates.length > 0 && !selectedTemplate) {
-      const def = templates.find(t => t.isDefault) || templates[0];
-      setSelectedTemplate(def?._id || '');
-    }
-  }, [templates]);
-
-  // Auto-select class-matched template when class or examType changes
+  // Show which template will actually be used. The server resolves it from
+  // SchoolSettings.selectedReportTemplateId (with class-specific targeting
+  // taking priority), so this is display-only — we never send a templateId.
   useEffect(() => {
     if (!selectedClass) return;
     if (classTemplateData?.success && classTemplateData?.data) {
       const t = classTemplateData.data;
-      setSelectedTemplate(t._id || '');
       setAutoMatchedTemplate({
         name:        t.name,
         matchReason: t.matchReason,
@@ -325,7 +320,6 @@ const TemplateReportCard = () => {
     try {
       const result = await generateReport({
         studentId,
-        templateId: selectedTemplate || undefined,
         academicYear,
         examType,
       }).unwrap();
@@ -351,7 +345,7 @@ const TemplateReportCard = () => {
     if (!academicYear) return toast.error('Session not resolved yet.');
     setGeneratingFor('bulk');
     try {
-      await generateBulk({ studentIds: ids, templateId: selectedTemplate || undefined, academicYear, examType }).unwrap();
+      await generateBulk({ studentIds: ids, academicYear, examType }).unwrap();
       toast.success(`⏳ Bulk generation started for ${ids.length} students`);
       refetchList();
     } catch (err) {
@@ -360,6 +354,30 @@ const TemplateReportCard = () => {
       setGeneratingFor(null); setSelectedStudents([]);
     }
   };
+
+  /* ── Active template + stats ──────────────────────────────────────────── */
+  // Name shown in the read-only line: the class-matched resolution when a class
+  // is chosen, otherwise the school's standing selection.
+  //
+  // Resolve against the SELECTION payload, not `templates` — the latter is
+  // filtered by the page's Exam Type, so a school whose selected template is a
+  // different type (e.g. half_yearly while viewing Annual) would wrongly read
+  // as "None selected".
+  const activeTemplateName =
+    autoMatchedTemplate?.name ||
+    (selectionData?.data?.templates || [])
+      .find(t => String(t._id) === String(selectedTemplateId))?.name ||
+    '';
+
+  // No template picked and none resolvable — generating would silently fall
+  // back to whatever isDefault happens to be, so block and send them to pick.
+  const hasTemplate = Boolean(activeTemplateName);
+
+  // Ported from the retired Report Cards screen — derived from the same
+  // getClassReportCards payload, so no extra request.
+  const finalizedCount = students.filter(s => s.status === 'finalized').length;
+  const generatedCount = students.filter(s => s.status === 'generated').length;
+  const pendingCount   = students.filter(s => s.status === 'pending').length;
 
   const toggleStudent = id => setSelectedStudents(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
   const toggleAll = () => {
@@ -436,18 +454,25 @@ const TemplateReportCard = () => {
             </select>
           </div>
 
-          <div>
-            <label htmlFor="trc-template" className="block text-xs font-semibold text-slate-700 mb-1">Template</label>
-            <select id="trc-template" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 outline-none bg-white focus:border-slate-400" value={selectedTemplate}
-              aria-busy={templatesLoading}
-              onChange={e => { setSelectedTemplate(e.target.value); setAutoMatchedTemplate(null); }}>
-              <option value="">{templatesLoading ? 'Loading…' : 'Auto (class-matched)'}</option>
-              {templates.map(t => (
-                <option key={t._id} value={t._id}>
-                  {t.name}{t.classGroupName ? ` [${t.classGroupName}]` : ''}{t.isDefault ? ' (Default)' : ''}
-                </option>
-              ))}
-            </select>
+        </div>
+
+        {/* Active template — read-only. Resolved server-side from
+            SchoolSettings.selectedReportTemplateId (class-specific targeting
+            wins). Changed in Report Card Templates, not here. */}
+        <div className="pt-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+            <span className="font-semibold text-slate-700">Using template:</span>
+            <span className="font-bold text-slate-900">
+              {activeTemplateName || (templatesLoading ? 'Loading…' : 'None selected')}
+            </span>
+            {autoMatchedTemplate?.matchReason === 'class_range' && (
+              <span className="text-[10px] font-bold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded">
+                class-specific
+              </span>
+            )}
+            <a href="/admin/templates" className="text-indigo-600 font-semibold hover:underline">
+              change in Report Card Templates
+            </a>
           </div>
         </div>
 
@@ -461,8 +486,42 @@ const TemplateReportCard = () => {
         </div>
       </div>
 
+      {/* No template selected — generating here would silently fall back to
+          whatever isDefault happens to be, so prompt instead. */}
+      {!hasTemplate && !templatesLoading && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-8 text-center">
+          <div className="text-sm font-bold text-amber-900">No report card template selected</div>
+          <p className="text-xs text-amber-800 mt-1.5 max-w-md mx-auto">
+            Pick the layout your school should use before generating report cards.
+          </p>
+          <a
+            href="/admin/templates"
+            className="inline-flex items-center gap-1.5 mt-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
+          >
+            Choose a template
+          </a>
+        </div>
+      )}
+
+      {/* Stats — ported from the retired Report Cards screen */}
+      {hasTemplate && selectedClass && selectedSession && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Total',     value: students.length },
+            { label: 'Generated', value: generatedCount },
+            { label: 'Finalized', value: finalizedCount },
+            { label: 'Pending',   value: pendingCount },
+          ].map(s => (
+            <div key={s.label} className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs">
+              <span className="text-[11px] font-semibold text-slate-500">{s.label}</span>
+              <strong className="block text-base font-bold text-slate-900 mt-0.5 tabular-nums">{s.value}</strong>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Student List & Actions Container */}
-      {selectedClass && selectedSession ? (
+      {hasTemplate && selectedClass && selectedSession ? (
         <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
           
           {/* Header Action Bar */}
@@ -614,7 +673,6 @@ const TemplateReportCard = () => {
         <PreviewModal
           studentId={previewStudent._id}
           studentName={previewStudent.name}
-          templateId={selectedTemplate || undefined}
           academicYear={academicYear}
           examType={examType}
           onClose={() => setPreviewStudent(null)}

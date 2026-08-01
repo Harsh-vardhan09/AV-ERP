@@ -18,10 +18,14 @@ const AcademicSession     = require('../models/AcademicSession');
 // const ReportCard          = require('../models/ReportCard');
 // const CoScholasticMark    = require('../models/CoScholasticMark');
 
+const Exam                = require('../models/Exam');
+const ReportCard          = require('../models/ReportCard');
+
 const DataAggregatorService   = require('../services/dataAggregatorService');
 const TemplateParserService   = require('../services/templateParserService');
 const PDFService              = require('../services/pdfService');
 const { resolveTemplateForStudent } = require('../services/templateResolver');
+const { getExamReadiness }    = require('../services/marksReadinessService');
 const logger                  = require('../utils/logger');
 
 const OUTPUT_DIR = path.join(__dirname, '../../output/reports');
@@ -472,6 +476,17 @@ exports.previewReport = async (req, res) => {
 
     const schoolId = req.schoolId;
 
+    // A student may only preview their OWN card. Without this, any logged-in
+    // student could read a classmate's report card by swapping the URL id.
+    if (req.user.role === 'student') {
+      const own = await StudentProfile.findOne({ userId: req.user._id, schoolId })
+        .select('_id')
+        .lean();
+      if (!own || String(own._id) !== String(studentId)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    }
+
     // Resolve session
     const session = await AcademicSession.findOne({
       $or: [
@@ -860,6 +875,283 @@ exports.validateTemplate = async (req, res) => {
 
   } catch (error) {
     logger.error('[DynamicReport] Validate error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STUDENT SELF-SERVICE REPORT CARD
+//
+// SECURITY: the student is resolved from req.user._id (set by varifyToken from
+// the signed JWT) and nothing else. No studentId is read from params, query or
+// body on these routes, so there is no path by which a client-supplied id can
+// select another student's data. Every query is additionally scoped to
+// req.schoolId.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Filesystem-safe filename segment. */
+const _slug = (s) => String(s || '')
+  .trim()
+  .replace(/\s+/g, '_')
+  .replace(/[^a-zA-Z0-9_-]/g, '');
+
+/**
+ * Resolve, gate and render the logged-in student's own report card.
+ *
+ * Shared by the JSON and PDF endpoints so both serve byte-identical markup —
+ * what the student sees on screen is exactly what they download.
+ *
+ * @returns {Promise<{status:number, published:boolean, ...}>}
+ */
+async function _buildOwnReportCard(req) {
+  const schoolId = req.schoolId;
+
+  // ── 1. Student identity — from the auth token ONLY ──────────────────────
+  const student = await StudentProfile.findOne({ userId: req.user._id, schoolId })
+    .populate('userId',    'firstName lastName email')
+    .populate('classId',   'name numericOrder')
+    .populate('sectionId', 'name')
+    .populate('session',   'name isActive')
+    .lean();
+
+  if (!student) {
+    return { status: 404, published: false, reason: 'No student profile is linked to your account.' };
+  }
+
+  // ── 2. Session — client may choose, but only within their own school ────
+  let session = null;
+  if (req.query.session) {
+    session = await AcademicSession.findOne({ _id: req.query.session, schoolId }).lean();
+    if (!session) {
+      return { status: 404, published: false, reason: 'Academic session not found.' };
+    }
+  } else {
+    session = await AcademicSession.findOne({ _id: student.session?._id || student.session, schoolId }).lean()
+      || await AcademicSession.findOne({ isActive: true, schoolId }).lean();
+  }
+  if (!session) {
+    return { status: 400, published: false, reason: 'No active academic session.' };
+  }
+
+  const classId = student.classId?._id || student.classId;
+  if (!classId) {
+    return { status: 400, published: false, reason: 'You are not assigned to a class yet.' };
+  }
+
+  // ── 3. Which exams does this card cover? ────────────────────────────────
+  const examFilter = { classIds: classId, session: session._id, schoolId };
+  if (req.query.examId) examFilter._id = req.query.examId;
+
+  const exams = await Exam.find(examFilter)
+    .select('name type startDate')
+    .sort({ startDate: 1, createdAt: 1 })
+    .lean();
+
+  if (!exams.length) {
+    return {
+      status: 200,
+      published: false,
+      reason: req.query.examId
+        ? 'That exam is not available for your class.'
+        : 'No exams have been scheduled for your class yet.',
+      student, session,
+    };
+  }
+
+  // ── 4. Readiness gate (Part 2) ──────────────────────────────────────────
+  // A finalized report card is an explicit admin sign-off, which outranks the
+  // computed readiness check.
+  const reportCard = await ReportCard.findOne({
+    studentId: student._id, session: session._id, schoolId,
+  }).select('isFinalized').lean();
+
+  if (!reportCard?.isFinalized) {
+    const readiness = await Promise.all(
+      exams.map(async (exam) => ({
+        examName: exam.name,
+        ...(await getExamReadiness({
+          examId: exam._id,
+          classId,
+          sectionId: student.sectionId?._id || student.sectionId || null,
+          schoolId,
+          sessionId: session._id,
+        })),
+      }))
+    );
+
+    // Exams with no configured subjects can't be assessed — ignore them rather
+    // than letting an unconfigured exam block the student forever.
+    const pending = readiness.filter(r => r.totalSubjects > 0 && !r.ready);
+
+    if (pending.length) {
+      const totalSubjects  = readiness.reduce((n, r) => n + r.totalSubjects, 0);
+      const submittedCount = readiness.reduce((n, r) => n + r.submittedCount, 0);
+      return {
+        status: 200,
+        published: false,
+        reason: 'Your report card has not been published yet. Marks entry is still in progress.',
+        student, session,
+        progress: {
+          totalSubjects,
+          submittedCount,
+          percentComplete: totalSubjects ? Math.round((submittedCount / totalSubjects) * 100) : 0,
+          // Exam names only — never the specific subjects or teachers still
+          // outstanding, which is staff-facing information.
+          pendingExams: pending.map(r => r.examName),
+        },
+      };
+    }
+  }
+
+  // ── 5. Resolve the template (honours the school's selected template) ────
+  const examType = exams.length === 1 ? (exams[0].type || 'annual') : 'annual';
+  const template = await resolveTemplateForStudent({
+    studentId: student._id,
+    schoolId,
+    examType,
+  });
+
+  if (!template) {
+    return {
+      status: 404, published: false, student, session,
+      reason: 'Your school has not set up a report card template yet.',
+    };
+  }
+
+  // ── 6. Aggregate + render (school logo arrives via the aggregator) ──────
+  const data = await DataAggregatorService.getStudentSnapshot({
+    studentId: student._id,
+    schoolId,
+    sessionId: session._id,
+    examType,
+  });
+
+  const rendered = TemplateParserService.renderFinalHTML(
+    template.htmlContent,
+    data,
+    template.cssContent || ''
+  );
+
+  if (!rendered.success) {
+    return { status: 500, published: false, reason: 'Report card could not be rendered.' };
+  }
+
+  const studentName = [student.firstName, student.lastName].filter(Boolean).join(' ');
+  const examLabel   = req.query.examId ? exams[0].name : (session.name || 'Report_Card');
+
+  return {
+    status: 200,
+    published: true,
+    html: rendered.html,
+    css: template.cssContent || '',
+    template,
+    student,
+    session,
+    exams,
+    studentName,
+    examLabel,
+    fileName: `${_slug(studentName)}_${_slug(examLabel)}_ReportCard.pdf`,
+  };
+}
+
+/**
+ * The logged-in student's own report card, rendered.
+ * GET /api/v1/dynamic-reports/my-report-card?examId=&session=
+ *
+ * Returns 200 with `published: false` for the not-yet-published state — that
+ * is a valid answer, not an error.
+ */
+exports.getMyReportCard = async (req, res) => {
+  try {
+    const result = await _buildOwnReportCard(req);
+
+    const studentSummary = result.student ? {
+      name:      [result.student.firstName, result.student.lastName].filter(Boolean).join(' '),
+      rollNo:    result.student.rollNo,
+      className: result.student.classId?.name   || '',
+      section:   result.student.sectionId?.name || '',
+    } : null;
+
+    if (!result.published) {
+      return res.status(result.status).json({
+        success: result.status === 200,
+        message: result.reason,
+        data: {
+          published: false,
+          reason:    result.reason,
+          progress:  result.progress || null,
+          student:   studentSummary,
+          session:   result.session ? { _id: result.session._id, name: result.session.name } : null,
+        },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        published: true,
+        html:      result.html,
+        css:       result.css,
+        template:  { _id: result.template._id, name: result.template.name },
+        student:   studentSummary,
+        session:   { _id: result.session._id, name: result.session.name },
+        exams:     result.exams.map(e => ({ _id: e._id, name: e.name, type: e.type })),
+        examLabel: result.examLabel,
+        fileName:  result.fileName,
+      },
+    });
+  } catch (error) {
+    logger.error('[DynamicReport] getMyReportCard error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Download the same rendered report card as a PDF.
+ * GET /api/v1/dynamic-reports/my-report-card/download?examId=&session=
+ *
+ * Streams the buffer rather than writing to disk — the admin generate path
+ * persists to OUTPUT_DIR, which is not writable on serverless deploys.
+ */
+exports.downloadMyReportCard = async (req, res) => {
+  try {
+    const result = await _buildOwnReportCard(req);
+
+    if (!result.published) {
+      // 403 when the card exists but isn't published yet; pass through real
+      // 404/400s unchanged.
+      return res.status(result.status === 200 ? 403 : result.status).json({
+        success: false,
+        message: result.reason,
+      });
+    }
+
+    const cfg = result.template.config || {};
+    const pdf = await PDFService.generatePDF({
+      html: result.html,          // identical markup to the on-screen version
+      css:  result.css,
+      options: {
+        format: cfg.pageSize || 'A4',
+        margin: {
+          top:    `${cfg.marginTop    ?? 10}mm`,
+          right:  `${cfg.marginRight  ?? 10}mm`,
+          bottom: `${cfg.marginBottom ?? 10}mm`,
+          left:   `${cfg.marginLeft   ?? 10}mm`,
+        },
+      },
+    });
+
+    if (!pdf.success) {
+      logger.error('[DynamicReport] Student PDF failed:', pdf.error);
+      return res.status(500).json({ success: false, message: 'Could not generate the PDF.' });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${result.fileName}"`);
+    res.setHeader('Content-Length', pdf.buffer.length);
+    return res.send(pdf.buffer);
+  } catch (error) {
+    logger.error('[DynamicReport] downloadMyReportCard error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

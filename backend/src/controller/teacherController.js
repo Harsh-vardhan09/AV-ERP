@@ -15,6 +15,7 @@ const ClassModel = require('../models/ClassModel');
 const ClassSubjectMap = require('../models/ClassSubjectMap');
 const ReportTemplate = require('../models/ReportTemplate');
 const TemplateFieldExtractor = require('../services/templateFieldExtractor');
+const { refreshExamEvaluationStatus } = require('../services/marksReadinessService');
 const { User } = require('../models/user');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
@@ -1299,6 +1300,9 @@ exports.uploadMarks = async (req, res) => {
 
       if (operations.length > 0) await Marks.bulkWrite(operations);
 
+      // Refresh per-subject completion roll-up on the exam (never throws)
+      await refreshExamEvaluationStatus({ examId: examObjectId, schoolId: req.schoolId });
+
       await MarksAuditLog.create({
         examId: examObjectId, classId: classObjectId, sectionId: sectionObjectId,
         subjectId: subjectObjectId, uploadedBy: req.user._id,
@@ -1349,6 +1353,9 @@ exports.uploadMarks = async (req, res) => {
     if (operations.length > 0) {
       await Marks.bulkWrite(operations);
     }
+
+    // Refresh per-subject completion roll-up on the exam (never throws)
+    await refreshExamEvaluationStatus({ examId: examObjectId, schoolId: req.schoolId });
 
     // Create audit log entry
     await MarksAuditLog.create({
@@ -1605,6 +1612,9 @@ exports.uploadMarksExcel = async (req, res) => {
     if (operations.length > 0) {
       await Marks.bulkWrite(operations);
     }
+
+    // Refresh per-subject completion roll-up on the exam (never throws)
+    await refreshExamEvaluationStatus({ examId: examObjectId, schoolId: req.schoolId });
 
     // Audit log
     await MarksAuditLog.create({

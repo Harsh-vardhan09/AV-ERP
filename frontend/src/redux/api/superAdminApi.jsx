@@ -16,9 +16,60 @@ export const superAdminApi = createApi({
     baseUrl: API_URL,
     credentials: 'include',
   }),
-  tagTypes: ['SuperAdmin', 'Schools', 'SchoolModules', 'SchoolTemplates', 'SchoolAdmissionTemplates'],
+  tagTypes: ['SuperAdmin', 'Schools', 'SchoolModules', 'SchoolTemplates', 'SchoolAdmissionTemplates', 'GlobalTemplates'],
 
   endpoints: (builder) => ({
+    // ── GLOBAL REPORT TEMPLATE AUTHORING ────────────────────────────────────
+    // Templates shared by every school. Only Super Admins may write these;
+    // school admins get read + select via reportTemplateApi.
+
+    getGlobalTemplates: builder.query({
+      query: ({ templateType, templateStatus, isActive, search, page = 1, limit = 50 } = {}) => {
+        const p = new URLSearchParams({ page, limit });
+        if (templateType)   p.set('templateType', templateType);
+        if (templateStatus) p.set('templateStatus', templateStatus);
+        if (isActive !== undefined) p.set('isActive', isActive);
+        if (search) p.set('search', search);
+        return `templates?${p.toString()}`;
+      },
+      providesTags: [{ type: 'GlobalTemplates', id: 'LIST' }],
+    }),
+
+    // Full document including htmlContent — used by the editor
+    getGlobalTemplate: builder.query({
+      query: (id) => `templates/${id}`,
+      providesTags: (r, e, id) => [{ type: 'GlobalTemplates', id }],
+    }),
+
+    createGlobalTemplate: builder.mutation({
+      query: (body) => ({ url: 'templates', method: 'POST', body }),
+      invalidatesTags: [{ type: 'GlobalTemplates', id: 'LIST' }],
+    }),
+
+    updateGlobalTemplate: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `templates/${id}`, method: 'PUT', body }),
+      invalidatesTags: (r, e, { id }) => [{ type: 'GlobalTemplates', id }, { type: 'GlobalTemplates', id: 'LIST' }],
+    }),
+
+    deleteGlobalTemplate: builder.mutation({
+      query: (id) => ({ url: `templates/${id}`, method: 'DELETE' }),
+      invalidatesTags: [{ type: 'GlobalTemplates', id: 'LIST' }],
+    }),
+
+    extractGlobalTemplateFields: builder.mutation({
+      query: (htmlContent) => ({ url: 'templates/extract-fields', method: 'POST', body: { htmlContent } }),
+    }),
+
+    // Returns rendered HTML (not JSON) for the editor's Preview tab
+    previewGlobalTemplate: builder.mutation({
+      query: ({ htmlContent, sampleData }) => ({
+        url: 'templates/preview',
+        method: 'POST',
+        body: { htmlContent, sampleData },
+        responseHandler: (response) => response.text(),
+      }),
+    }),
+
     // ── AUTH ────────────────────────────────────────────────────────────────
 
     loginSuperAdmin: builder.mutation({
@@ -229,7 +280,15 @@ export const {
   useGetSchoolModulesQuery,
   useUpdateSchoolModuleMutation,
   useBulkUpdateSchoolModulesMutation,
-  // ── Report Template Management ──
+  // ── Global Report Template Authoring ──
+  useGetGlobalTemplatesQuery,
+  useGetGlobalTemplateQuery,
+  useCreateGlobalTemplateMutation,
+  useUpdateGlobalTemplateMutation,
+  useDeleteGlobalTemplateMutation,
+  useExtractGlobalTemplateFieldsMutation,
+  usePreviewGlobalTemplateMutation,
+  // ── Report Template Management (per-school, legacy) ──
   useGetSchoolTemplatesQuery,
   useUploadTemplateForSchoolMutation,
   useDeleteSchoolTemplateMutation,

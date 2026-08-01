@@ -461,8 +461,11 @@ const menuConfig = {
     { to: '/admin/biometric/devices', icon: <MdCheckCircle size={20} />, label: 'Biometric Devices' },
     { to: '/admin/biometric/attendance', icon: <FaCalendarCheck size={20} />, label: 'Faculty Attendance' },
     { to: '/admin/fee', icon: <MdAttachMoney size={20} />, label: 'Fee Management' },
-    { to: '/admin/report-cards', icon: <MdDescription size={20} />, label: 'Report Cards' },
-    { to: '/admin/template-report-cards', icon: <MdGridView size={20} />, label: 'Template Report Cards' },
+    // Legacy "Report Cards" generator retired — it used the pre-template
+    // renderer and duplicated this screen. Template Report Cards is now the
+    // single generator; Report Card Templates is where the layout is chosen.
+    { to: '/admin/template-report-cards', icon: <MdGridView size={20} />, label: 'Report Cards' },
+    { to: '/admin/templates', icon: <MdUploadFile size={20} />, label: 'Report Card Templates' },
     { to: '/admin/documents', icon: <MdArticle size={20} />, label: 'Documents (TC / Migration)' },
     // ── OASES module ──
     { to: '/admin/oases', icon: <MdOutlineAutoStories size={20} />, label: 'OASES – Evaluation' },
@@ -688,7 +691,8 @@ const DashboardLayout = () => {
     if (enabledModules.fee_management === false && to.includes('/fee')) return false;
     // Report Cards (old + template-based)
     if (enabledModules.report_cards === false &&
-      (to.includes('/report-cards') || to.includes('/template-report-cards'))) return false;
+      (to.includes('/report-cards') || to.includes('/template-report-cards') ||
+       to === '/admin/templates')) return false;
     // Documents
     if (enabledModules.documents === false && to.includes('/documents')) return false;
     // Biometric

@@ -13,6 +13,12 @@ router.use(checkModuleAccess('report_cards'));
 router.post('/generate', varifyToken, authorize('admin', 'teacher'), dynamicReportController.generateReport);
 router.post('/generate-bulk', varifyToken, authorize('admin', 'teacher'), dynamicReportController.generateBulkReports);
 
+// ── Student self-service ─────────────────────────────────────────────────────
+// studentId is taken from the auth token inside the controller — never from the
+// request — so a student can only ever reach their own report card.
+router.get('/my-report-card', varifyToken, authorize('student'), dynamicReportController.getMyReportCard);
+router.get('/my-report-card/download', varifyToken, authorize('student'), dynamicReportController.downloadMyReportCard);
+
 // Preview route
 router.get('/preview/:studentId', varifyToken, authorize('admin', 'teacher', 'student'), dynamicReportController.previewReport);
 

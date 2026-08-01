@@ -10,7 +10,7 @@ const baseQuery = fetchBaseQuery({
 export const reportCardApi = createApi({
   reducerPath: 'reportCardApi',
   baseQuery,
-  tagTypes: ['ReportCard', 'ReportCardList', 'ReportCardExams'],
+  tagTypes: ['ReportCard', 'ReportCardList', 'ReportCardExams', 'ReportCardReadiness'],
   endpoints: (builder) => ({
     getReportCard: builder.query({
       query: ({ studentId, session } = {}) => {
@@ -34,6 +34,22 @@ export const reportCardApi = createApi({
       },
       providesTags: (result, error, arg) => [
         { type: 'ReportCardExams', id: `${arg?.classId}-${arg?.session}` },
+      ],
+    }),
+
+    // Per-subject marks submission status for a class+exam.
+    // Omit examId to get readiness for every exam in the session.
+    getMarksReadiness: builder.query({
+      query: ({ classId, examId, sectionId, session } = {}) => {
+        const params = new URLSearchParams();
+        if (classId) params.append('classId', classId);
+        if (examId) params.append('examId', examId);
+        if (sectionId) params.append('sectionId', sectionId);
+        if (session) params.append('session', session);
+        return `/readiness?${params.toString()}`;
+      },
+      providesTags: (result, error, arg) => [
+        { type: 'ReportCardReadiness', id: `${arg?.classId}-${arg?.examId || 'all'}` },
       ],
     }),
 
@@ -106,4 +122,5 @@ export const {
   useFinalizeReportCardMutation,
   useUnlockReportCardMutation,
   useGetClassReportCardsQuery,
+  useGetMarksReadinessQuery,
 } = reportCardApi;

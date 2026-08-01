@@ -98,7 +98,11 @@ const Setupserver = async () => {
           // Allow Razorpay checkout script to load
           scriptSrc: ["'self'", "https://checkout.razorpay.com"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:', CF_DOMAIN, S3_DOMAIN, 'https://*.razorpay.com'].filter(Boolean),
+          // Cloudinary hosts every uploaded image (school logos, student photos,
+          // signatures). Without it, any HTML served from this origin — e.g. the
+          // report-card preview route — renders with broken images, since
+          // CF_DOMAIN / S3_DOMAIN are usually unset and filtered out below.
+          imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', CF_DOMAIN, S3_DOMAIN, 'https://*.razorpay.com'].filter(Boolean),
           // Allow XHR/fetch to Razorpay payment API and our own origins
           connectSrc: ["'self'", ...ALLOWED_ORIGINS, "https://api.razorpay.com", "https://lumberjack.razorpay.com"],
           fontSrc: ["'self'"],

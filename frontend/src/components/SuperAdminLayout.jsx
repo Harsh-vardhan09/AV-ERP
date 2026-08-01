@@ -14,6 +14,7 @@ const navItems = [
   { to: '/superadmin/dashboard',           icon: <MdDashboard size={18} />,   label: 'Dashboard'            },
   { to: '/superadmin/schools',             icon: <MdSchool size={18} />,       label: 'Schools'              },
   { to: '/superadmin/templates',           icon: <MdArticle size={18} />,      label: 'Report Templates'     },
+  { to: '/superadmin/school-templates',    icon: <MdArticle size={18} />,      label: 'Per-School Templates' },
   { to: '/superadmin/admission-templates', icon: <MdDescription size={18} />, label: 'Admission Templates'  },
 ];
 

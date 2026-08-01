@@ -16,6 +16,13 @@ const reportTemplateSchema = new mongoose.Schema(
       type: String,
       required: [true, 'HTML content is required'],
     },
+    /**
+     * @deprecated Templates are now a single HTML document with inline CSS.
+     * Kept nullable for backward compatibility with rows created before the
+     * split was removed; scripts/migrateGlobalTemplates.js folds any existing
+     * value into a <style> block at the top of htmlContent and blanks this.
+     * Nothing writes to it any more — the render path reads htmlContent only.
+     */
     cssContent: {
       type: String,
       default: '',
@@ -25,7 +32,11 @@ const reportTemplateSchema = new mongoose.Schema(
       name: String,
       type: {
         type: String,
-        enum: ['simple', 'object', 'array', 'array_item'],
+        // Must cover every type TemplateFieldExtractor.extractFields() emits.
+        // 'hyphenated' ({{student-name}}, {{school-logo}}) and 'bracket_access'
+        // ({{subjects[0].total}}) were missing, so saving any template that used
+        // those token styles failed validation with a 500.
+        enum: ['simple', 'object', 'array', 'array_item', 'hyphenated', 'bracket_access'],
         default: 'simple',
       },
       parentArray: String,
@@ -154,11 +165,28 @@ const reportTemplateSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    // Multi-tenancy
+    // ── Global vs school-owned ────────────────────────────────────────────────
+    // Global templates are authored by a Super Admin and shared by every school.
+    // A school adopts one by setting SchoolSettings.selectedReportTemplateId —
+    // it never edits the template itself.
+    //
+    // Templates created before this split remain school-owned (isGlobal:false,
+    // schoolId set) and keep working; the resolver reads both.
+    isGlobal: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    // Multi-tenancy — required for school-owned templates, null for global ones.
     schoolId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'School',
-      required: [true, 'School context is required'],
+      default: null,
+      required: [
+        function () { return !this.isGlobal; },
+        'School context is required for a non-global template',
+      ],
       index: true,
     },
     createdBy: {
@@ -181,6 +209,8 @@ reportTemplateSchema.index({ schoolId: 1, name: 'text', description: 'text' });
 reportTemplateSchema.index({ schoolId: 1, classRangeFrom: 1, classRangeTo: 1, isActive: 1 });
 // Template status queries (e.g., find all recommended for a school)
 reportTemplateSchema.index({ schoolId: 1, templateStatus: 1, isActive: 1 });
+// Global template lookups (school admins browsing the shared gallery)
+reportTemplateSchema.index({ isGlobal: 1, isActive: 1, templateType: 1 });
 
 // Ensure only one default template per school per (type + class range).
 // Class-specific groups (e.g., Class 1-5 and Class 9-10) can each have their

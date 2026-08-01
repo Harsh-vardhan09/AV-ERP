@@ -10,8 +10,41 @@ const baseQuery = fetchBaseQuery({
 export const dynamicReportApi = createApi({
   reducerPath: 'dynamicReportApi',
   baseQuery,
-  tagTypes: ['DynamicReport', 'DynamicReportList', 'DynamicReportStats'],
+  tagTypes: ['DynamicReport', 'DynamicReportList', 'DynamicReportStats', 'MyReportCard'],
   endpoints: (builder) => ({
+    // ── Student self-service ────────────────────────────────────────────
+    // The server derives the student from the auth cookie — no id is sent.
+    getMyReportCard: builder.query({
+      query: ({ examId, session } = {}) => {
+        const params = new URLSearchParams();
+        if (examId) params.append('examId', examId);
+        if (session) params.append('session', session);
+        const suffix = params.toString() ? `?${params.toString()}` : '';
+        return `/my-report-card${suffix}`;
+      },
+      providesTags: (result, error, arg) => [
+        { type: 'MyReportCard', id: `${arg?.examId || 'all'}-${arg?.session || 'current'}` },
+      ],
+    }),
+
+    // Returns the PDF as a Blob. A mutation, not a query, so the binary is
+    // never retained in the redux cache.
+    downloadMyReportCard: builder.mutation({
+      query: ({ examId, session } = {}) => {
+        const params = new URLSearchParams();
+        if (examId) params.append('examId', examId);
+        if (session) params.append('session', session);
+        const suffix = params.toString() ? `?${params.toString()}` : '';
+        return {
+          url: `/my-report-card/download${suffix}`,
+          method: 'GET',
+          cache: 'no-cache',
+          responseHandler: (response) =>
+            response.ok ? response.blob() : response.json(),
+        };
+      },
+    }),
+
     // Generate single report
     generateDynamicReport: builder.mutation({
       query: (data) => ({
@@ -90,4 +123,6 @@ export const {
   useGetDynamicReportsQuery,
   useDeleteDynamicReportMutation,
   useGetDynamicReportStatsQuery,
+  useGetMyReportCardQuery,
+  useDownloadMyReportCardMutation,
 } = dynamicReportApi;

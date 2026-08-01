@@ -28,6 +28,23 @@ const Attendance        = require('../models/attendance');
 const AcademicSession   = require('../models/AcademicSession');
 const CoScholasticMark  = require('../models/CoScholasticMark');
 const ReportCardMark    = require('../models/ReportCardMark');
+const School            = require('../models/School');
+const SchoolSettings    = require('../models/SchoolSettings');
+
+// ─── CBSE co-scholastic part membership ───────────────────────────────────────
+// Normalised skill names (lowercase, alphanumeric only). Anything not listed
+// here lands in Part A — see the _partOf() helper in _buildFlat.
+// Matched as substrings so real-world compound names still land correctly
+// (e.g. "Punctuality / Regularity", "Discipline / Confidence").
+const CO_PART_B = [
+  'regularity', 'sincerity', 'behaviour', 'behavior', 'values',
+  'punctuality', 'discipline', 'attitude', 'neatness', 'cleanliness',
+];
+const CO_PART_C = [
+  'selfawareness', 'empathy', 'communication', 'literacy', 'creative',
+  'scientific', 'criticalthinking', 'problemsolving', 'decisionmaking',
+  'thinking', 'awareness',
+];
 
 // ─── Subject name → short slug ────────────────────────────────────────────────
 const SLUG_MAP = {
@@ -63,10 +80,13 @@ function classifyExam(examName = '', examType = '') {
 // Term 2 = second half / final  (Annual, Final, Yearly, SA2, Term 2)
 function classifyTerm(examName = '', examType = '') {
   const n = (examName + ' ' + examType).toLowerCase();
+  // Term 1 identifiers are tested FIRST: "half yearly" contains "yearly", so
+  // the term2 pattern below would otherwise swallow every half-yearly exam and
+  // collapse Term I marks into Term II. No term1 pattern matches an annual /
+  // final / SA-II name, so this ordering is safe.
+  if (/term.?1|half.?year|midterm|mid.?term|sa.?1|unit.?test/i.test(n)) return 'term1';
   // Explicit Term 2 identifiers
   if (/term.?2|annual|final|yearly|sa.?2/i.test(n)) return 'term2';
-  // Explicit Term 1 identifiers (half_yearly / midterm stay in term1)
-  if (/term.?1|half.?year|midterm|mid.?term|sa.?1|unit.?test/i.test(n)) return 'term1';
   // Default: term1 (safer — avoids inflating annual/term2 totals)
   return 'term1';
 }
@@ -105,12 +125,13 @@ class DataAggregatorService {
   static async getStudentSnapshot({ studentId, schoolId, sessionId, examType = 'annual' }) {
     const t0 = Date.now();
 
-    const [studentData, reportCard, sessionData, coScholastic, attendance] = await Promise.all([
+    const [studentData, reportCard, sessionData, coScholastic, attendance, school] = await Promise.all([
       this._fetchStudent(studentId, schoolId),
       ReportCard.findOne({ studentId, schoolId, session: sessionId }).lean(),
       AcademicSession.findById(sessionId).lean(),
       this._fetchCoScholastic(studentId, schoolId, sessionId),
       this._fetchAttendance(studentId, schoolId, sessionId),
+      this._fetchSchool(schoolId),
     ]);
 
     if (!studentData) throw new Error(`Student not found: ${studentId}`);
@@ -119,7 +140,7 @@ class DataAggregatorService {
     const { rows: subjectRows, flatDynamicFields } = await this._aggregateMarks(studentData, schoolId, sessionId);
 
     const calc    = this._calcTotals(subjectRows);
-    const flatMap = this._buildFlat({ studentData, reportCard, sessionData, subjectRows, calc, coScholastic, attendance });
+    const flatMap = this._buildFlat({ studentData, reportCard, sessionData, subjectRows, calc, coScholastic, attendance, school });
 
     // ── NOTE: flatDynamicFields is intentionally NOT injected into the root flatMap ──
     // Injecting it (Object.assign) caused all subjects to show the same marks because
@@ -151,6 +172,43 @@ class DataAggregatorService {
     return {
       ...flatMap,
       _meta: { generationTime: Date.now() - t0, subjectCount: subjectRows.length },
+    };
+  }
+
+  /**
+   * Fetch school identity + branding for the report header.
+   *
+   * Logo precedence: SchoolSettings.schoolProfile.schoolLogo (the topbar logo
+   * uploaded via /admission/school-settings/upload-logo) → School.logoUrl.
+   * Returns a plain object with '' defaults so templates never render "N/A"
+   * or a broken <img> when a school hasn't uploaded anything.
+   */
+  static async _fetchSchool(schoolId) {
+    const [school, settings] = await Promise.all([
+      School.findById(schoolId).select('name code address phone email logoUrl udiseCode').lean(),
+      SchoolSettings.findOne({ schoolId }).select('schoolProfile').lean(),
+    ]);
+
+    const p = settings?.schoolProfile || {};
+    return {
+      name:        p.fullName    || school?.name    || '',
+      shortName:   p.shortName   || school?.name    || '',
+      code:        p.schoolCode  || school?.code    || '',
+      tagline:     p.tagline     || '',
+      address:     p.address     || school?.address || '',
+      city:        p.city        || '',
+      state:       p.state       || '',
+      pincode:     p.pincode     || '',
+      phone:       p.phoneNumber || p.mobileNumber  || school?.phone || '',
+      email:       p.emailId     || school?.email   || '',
+      website:     p.website     || '',
+      affiliatedTo:p.affiliatedTo|| '',
+      udiseCode:   p.udiseCode   || school?.udiseCode || '',
+      logo:        p.schoolLogo  || school?.logoUrl || '',
+      boardLogo:   p.boardLogo   || '',
+      watermark:   p.watermarkLogo      || '',
+      signature:   p.authoritySignature || '',
+      qrCode:      p.marksheetQrCode    || '',
     };
   }
 
@@ -585,8 +643,36 @@ class DataAggregatorService {
   }
 
   // ── Build the COMPLETE flat token map ─────────────────────────────────────
-  static _buildFlat({ studentData, reportCard, sessionData, subjectRows, calc, coScholastic, attendance }) {
+  static _buildFlat({ studentData, reportCard, sessionData, subjectRows, calc, coScholastic, attendance, school }) {
     const d = {};
+
+    // ── School identity & branding ────────────────────────────────────────
+    // Empty string (not 'N/A') on purpose: these land in headers and <img> tags,
+    // where "N/A" would print literally. _normalizeData builds the school.*
+    // namespace from these; the parser's fuzzy matcher maps {{school-name}},
+    // {{school_name}} and {{schoolName}} onto d.schoolName automatically.
+    const sc = school || {};
+    d.schoolName      = d.school_name      = sc.name      || '';
+    d.schoolShortName = d.school_shortname = sc.shortName || '';
+    d.schoolCode      = d.school_code      = sc.code      || '';
+    d.schoolTagline   = d.school_tagline   = sc.tagline   || '';
+    d.schoolAddress   = d.school_address   = [sc.address, sc.city, sc.state, sc.pincode].filter(Boolean).join(', ');
+    d.schoolPhone     = d.school_phone     = sc.phone     || '';
+    d.schoolEmail     = d.school_email     = sc.email     || '';
+    d.schoolWebsite   = d.school_website   = sc.website   || '';
+    d.affiliatedTo    = d.affiliated_to    = sc.affiliatedTo || '';
+    d.udiseCode       = d.udise_code       = sc.udiseCode || '';
+    // Raw asset URLs — the parser turns schoolLogo into the {{school-logo}} <img> tag.
+    d.schoolLogoUrl        = sc.logo      || '';
+    d.schoolWatermarkUrl   = sc.watermark || '';
+    d.schoolSignatureUrl   = sc.signature || '';
+    d.schoolQrCodeUrl      = sc.qrCode    || '';
+    // Optional board/affiliation crest — no upload slot exists yet, so this is
+    // '' today and {{board-logo}} renders nothing. Wiring an uploader later
+    // only needs schoolProfile.boardLogo to be populated.
+    d.boardLogoUrl         = sc.boardLogo || '';
+    // Student photo for the CBSE photo box; '' → {{student-photo}} renders nothing.
+    d.studentPhotoUrl      = studentData.photo || '';
 
     // ── Student identity ──────────────────────────────────────────────────
     const fullName = [studentData.firstName, studentData.middleName, studentData.lastName].filter(Boolean).join(' ') || 'N/A';
@@ -677,6 +763,8 @@ class DataAggregatorService {
     d.gt_total        = calc.grandObt;
     d.totalPercentage = d.total_percentage = d.percentage                           = calc.percentage;
     d.totalGrade      = d.total_grade     = d.grade = d.final_grade                = calc.grade;
+    // {{overall-grade}} / {{overall_grade}} — used by the CBSE summary strip
+    d.overallGrade    = d.overall_grade                                             = calc.grade;
     d.rank            = d.rank_number                                               = 'N/A';
     d.subjectCount    = d.subject_count                                             = calc.subjectCount;
 
@@ -848,6 +936,26 @@ class DataAggregatorService {
     d.coScholastic   = _validCoItems;       // camelCase alias
     d.skills         = _validCoItems.map(c => ({ name: c.skillName, grade: c.grade }));
     d.observations   = d.skills;            // alias for {{#observations}} templates
+
+    // ── CBSE Part A / B / C split ──────────────────────────────────────────
+    // CoScholasticMark has no "part" column, so the three-table CBSE layout
+    // can't come from the schema. Derive it from the cleaned list by skill
+    // name; anything unrecognised falls into Part A so no skill is ever lost.
+    // Existing {{#co_scholastic}} consumers are unaffected — this is additive.
+    const _partOf = (skillName) => {
+      const n = String(skillName).toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (CO_PART_B.some(k => n.includes(k))) return 'b';
+      if (CO_PART_C.some(k => n.includes(k))) return 'c';
+      return 'a';
+    };
+    d.co_scholastic_a = [];
+    d.co_scholastic_b = [];
+    d.co_scholastic_c = [];
+    _validCoItems.forEach((c) => d[`co_scholastic_${_partOf(c.skillName)}`].push(c));
+    // Re-index within each part so {{index}} counts per table
+    ['a', 'b', 'c'].forEach((p) => {
+      d[`co_scholastic_${p}`] = d[`co_scholastic_${p}`].map((c, i) => ({ ...c, index: i + 1 }));
+    });
 
     // Expose each skill as a FLAT field by its normalised name
     // e.g. skillName = "Discipline" → d.discipline = "A", d.discipline_t1 = "A"

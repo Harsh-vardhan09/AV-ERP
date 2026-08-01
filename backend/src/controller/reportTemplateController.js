@@ -8,6 +8,7 @@ const ReportTemplate = require('../models/ReportTemplate');
 const TemplateFieldExtractor = require('../services/templateFieldExtractor');
 const { resolveTemplate }     = require('../services/templateResolver');
 const Class                   = require('../models/ClassModel');
+const SchoolSettings          = require('../models/SchoolSettings');
 const logger = require('../utils/logger');
 
 /**
@@ -114,9 +115,11 @@ exports.getTemplates = async (req, res) => {
 
     const schoolId = req.schoolId;
 
-    // Build query
+    // Global (Super Admin authored) templates + this school's own legacy ones.
+    // School admins browse this list to pick an active template; they cannot
+    // author — see superAdminController.* for the authoring endpoints.
     const query = {
-      schoolId,
+      $or: [{ isGlobal: true }, { schoolId }],
       isDeleted: { $ne: true },
     };
 
@@ -172,7 +175,7 @@ exports.getTemplate = async (req, res) => {
 
     const template = await ReportTemplate.findOne({
       _id: id,
-      schoolId,
+      $or: [{ isGlobal: true }, { schoolId }],
     })
       .populate('createdBy', 'firstName lastName email')
       .populate('updatedBy', 'firstName lastName email');
@@ -695,5 +698,106 @@ exports.getStats = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+/**
+ * List selectable templates + the school's current selection.
+ * GET /api/v1/report-templates/selection
+ *
+ * Returns every active template for this school (the picker options) plus
+ * selectedTemplateId, so the UI renders the list and current choice in one call.
+ */
+exports.getSelection = async (req, res) => {
+  try {
+    const schoolId = req.schoolId;
+
+    const [templates, settings] = await Promise.all([
+      ReportTemplate.find({
+        $or: [{ isGlobal: true }, { schoolId }],
+        isActive: true,
+        isDeleted: { $ne: true },
+      })
+        .select('name description templateType templateStatus isDefault isGlobal classGroupName classRangeFrom classRangeTo applicableClassIds updatedAt')
+        .sort({ isGlobal: -1, isDefault: -1, name: 1 })
+        .lean(),
+      SchoolSettings.findOne({ schoolId }).select('selectedReportTemplateId').lean(),
+    ]);
+
+    const selectedTemplateId = settings?.selectedReportTemplateId
+      ? String(settings.selectedReportTemplateId)
+      : null;
+
+    // A selection pointing at a deleted/deactivated template is stale — report
+    // it so the UI can prompt the admin to re-pick instead of silently falling
+    // back to the isDefault template.
+    const isStale = Boolean(
+      selectedTemplateId && !templates.some(t => String(t._id) === selectedTemplateId)
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        templates,
+        selectedTemplateId: isStale ? null : selectedTemplateId,
+        isStale,
+      },
+    });
+  } catch (error) {
+    logger.error('[ReportTemplate] getSelection error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Set (or clear) the school-wide report template.
+ * PUT /api/v1/report-templates/selection   body: { templateId }
+ *
+ * Pass templateId: null to clear the selection and fall back to the normal
+ * isDefault resolution chain.
+ */
+exports.setSelection = async (req, res) => {
+  try {
+    const schoolId = req.schoolId;
+    const { templateId } = req.body;
+
+    if (templateId) {
+      // A school may select a global template or one of its own legacy ones —
+      // never another tenant's. This handler writes ONLY
+      // SchoolSettings.selectedReportTemplateId; it can't touch template
+      // htmlContent or templateSchema, which are Super Admin territory.
+      const template = await ReportTemplate.findOne({
+        _id: templateId,
+        $or: [{ isGlobal: true }, { schoolId }],
+        isActive: true,
+        isDeleted: { $ne: true },
+      }).select('_id name').lean();
+
+      if (!template) {
+        return res.status(404).json({
+          success: false,
+          message: 'Template not found or is not active for this school',
+        });
+      }
+    }
+
+    const settings = await SchoolSettings.findOneAndUpdate(
+      { schoolId },
+      { $set: { selectedReportTemplateId: templateId || null } },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    ).select('selectedReportTemplateId').lean();
+
+    logger.info('[ReportTemplate] School template selection updated', {
+      schoolId, templateId: templateId || null, by: req.user?._id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: templateId ? 'Report card template selected' : 'Template selection cleared',
+      data: { selectedTemplateId: settings?.selectedReportTemplateId || null },
+    });
+  } catch (error) {
+    logger.error('[ReportTemplate] setSelection error:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

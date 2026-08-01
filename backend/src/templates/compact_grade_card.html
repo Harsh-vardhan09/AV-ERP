@@ -1,0 +1,97 @@
+<!--
+  Compact Grade Card — minimal one-page card for lower classes.
+  Subjects render as grade-only; same token dialect as the other templates.
+-->
+<div class="rc">
+
+  <table class="hdr">
+    <tr>
+      <td class="hdr-logo">{{school-logo}}</td>
+      <td class="hdr-name">
+        {{school-name}}
+        <div class="hdr-sub">GRADE CARD &nbsp;·&nbsp; {{session}}</div>
+      </td>
+    </tr>
+  </table>
+
+  <table class="info">
+    <tr>
+      <td><span class="k">Name</span> : <span class="v">{{student-name}}</span></td>
+      <td><span class="k">Class</span> : <span class="v">{{class}} {{section}}</span></td>
+      <td><span class="k">Roll No</span> : <span class="v">{{rollNo}}</span></td>
+    </tr>
+  </table>
+
+  <table class="sch">
+    <thead>
+      <tr><th class="y">Subject</th><th class="y gr">Grade</th></tr>
+    </thead>
+    <tbody>
+      {{#subjects}}
+      <tr><td class="subj">{{name}}</td><td class="grade">{{grade}}</td></tr>
+      {{/subjects}}
+    </tbody>
+  </table>
+
+  <table class="summary">
+    <tr>
+      <td class="pk">ATTENDANCE</td><td class="bx">{{attendance.str}}</td>
+      <td class="pk">OVERALL GRADE</td><td class="bx">{{overall-grade}}</td>
+      <td class="pk">RESULT</td><td class="bx">{{result}}</td>
+    </tr>
+  </table>
+
+  <table class="co">
+    <tr><th class="y">Personal &amp; Social Qualities</th><th class="y gr">Grade</th></tr>
+    {{#co_scholastic}}
+    <tr><td class="co-name">{{name}}</td><td class="co-grade">{{grade}}</td></tr>
+    {{/co_scholastic}}
+  </table>
+
+  <div class="remarks"><span class="k">Remarks:</span> {{remarks}}</div>
+
+  <table class="sign">
+    <tr><td>Class Teacher</td><td>Principal</td><td>Guardian</td></tr>
+  </table>
+
+</div>
+
+<style>
+  .rc { font-family: Calibri, Carlito, Arial, sans-serif; color:#000; font-size:12px;
+        border:2px solid #000; padding:14px 16px; box-sizing:border-box; }
+  .rc table { border-collapse:collapse; width:100%; }
+  .k { font-weight:bold; }
+  .v { }
+
+  .hdr td { border:none; vertical-align:middle; padding:0; }
+  .hdr-logo { width:90px; }
+  .hdr-logo img { max-height:70px !important; max-width:80px !important; }
+  .hdr-name { text-align:center; font-size:24px; font-weight:bold; font-family:Arial, sans-serif; }
+  .hdr-sub  { font-size:12px; font-weight:bold; letter-spacing:1px; margin-top:3px; }
+
+  .info { margin-top:14px; font-size:12px; }
+  .info td { border:none; padding:2px 4px; }
+
+  .sch { margin-top:12px; }
+  .sch th, .sch td { border:1px solid #000; padding:5px 8px; }
+  .sch .y  { background:#fdeeb8; font-weight:bold; text-align:left; }
+  .sch .gr { text-align:center; width:110px; }
+  .sch .subj  { font-weight:bold; }
+  .sch .grade { text-align:center; font-weight:bold; }
+
+  .summary { margin-top:14px; font-size:11px; table-layout:fixed; }
+  .summary td { border:1px solid #000; padding:5px 6px; font-weight:bold; text-align:center; }
+  .summary .pk { background:#fbe0d6; text-align:left; }
+
+  .co { margin-top:14px; }
+  .co th, .co td { border:1px solid #000; padding:4px 8px; }
+  .co .y  { background:#fdeeb8; font-weight:bold; text-align:left; }
+  .co .gr { text-align:center; width:110px; }
+  .co-name  { font-weight:bold; }
+  .co-grade { text-align:center; }
+
+  .remarks { margin-top:14px; border:1px solid #000; padding:8px; min-height:34px; font-size:11px; }
+
+  .sign { margin-top:44px; font-size:12px; }
+  .sign td { text-align:center; font-weight:bold; border:none; padding-top:6px; }
+</style>

@@ -7,22 +7,20 @@ const baseQuery = fetchBaseQuery({
   credentials: 'include',
 });
 
+/**
+ * reportTemplateApi — SCHOOL-SIDE, READ + SELECT ONLY.
+ *
+ * Report card templates are authored by Super Admins and shared globally.
+ * A school admin browses them and adopts one; the authoring mutations
+ * (create / update / delete / clone / set-default / preview / extract-fields)
+ * now live in superAdminApi and hit /api/super-admin/templates/*.
+ */
 export const reportTemplateApi = createApi({
   reducerPath: 'reportTemplateApi',
   baseQuery,
-  tagTypes: ['ReportTemplate', 'ReportTemplateList', 'ReportTemplateStats'],
+  tagTypes: ['ReportTemplate', 'ReportTemplateList', 'ReportTemplateStats', 'ReportTemplateSelection'],
   endpoints: (builder) => ({
-    // Create new template
-    createReportTemplate: builder.mutation({
-      query: (data) => ({
-        url: '/',
-        method: 'POST',
-        body: data,
-      }),
-      invalidatesTags: [{ type: 'ReportTemplateList' }, { type: 'ReportTemplateStats' }],
-    }),
-
-    // Get all templates
+    // Browse: global templates + this school's own legacy ones
     getReportTemplates: builder.query({
       query: ({ page = 1, limit = 20, templateType, isActive, isDefault, search } = {}) => {
         const params = new URLSearchParams();
@@ -37,89 +35,36 @@ export const reportTemplateApi = createApi({
       providesTags: [{ type: 'ReportTemplateList' }],
     }),
 
-    // Get single template
+    // Single template (read-only — used for the gallery preview)
     getReportTemplate: builder.query({
       query: (id) => `/${id}`,
       providesTags: (result, error, id) => [{ type: 'ReportTemplate', id }],
     }),
 
-    // Update template
-    updateReportTemplate: builder.mutation({
-      query: ({ id, ...data }) => ({
-        url: `/${id}`,
-        method: 'PUT',
-        body: data,
-      }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: 'ReportTemplate', id },
-        { type: 'ReportTemplateList' },
-      ],
-    }),
-
-    // Delete template
-    deleteReportTemplate: builder.mutation({
-      query: (id) => ({
-        url: `/${id}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: [{ type: 'ReportTemplateList' }, { type: 'ReportTemplateStats' }],
-    }),
-
-    // Extract fields from template HTML
-    extractTemplateFields: builder.mutation({
-      query: (htmlContent) => ({
-        url: '/extract-fields',
-        method: 'POST',
-        body: { htmlContent },
-      }),
-    }),
-
-    // Validate template with sample data
-    validateTemplate: builder.mutation({
-      query: ({ htmlContent, sampleData }) => ({
-        url: '/validate',
-        method: 'POST',
-        body: { htmlContent, sampleData },
-      }),
-    }),
-
-    // Preview template (returns HTML)
-    previewTemplate: builder.mutation({
-      query: ({ htmlContent, cssContent, sampleData }) => ({
-        url: '/preview',
-        method: 'POST',
-        body: { htmlContent, cssContent, sampleData },
-        responseHandler: (response) => response.text(),
-      }),
-    }),
-
-    // Set template as default
-    setDefaultTemplate: builder.mutation({
-      query: (id) => ({
-        url: `/${id}/set-default`,
-        method: 'PUT',
-      }),
-      invalidatesTags: [{ type: 'ReportTemplateList' }],
-    }),
-
-    // Clone template
-    cloneReportTemplate: builder.mutation({
-      query: ({ id, newName }) => ({
-        url: `/${id}/clone`,
-        method: 'POST',
-        body: { newName },
-      }),
-      invalidatesTags: [{ type: 'ReportTemplateList' }, { type: 'ReportTemplateStats' }],
-    }),
-
-    // Get template statistics
+    // Template statistics
     getReportTemplateStats: builder.query({
       query: () => '/stats',
       providesTags: [{ type: 'ReportTemplateStats' }],
     }),
 
-    // Get best-matched template for a given class (class-group targeting)
-    // Returns the resolved template with matchReason: 'exact_class' | 'class_range' | 'global_default'
+    // School-wide selection — returns { templates, selectedTemplateId, isStale }
+    getTemplateSelection: builder.query({
+      query: () => '/selection',
+      providesTags: [{ type: 'ReportTemplateSelection' }],
+    }),
+
+    // Adopt a template. Writes SchoolSettings.selectedReportTemplateId ONLY —
+    // it cannot alter template content. Pass null to clear.
+    setTemplateSelection: builder.mutation({
+      query: (templateId) => ({
+        url: '/selection',
+        method: 'PUT',
+        body: { templateId: templateId || null },
+      }),
+      invalidatesTags: [{ type: 'ReportTemplateSelection' }, { type: 'ReportTemplateList' }],
+    }),
+
+    // Best-matched template for a class (class-group targeting)
     getTemplateForClass: builder.query({
       query: ({ classId, examType = 'annual' }) =>
         `/for-class?classId=${classId}&examType=${examType}`,
@@ -132,16 +77,10 @@ export const reportTemplateApi = createApi({
 });
 
 export const {
-  useCreateReportTemplateMutation,
   useGetReportTemplatesQuery,
   useGetReportTemplateQuery,
-  useUpdateReportTemplateMutation,
-  useDeleteReportTemplateMutation,
-  useExtractTemplateFieldsMutation,
-  useValidateTemplateMutation,
-  usePreviewTemplateMutation,
-  useSetDefaultTemplateMutation,
-  useCloneReportTemplateMutation,
   useGetReportTemplateStatsQuery,
+  useGetTemplateSelectionQuery,
+  useSetTemplateSelectionMutation,
   useGetTemplateForClassQuery,
 } = reportTemplateApi;

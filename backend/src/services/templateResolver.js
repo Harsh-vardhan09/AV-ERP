@@ -6,6 +6,7 @@
  *   1. Explicit templateId override (user passed a specific template)
  *   2. applicableClassIds exact class match (exact targeting)
  *   3. Smallest numeric range that covers student's numericOrder (most specific wins)
+ *   3.5. SchoolSettings.selectedReportTemplateId (admin's school-wide pick)
  *   4. isDefault + matching examType (scoped default)
  *   5. Any isDefault template (global default)
  *   5a. Super Admin Recommended template (templateStatus === 'recommended')
@@ -25,6 +26,7 @@
 
 const ReportTemplate = require('../models/ReportTemplate');
 const StudentProfile  = require('../models/StudentProfile');
+const SchoolSettings  = require('../models/SchoolSettings');
 const logger          = require('../utils/logger');
 
 /**
@@ -41,12 +43,16 @@ const logger          = require('../utils/logger');
  */
 async function resolveTemplate({ schoolId, classNumericOrder, classId, examType, templateId, studentId }) {
 
+  // A school can use its own legacy templates OR any global (Super Admin
+  // authored) one. Both are in scope everywhere below.
+  const visibleTo = (sid) => ({ $or: [{ isGlobal: true }, { schoolId: sid }] });
+
   // ── Priority 1: Explicit templateId override ──────────────────────────────
   if (templateId) {
     const explicit = await ReportTemplate.findOne({
       _id: templateId,
-      schoolId,
       isActive: true,
+      ...visibleTo(schoolId),
     }).lean();
     if (explicit) {
       _trace('explicit_override', explicit, { schoolId, classId, studentId });
@@ -57,8 +63,8 @@ async function resolveTemplate({ schoolId, classNumericOrder, classId, examType,
 
   // Fetch ALL active templates for this school (one round-trip, sorted for stable ordering)
   const allTemplates = await ReportTemplate.find({
-    schoolId,
     isActive: true,
+    ...visibleTo(schoolId),
   })
     .sort({ createdAt: -1 })
     .lean();
@@ -104,6 +110,21 @@ async function resolveTemplate({ schoolId, classNumericOrder, classId, examType,
       );
       _trace('class_range', rangeMatches[0], { schoolId, classId, studentId });
       return _attach(rangeMatches[0], 'class_range');
+    }
+  }
+
+  // ── Priority 3.5: School-wide admin selection ─────────────────────────────
+  // Sits BELOW class targeting on purpose: an admin picking one template for
+  // the school must not override templates aimed at a specific class group.
+  const settings = await SchoolSettings.findOne({ schoolId })
+    .select('selectedReportTemplateId')
+    .lean();
+  if (settings?.selectedReportTemplateId) {
+    const selectedId = String(settings.selectedReportTemplateId);
+    const selected = allTemplates.find(t => String(t._id) === selectedId);
+    if (selected) {
+      _trace('school_selection', selected, { schoolId, classId, studentId });
+      return _attach(selected, 'school_selection');
     }
   }
 
@@ -164,8 +185,8 @@ async function resolveTemplateForStudent({ studentId, schoolId, examType, templa
   if (templateId) {
     const explicit = await ReportTemplate.findOne({
       _id: templateId,
-      schoolId,
       isActive: true,
+      $or: [{ isGlobal: true }, { schoolId }],
     }).lean();
     if (explicit) return _attach(explicit, 'explicit_override');
   }

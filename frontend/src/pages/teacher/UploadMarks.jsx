@@ -8,6 +8,7 @@ import {
   useGetExamTemplateQuery,
 } from '../../redux/api/teacherApi';
 import { useGetActiveSessionQuery } from '../../redux/api/adminApi';
+import { useGetMarksReadinessQuery } from '../../redux/api/reportCardApi';
 import toast from 'react-hot-toast';
 
 /* ─── Constants ─────────────────────────────────────────────── */
@@ -330,6 +331,23 @@ const UploadMarks = () => {
 
   const students = studentData?.data || [];
 
+  /**
+   * Which subjects still need marks for this exam+class before report cards
+   * can be released. Refetches after each upload so the teacher sees their own
+   * submission land.
+   */
+  const { data: readinessData, refetch: refetchReadiness } = useGetMarksReadinessQuery(
+    {
+      classId: selectedClass,
+      examId: selectedExam,
+      sectionId: selectedSection,
+      session: sessionId,
+    },
+    { skip: !selectedClass || !selectedExam || !sessionId }
+  );
+
+  const readiness = readinessData?.data?.exams?.[0] || null;
+
   const dynamicFieldsKey = useMemo(
     () => dynamicMarksFields.map((f) => f.key).join(','),
     [dynamicMarksFields]
@@ -544,6 +562,8 @@ const UploadMarks = () => {
       const response = await uploadMarks(payload).unwrap();
 
       toast.success(response.message || 'Marks uploaded successfully');
+      // Readiness lives in a different API slice — refetch it explicitly.
+      refetchReadiness();
 
       // Reset form
       setMarks((prev) =>
@@ -609,6 +629,7 @@ const UploadMarks = () => {
       const response = await uploadMarksExcel(formData).unwrap();
 
       toast.success(response.message || 'Excel file uploaded successfully');
+      refetchReadiness();
 
       // Show individual errors if any
       if (response.errors?.length) {
@@ -696,6 +717,43 @@ const UploadMarks = () => {
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Upload Marks</h1>
+
+      {/* Submission progress — report cards unlock once every subject is in */}
+      {readiness && readiness.totalSubjects > 0 && (
+        <div
+          className={`rounded-xl border p-4 mb-6 ${
+            readiness.ready ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className={`text-sm font-semibold ${readiness.ready ? 'text-green-800' : 'text-amber-800'}`}>
+                {readiness.ready
+                  ? 'All subjects submitted — report cards can be released.'
+                  : `${readiness.submittedCount} of ${readiness.totalSubjects} subjects submitted`}
+              </p>
+              {!readiness.ready && readiness.missing?.length > 0 && (
+                <p className="text-xs text-amber-700 mt-1">
+                  Awaiting: {readiness.missing.map((s) => s.name).join(', ')}
+                </p>
+              )}
+            </div>
+            <span
+              className={`text-xs font-bold tabular-nums px-2.5 py-1 rounded-lg ${
+                readiness.ready ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+              }`}
+            >
+              {readiness.percentComplete}%
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 w-full bg-white/70 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${readiness.ready ? 'bg-green-500' : 'bg-amber-500'}`}
+              style={{ width: `${readiness.percentComplete}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Selection Card */}
       <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">

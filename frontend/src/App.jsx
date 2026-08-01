@@ -28,6 +28,7 @@ const SuperAdminLayout = lazy(() => import('./components/SuperAdminLayout'));
 const SchoolModules = lazy(() => import('./pages/superadmin/SchoolModules'));
 const SchoolStaffAdmin = lazy(() => import('./pages/superadmin/SchoolStaffAdmin'));
 const SuperAdminTemplateManager = lazy(() => import('./pages/superadmin/SuperAdminTemplateManager'));
+const SuperAdminGlobalTemplates = lazy(() => import('./pages/superadmin/SuperAdminGlobalTemplates'));
 const SuperAdminAdmissionTemplateManager = lazy(() => import('./pages/superadmin/SuperAdminAdmissionTemplateManager'));
 
 // Admin pages
@@ -90,7 +91,6 @@ const ReportCardEditor = lazy(() => import('./pages/reportcard/ReportCardEditor'
 // —— Dynamic Report Card System ——
 const DynamicReportManager = lazy(() => import('./pages/reportcard/DynamicReportManager'));
 const TemplateManager = lazy(() => import('./pages/reportcard/TemplateManager'));
-const TemplateEditor = lazy(() => import('./pages/reportcard/TemplateEditor'));
 const TemplateReportCard = lazy(() => import('./pages/reportcard/TemplateReportCard'));
 const DocumentHub = lazy(() => import('./pages/documents/DocumentHub'));
 const DocumentStudentList = lazy(() => import('./pages/documents/DocumentStudentList'));
@@ -483,13 +483,17 @@ function App() {
               <Route path="fee/*" element={<FeeModuleHub />} />
               {/* 💰 Payroll Module — admin manages all payroll */}
               <Route path="payroll/*" element={<PayrollModuleHub />} />
-              <Route path="report-cards" element={<ReportCardManager />} />
+              {/* DEPRECATED: the legacy ReportCardManager generator is unrouted
+                  for admin — /admin/template-report-cards is the single
+                  template-driven generator. The per-student marks editor below
+                  is still routed and reachable from it. Teacher route unchanged. */}
+              <Route path="report-cards" element={<Navigate to="/admin/template-report-cards" replace />} />
               <Route path="report-cards/:studentId" element={<ReportCardEditor />} />
               {/* —— Dynamic Report Card System —— */}
               <Route path="dynamic-reports" element={<DynamicReportManager />} />
+              {/* Select-only gallery. Authoring moved to Super Admin
+                  (/superadmin/templates) — school admins adopt, never edit. */}
               <Route path="templates" element={<TemplateManager />} />
-              <Route path="templates/new" element={<TemplateEditor />} />
-              <Route path="templates/edit/:id" element={<TemplateEditor />} />
               {/* Template-based report cards — fully dynamic, no hardcoding */}
               <Route path="template-report-cards" element={<TemplateReportCard />} />
               <Route path="documents" element={<DocumentHub />} />
@@ -793,8 +797,10 @@ function App() {
               <Route path="schools/:id/staff" element={<SchoolStaffAdmin />} />
               {/* Super admin uploads HTML/CSS report templates to any school */}
               <Route path="schools/:id/templates" element={<SuperAdminTemplateManager />} />
-              {/* Alias: /superadmin/templates goes to the all-schools template manager */}
-              <Route path="templates" element={<SuperAdminTemplateManager />} />
+              {/* Global report card template authoring — shared by every school */}
+              <Route path="templates" element={<SuperAdminGlobalTemplates />} />
+              {/* Legacy per-school template manager, still reachable directly */}
+              <Route path="school-templates" element={<SuperAdminTemplateManager />} />
               {/* Super admin uploads HTML/CSS admission form templates to any school */}
               <Route path="admission-templates" element={<SuperAdminAdmissionTemplateManager />} />
             </Route>

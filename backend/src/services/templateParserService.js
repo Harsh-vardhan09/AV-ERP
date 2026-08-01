@@ -111,6 +111,11 @@ class TemplateParserService {
       // Step 4: Simple + hyphenated  {{name}} / {{student-name}}
       html = this._renderSimplePlaceholders(html, enriched, missingFields);
 
+      // Step 5: Logo fallback — templates written before {{school-logo}} existed
+      // still get the school logo at the top. Skipped when the template places
+      // the logo itself, and when the school has no logo uploaded.
+      html = this._prependLogoIfAbsent(html, template, enriched);
+
       const uniqueMissing = [...new Set(missingFields)];
       // DEBUG: log data coverage so template authors can diagnose missing fields
       if (uniqueMissing.length > 0) {
@@ -164,9 +169,48 @@ class TemplateParserService {
 
   // ── Step 0: Data normalisation ────────────────────────────────────────────
 
+  /**
+   * Build the <img> markup for the school logo.
+   * Returns '' when the school has no logo so {{school-logo}} collapses to
+   * nothing instead of emitting <img src=""> (which renders a broken icon).
+   */
+  static _logoImg(url, cls = 'rc-school-logo', style = 'max-height:90px;max-width:200px;object-fit:contain;') {
+    if (!url || typeof url !== 'string') return '';
+    const safe = url.replace(/"/g, '&quot;');
+    return `<img class="${cls}" src="${safe}" alt="" style="${style}" />`;
+  }
+
   static _normalizeData(raw) {
     // Apply all field-mapping aliases first
     let d = FieldMappingService.applyAliases({ ...raw });
+
+    // ── school.* namespace ─────────────────────────────────────────────────
+    // {{school-logo}} resolves to a ready-to-render <img> tag (empty when the
+    // school has no logo); {{school-logo-url}} exposes the bare URL for
+    // templates that need it inside their own markup.
+    d.schoolLogo = d.school_logo = this._logoImg(d.schoolLogoUrl);
+    // {{board-logo}} / {{student-photo}} follow the same contract as
+    // {{school-logo}}: a ready-to-render <img>, or nothing at all when the
+    // source URL is absent — never <img src="">.
+    d.boardLogo    = d.board_logo    = this._logoImg(d.boardLogoUrl, 'rc-board-logo',   'max-height:80px;max-width:80px;object-fit:contain;');
+    d.studentPhoto = d.student_photo = this._logoImg(d.studentPhotoUrl, 'rc-student-photo', 'width:100%;height:100%;object-fit:cover;');
+    d.school = {
+      name:         d.schoolName    || '',
+      shortName:    d.schoolShortName || '',
+      code:         d.schoolCode    || '',
+      tagline:      d.schoolTagline || '',
+      address:      d.schoolAddress || '',
+      phone:        d.schoolPhone   || '',
+      email:        d.schoolEmail   || '',
+      website:      d.schoolWebsite || '',
+      affiliatedTo: d.affiliatedTo  || '',
+      udiseCode:    d.udiseCode     || '',
+      logo:         d.schoolLogo    || '',
+      logoUrl:      d.schoolLogoUrl || '',
+      watermarkUrl: d.schoolWatermarkUrl || '',
+      signatureUrl: d.schoolSignatureUrl || '',
+      qrCodeUrl:    d.schoolQrCodeUrl    || '',
+    };
 
     // ── student.* namespace ────────────────────────────────────────────────
     // Merge existing student namespace (from AdmissionDataService) with parser defaults.
@@ -323,6 +367,11 @@ class TemplateParserService {
       }
     });
 
+    // Term totals — 'total' is excluded from allTypes above (it isn't a marks
+    // component), so expose it explicitly for {{t1_total}} / {{t2_total}}.
+    s.t1_total = t1.total ?? null;
+    s.t2_total = t2.total ?? null;
+
     s.total    = sub.total    ?? sub.grandObt ?? 0;
     s.grandObt = sub.grandObt ?? sub.total    ?? 0;
     s.grandMax = sub.grandMax ?? (sub.maxMarks?.total || 0);
@@ -477,6 +526,22 @@ class TemplateParserService {
       missing.push(field);
       return '';
     });
+  }
+
+  // ── Step 5: Logo fallback ─────────────────────────────────────────────────
+
+  /**
+   * Prepend the school logo when the template doesn't position it itself.
+   * No-ops when the template references any school logo token, or when the
+   * school has no logo — so nothing is injected into templates that opt out.
+   */
+  static _prependLogoIfAbsent(html, rawTemplate, data) {
+    const logoImg = data.schoolLogo;
+    if (!logoImg) return html;
+    // Matches {{school-logo}}, {{school_logo}}, {{schoolLogo}}, {{school.logo}},
+    // {{school-logo-url}}, {{schoolLogoUrl}} …
+    if (/\{\{\s*school[-_.]?logo/i.test(rawTemplate)) return html;
+    return `<div class="rc-logo-header" style="text-align:center;margin-bottom:8px;">${logoImg}</div>${html}`;
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────

@@ -35,7 +35,7 @@ const MONGO_URI =
   process.env.MONGO_URI;
 
 const SA_EMAIL    = getArg('--email')    || 'superadmin@nexisparkx.com';
-const SA_PASSWORD = getArg('--password') || null; // REQUIRED
+const SA_PASSWORD = getArg('--password') || 'superadmin123'; // REQUIRED
 
 if (!MONGO_URI) {
   console.error('❌  No MONGO_URI found. Pass --mongo "<uri>" or set MONGO_URI in .env');
