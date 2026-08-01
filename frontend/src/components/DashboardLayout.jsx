@@ -19,6 +19,7 @@ import { FaChalkboardTeacher, FaUserGraduate, FaCalendarCheck, FaCreditCard } fr
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import LibraryDueAlert from './LibraryDueAlert';
+import MobileBottomNav from './MobileBottomNav';
 
 const COLLAPSE_KEY = 'erp.sidebar.collapsed';
 const STUDENTS_OPEN_KEY = 'erp.sidebar.students.open';
@@ -896,9 +897,11 @@ const DashboardLayout = () => {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
         {/* Topbar */}
         <header className="erp-topbar">
-          <button className="erp-topbar-mobile-btn" onClick={() => setMobileOpen(true)}>
-            <MdMenu size={22} />
-          </button>
+          {role !== 'student' && role !== 'teacher' && (
+            <button className="erp-topbar-mobile-btn" onClick={() => setMobileOpen(true)}>
+              <MdMenu size={22} />
+            </button>
+          )}
 
           {/* School brand — shows current school name + logo */}
           <div className="erp-topbar-brand" style={{ gap: 10 }}>
@@ -964,7 +967,7 @@ const DashboardLayout = () => {
               {profileOpen && (
                 <div id="topbar-profile-panel" style={{
                   position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                  width: 290, background: '#ffffff',
+                  width: 'min(290px, calc(100vw - 24px))', background: '#ffffff',
                   border: '1px solid #cbd5e1', borderRadius: 16,
                   boxShadow: '0 10px 30px -5px rgba(15, 23, 42, 0.12)', zIndex: 100,
                   overflow: 'hidden', animation: 'fadeSlideDown 0.18s ease'
@@ -1095,8 +1098,14 @@ const DashboardLayout = () => {
         {/* Page content */}
         <main className="erp-main-content" style={{ flex: 1, overflowY: 'auto', padding: '28px', background: 'var(--page-bg)' }}>
           <Outlet />
+          {(role === 'student' || role === 'teacher') && (
+            <div className="h-28 w-full shrink-0 md:hidden pointer-events-none" aria-hidden="true" />
+          )}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation for Students and Teachers */}
+      <MobileBottomNav role={role} />
 
       {/* Library due-date popup — renders only for students with overdue/due-soon books */}
       <LibraryDueAlert />

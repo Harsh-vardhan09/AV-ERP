@@ -46,10 +46,10 @@ const AttendanceDonutRing = ({ present = 0, total = 0 }) => {
   const presentStroke = total > 0 ? (present / total) * circumference : 0;
 
   return (
-    <div className="flex flex-row items-center gap-3 sm:gap-4 w-full">
+    <div className="flex flex-row items-center gap-2.5 sm:gap-4 w-full min-w-0 overflow-hidden">
       {/* Donut Ring Visual */}
-      <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center shrink-0">
-        <svg className="w-24 h-24 sm:w-28 sm:h-28 transform -rotate-90" viewBox="0 0 100 100">
+      <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center shrink-0">
+        <svg className="w-20 h-20 sm:w-24 sm:h-24 transform -rotate-90" viewBox="0 0 100 100">
           {/* Red/Absent Ring */}
           <circle
             cx="50"
@@ -79,27 +79,27 @@ const AttendanceDonutRing = ({ present = 0, total = 0 }) => {
 
         {/* Center Percentage Display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-base sm:text-lg font-bold text-slate-900 tracking-tight tabular-nums">{percentage}%</span>
-          <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-slate-500">Present</span>
+          <span className="text-sm sm:text-base font-bold text-slate-900 tracking-tight tabular-nums">{percentage}%</span>
+          <span className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider text-slate-500">Present</span>
         </div>
       </div>
 
       {/* Legend & Stat Breakdowns */}
-      <div className="space-y-2 shrink-0 w-full max-w-[200px]">
-        <div className="flex items-center justify-between p-1.5 px-3 rounded-xl bg-emerald-50/80 border border-emerald-100/80">
-          <div className="flex items-center gap-2">
+      <div className="space-y-1.5 flex-1 min-w-0">
+        <div className="flex items-center justify-between p-1.5 px-2.5 rounded-xl bg-emerald-50/80 border border-emerald-100/80">
+          <div className="flex items-center gap-1.5 min-w-0">
             <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
-            <span className="text-xs font-semibold text-emerald-900">Present</span>
+            <span className="text-[11px] sm:text-xs font-semibold text-emerald-900 truncate">Present</span>
           </div>
-          <span className="text-xs font-bold text-emerald-700 tabular-nums">{present} days</span>
+          <span className="text-[11px] sm:text-xs font-bold text-emerald-700 tabular-nums shrink-0 ml-1">{present}d</span>
         </div>
 
-        <div className="flex items-center justify-between p-1.5 px-3 rounded-xl bg-rose-50/80 border border-rose-100/80">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between p-1.5 px-2.5 rounded-xl bg-rose-50/80 border border-rose-100/80">
+          <div className="flex items-center gap-1.5 min-w-0">
             <span className="w-2 h-2 rounded-full bg-rose-500 inline-block shrink-0" />
-            <span className="text-xs font-semibold text-rose-900">Absent</span>
+            <span className="text-[11px] sm:text-xs font-semibold text-rose-900 truncate">Absent</span>
           </div>
-          <span className="text-xs font-bold text-rose-700 tabular-nums">{absent} days</span>
+          <span className="text-[11px] sm:text-xs font-bold text-rose-700 tabular-nums shrink-0 ml-1">{absent}d</span>
         </div>
       </div>
     </div>
@@ -553,7 +553,7 @@ const StudentDashboard = () => {
   const overallGrade = getGradeBadge(avgMark);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 pb-10">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 pb-32">
 
       {/* ── Top Header Banner & Student Metadata ──────────────────────────── */}
       <div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs flex flex-row items-center justify-between gap-4">
@@ -724,6 +724,199 @@ const StudentDashboard = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* ── All Student Features & Modules (Fedena ERP Horizontal List Layout) ── */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight uppercase">
+              All Student Features
+            </h3>
+          </div>
+          <span className="text-xs font-semibold text-slate-400">11 Modules</span>
+        </div>
+
+        <div className="flex flex-col gap-2.5">
+          <NavLink
+            to="/student/dashboard"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Dashboard</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Home Overview & Quick Feed</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/attendance"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 shrink-0 group-hover:scale-105 transition-transform">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Attendance</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Monthly Logs & Donut Breakdown</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/assignments"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shrink-0 group-hover:scale-105 transition-transform">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Assignments</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Homework & Submission Tracker</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/marks"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600 shrink-0 group-hover:scale-105 transition-transform">
+                <Award className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Marks & Results</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Exam Scores & Performance</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/leave"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 shrink-0 group-hover:scale-105 transition-transform">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Apply Leave</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Submit Leave Application</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/materials"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-sky-50 text-sky-600 shrink-0 group-hover:scale-105 transition-transform">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Knowledge Center</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Study Materials & Notes</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/library"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-teal-50 text-teal-600 shrink-0 group-hover:scale-105 transition-transform">
+                <Bookmark className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Library</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Issued Books & Due Alerts</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/notices"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600 shrink-0 group-hover:scale-105 transition-transform">
+                <Bell className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Notices</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">School Circulars & Bulletins</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/complaints"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-red-50 text-red-600 shrink-0 group-hover:scale-105 transition-transform">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Complaints</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Feedback & Helpdesk Queries</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/fees"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 shrink-0 group-hover:scale-105 transition-transform">
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">My Fees</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Receipts & Online Payment</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+
+          <NavLink
+            to="/student/report-card"
+            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Report Card</h4>
+                <p className="text-xs text-slate-500 font-medium truncate">Term & Final Academic Cards</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </NavLink>
+        </div>
       </div>
 
       {/* Attendance Breakdown Modal */}
