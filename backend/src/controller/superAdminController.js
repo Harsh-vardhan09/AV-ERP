@@ -330,7 +330,7 @@ exports.createSchool = async (req, res, next) => {
         schoolName:   name.trim(),
         schoolCode:   normalizedCode,
         tempPassword: adminPassword,  // plain text — only used here
-        loginUrl:     process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com',
+        loginUrl:     process.env.CLIENT_URL || 'https://campus.unifiedcampus.com',
       });
     } catch (emailErr) {
       logger.error('[SuperAdmin] createSchool: admin credential email failed', { error: emailErr.message });
@@ -827,7 +827,7 @@ exports.createStaffForSchool = async (req, res, next) => {
 
     // Send appropriate credentials email (non-blocking)
     try {
-      const loginUrl = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+      const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
       if (role === 'admin') {
         await sendAdminCredentials({
           to:           newUser.email,

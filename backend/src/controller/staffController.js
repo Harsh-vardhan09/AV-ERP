@@ -96,7 +96,7 @@ exports.createStaffMember = async (req, res, next) => {
     let emailSent = false;
     let emailError = null;
     try {
-      const loginUrl = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+      const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
       await sendStaffCredentials({
         to:           staffUser.email,
         staffName:    `${firstName} ${lastName}`,
@@ -337,7 +337,7 @@ exports.resendCredentials = async (req, res, next) => {
         schoolName: school.name,
         schoolCode: school.code,
         tempPassword,
-        loginUrl:   process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com',
+        loginUrl:   process.env.CLIENT_URL || 'https://campus.unifiedcampus.com',
       });
       emailSent = true;
     } catch (emailErr) {

@@ -27,7 +27,7 @@ Here are the test accounts seeded in the MongoDB database (`ProductionERPDB` on 
 ## 🔑 2. Super Admin User
 If you need root level access to the Super Admin Panel to manage schools, subscriptions, or system-wide settings:
 
-* **Email:** `superadmin@nexisparkx.com`
+* **Email:** `superadmin@unifiedcampus.com`
 * **Password:** `superadmin123`
 
 ---

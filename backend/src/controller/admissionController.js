@@ -314,7 +314,7 @@ exports.registerStudent = async (req, res) => {
         const School = require('../models/School');
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
-        const loginUrl   = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+        const loginUrl   = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
         const studentName = `${firstName} ${lastName}`;
 
         // In-app welcome notification
@@ -537,7 +537,7 @@ exports.registerTeacher = async (req, res) => {
         const School = require('../models/School');
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
-        const loginUrl   = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+        const loginUrl   = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
         const teacherName = `${firstName} ${lastName}`;
 
         // In-app welcome

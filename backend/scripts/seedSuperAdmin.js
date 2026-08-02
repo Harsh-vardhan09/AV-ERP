@@ -46,7 +46,7 @@ const run = async () => {
     const superAdmin = await SuperAdmin.create({
       firstName: 'Super',
       lastName: 'Admin',
-      email: 'superadmin@nexisparkx.com',
+      email: 'superadmin@unifiedcampus.com',
       password: plainPassword,   // plain text — pre-save hook hashes it
       isActive: true,
       permissions: [

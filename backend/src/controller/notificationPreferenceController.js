@@ -322,7 +322,7 @@ exports.sendBulkAnnouncement = async (req, res, next) => {
       const school     = await School.findById(req.schoolId).select('name').lean();
       const schoolName = school?.name || 'School';
       const loginUrl   =
-        process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+        process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
 
       const emailList = users.map((user) => ({
         to:      user.email,

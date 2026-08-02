@@ -5,10 +5,10 @@ const path = require('path');
 /**
  * Generates a professional Payslip PDF
  * @param {Object} payslip - The payslip data object
- * @param {string} schoolName - Optional school name (defaults to 'NexisparkX Academy')
+ * @param {string} schoolName - Optional school name (defaults to 'Unified Campus Academy')
  * @returns {Promise<Buffer>} - Returns the PDF as a buffer
  */
-const generatePayslipPDF = async (payslip, schoolName = 'NexisparkX Academy') => {
+const generatePayslipPDF = async (payslip, schoolName = 'Unified Campus Academy') => {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ margin: 50, size: 'A4' });

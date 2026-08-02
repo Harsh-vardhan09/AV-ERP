@@ -138,7 +138,7 @@ const download = async (schoolId, payslipId, user) => {
   // In production, we'd upload this to S3, but for now we provide a direct data link or signed URL
   if (!payslip.pdfUrl) {
     logger.info('payslipService.download: PDF URL missing, generating on-the-fly', { payslipId });
-    const pdfBuffer = await pdfGenerator(payslip, 'NexisparkX Academy');
+    const pdfBuffer = await pdfGenerator(payslip, 'Unified Campus Academy');
     
     // Convert to Data URI for immediate opening in browser
     const dataUri = `data:application/pdf;base64,${pdfBuffer.toString('base64')}`;

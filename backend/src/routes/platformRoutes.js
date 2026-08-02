@@ -55,7 +55,7 @@ router.post('/schools', async (req, res) => {
         schoolName:   name,
         schoolCode:   code.toUpperCase().trim(),
         tempPassword: adminPassword,  // plain text — only time it is used
-        loginUrl:     process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com'
+        loginUrl:     process.env.CLIENT_URL || 'https://campus.unifiedcampus.com'
       });
     } catch (emailErr) {
       console.error('Admin credential email failed (platform route):', emailErr.message);

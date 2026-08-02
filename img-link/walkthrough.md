@@ -31,7 +31,7 @@ Here is the screenshot of the successfully loaded local **School Admin Dashboard
 
 ### 4. Super Admin Panel Login
 * **URL:** `http://localhost:3000/superadmin/login`
-* **Credentials:** `superadmin@nexisparkx.com` / `superadmin123`
+* **Credentials:** `superadmin@unifiedcampus.com` / `superadmin123`
 * **Result:** Successfully redirected to the Super Admin Dashboard displaying tenant platform metrics.
 
 Here is the screenshot of the successfully loaded **Super Admin Dashboard**:

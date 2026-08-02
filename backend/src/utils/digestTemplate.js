@@ -64,7 +64,7 @@ exports.generateDigestEmail = ({ notifications, recipientEmail }) => {
     .join('');
 
   const loginUrl =
-    process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+    process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
 
   const subject = `Your Daily Summary — ${count} update${count > 1 ? 's' : ''} | ${today}`;
 

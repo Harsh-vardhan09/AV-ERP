@@ -34,7 +34,7 @@ const MONGO_URI =
   process.env.MONGO_OVERRIDE ||
   process.env.MONGO_URI;
 
-const SA_EMAIL    = getArg('--email')    || 'superadmin@nexisparkx.com';
+const SA_EMAIL    = getArg('--email')    || 'superadmin@unifiedcampus.com';
 const SA_PASSWORD = getArg('--password') || 'superadmin123'; // REQUIRED
 
 if (!MONGO_URI) {

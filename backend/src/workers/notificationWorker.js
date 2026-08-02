@@ -83,7 +83,7 @@ feeReminderQueue.process(async (job) => {
   logger.info('[NotifWorker] Processing fee reminder', { studentUserId, amount, dueDate });
 
   const svc = getServices();
-  const loginUrl = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+  const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
 
   // In-app notification
   await svc.createInAppNotification({
@@ -119,7 +119,7 @@ feeOverdueQueue.process(async (job) => {
   logger.info('[NotifWorker] Processing fee overdue', { studentUserId, amount, dueSince });
 
   const svc = getServices();
-  const loginUrl = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+  const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
 
   const overdueMsg = `Fee of ₹${amount} was due on ${dueSince} and is now overdue.`;
 
@@ -169,7 +169,7 @@ marksDeadlineQueue.process(async (job) => {
   logger.info('[NotifWorker] Processing marks deadline reminder', { teacherUserId, examName, daysLeft });
 
   const svc = getServices();
-  const loginUrl = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+  const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
 
   const deadlineMsg =
     `Marks entry for ${subjectName} (${examName}) closes in ` +

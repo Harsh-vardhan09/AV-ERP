@@ -220,7 +220,7 @@ exports.takeAttendance = async (req, res) => {
       // ── NOTIFICATION BLOCK — non-blocking ─────────────────────────────────
       ;(async () => {
         try {
-          const loginUrl = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+          const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
           const School = require('../models/School');
           const school = await School.findById(req.schoolId).select('name').lean();
           const schoolName = school?.name || 'School';
@@ -368,7 +368,7 @@ exports.takeAttendance = async (req, res) => {
       // ── NOTIFICATION BLOCK — non-blocking ─────────────────────────────────
       ;(async () => {
         try {
-          const loginUrl = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+          const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
           const School = require('../models/School');
           const school = await School.findById(req.schoolId).select('name').lean();
           const schoolName = school?.name || 'School';
@@ -693,7 +693,7 @@ exports.approveStudentLeave = async (req, res) => {
     // ── NOTIFICATION BLOCK — non-blocking ───────────────────────────────────
     ;(async () => {
       try {
-        const loginUrl = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+        const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
         const School = require('../models/School');
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
@@ -1376,7 +1376,7 @@ exports.uploadMarks = async (req, res) => {
       try {
         if (sanitizedMarks.length === 0) return;
 
-        const loginUrl = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+        const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
         const School = require('../models/School');
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';

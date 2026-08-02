@@ -189,7 +189,7 @@ exports.collectPayment = async (req, res) => {
             const schoolId    = studentProfileDoc.schoolId;
             if (!schoolId) return;
 
-            const loginUrl  = process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com';
+            const loginUrl  = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
             const School    = require('../../models/School');
             const school    = await School.findById(schoolId).select('name').lean();
             const schoolName = school?.name || 'School';

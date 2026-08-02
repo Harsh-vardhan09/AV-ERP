@@ -332,7 +332,7 @@ exports.createLibrarian = async (req, res) => {
         schoolName:   school?.name || '',
         schoolCode:   school?.code || '',
         tempPassword,
-        loginUrl:     process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com',
+        loginUrl:     process.env.CLIENT_URL || 'https://campus.unifiedcampus.com',
       });
       emailSent = true;
     } catch (emailErr) {
@@ -455,7 +455,7 @@ exports.resendLibrarianCredentials = async (req, res) => {
       schoolName: school?.name || '',
       schoolCode: school?.code || '',
       tempPassword,
-      loginUrl:   process.env.CLIENT_URL || 'https://campus-nexus.nexisparkx.com',
+      loginUrl:   process.env.CLIENT_URL || 'https://campus.unifiedcampus.com',
     });
 
     logger.info('[Library] Librarian credentials resent', { userId: lib._id, schoolId: req.schoolId });

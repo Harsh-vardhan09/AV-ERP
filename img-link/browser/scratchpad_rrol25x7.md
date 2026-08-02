@@ -3,7 +3,7 @@
 ## Checklist
 - [x] Navigate to http://localhost:3000/superadmin/login
 - [x] Log in with Super Admin credentials
-  - Email: superadmin@nexisparkx.com
+  - Email: superadmin@unifiedcampus.com
   - Password: superadmin123
 - [x] Verify dashboard loads successfully
 - [x] Take a screenshot of the dashboard

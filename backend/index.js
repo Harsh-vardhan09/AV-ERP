@@ -154,8 +154,8 @@ const Setupserver = async () => {
           return callback(null, origin);
         }
 
-        // Allow any nexisparkx.com subdomain dynamically
-        if (origin.endsWith('.nexisparkx.com')) {
+        // Allow any unifiedcampus.com subdomain dynamically
+        if (origin.endsWith('.unifiedcampus.com')) {
           return callback(null, origin);
         }
 

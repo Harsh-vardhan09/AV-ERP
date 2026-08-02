@@ -1,6 +1,10 @@
 const nodemailer = require('nodemailer')
 const { PASSWORD_RESET_REQUEST_TEMPLATE, VERIFICATION_EMAIL_TEMPLATE } = require('./mailtamplate.js');
 
+// Sender address comes from env, same as emailService.js — a hardcoded address
+// silently breaks whenever the authenticated Gmail account changes.
+const _from = () => `ERP Unified Campus <${process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER}>`;
+
 // Shared transporter factory (creates new transporter each call — legacy behaviour)
 const _makeTransporter = () => nodemailer.createTransport({
     service: 'gmail',
@@ -14,7 +18,7 @@ exports.sendmail = async (email, otp) => {
     try {
         const transporter = _makeTransporter();
         const mailOptions = {
-            from:     'ERP Nexisparkx <nexisparkx@gmail.com>',
+            from:     _from(),
             to:       email,
             subject:  'Verify your email',
             html:     VERIFICATION_EMAIL_TEMPLATE.replace("{verificationCode}", otp),
@@ -31,7 +35,7 @@ exports.sendwelcomeemail = async (mail, names) => {
     try {
         const transporter = _makeTransporter();
         const mailOptions = {
-            from:     'ERP Nexisparkx <nexisparkx@gmail.com>',
+            from:     _from(),
             to:       mail,
             subject:  'Welcome to our website!',
             html:     `Hello ${names}, <br> Welcome to our website! Your account has been created successfully.`,
@@ -47,7 +51,7 @@ exports.resetPasswordmail = async (mail, token) => {
     try {
         const transporter = _makeTransporter();
         const mailOptions = {
-            from:     'ERP Nexisparkx <nexisparkx@gmail.com>',
+            from:     _from(),
             to:       mail,
             subject:  'Reset your password',
             html:     PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", token),

@@ -70,7 +70,7 @@ const SuperAdminLogin = () => {
           Super Admin Login
         </h2>
         <p className="text-center text-sm text-gray-500 mb-6">
-          NexiSpark Platform Control
+          Unified Campus Platform Control
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
@@ -85,7 +85,7 @@ const SuperAdminLogin = () => {
               type="email"
               value={email}
               onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((er) => ({ ...er, email: '' })); }}
-              placeholder="superadmin@nexisparkx.com"
+              placeholder="superadmin@unifiedcampus.com"
               autoComplete="email"
               className={`w-full px-4 py-2 border ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
