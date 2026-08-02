@@ -3,6 +3,9 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const app = express();
+// Render/Vercel terminate TLS at a proxy: without this req.secure is always
+// false and rate-limiting buckets every client into the proxy's single IP.
+app.set('trust proxy', 1);
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');

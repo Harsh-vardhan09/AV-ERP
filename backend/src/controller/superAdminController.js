@@ -5,6 +5,7 @@ const School = require('../models/School');
 const { User } = require('../models/user');
 const SchoolSettings = require('../models/SchoolSettings');
 const { generateSuperAdminToken } = require('../utils/generateSuperAdminToken');
+const { crossSiteCookie } = require('../utils/cookieOptions');
 const logger = require('../utils/logger');
 const { MODULES, DEFAULT_MODULES, MODULE_KEYS, isModuleEnabled } = require('../utils/moduleConstants');
 
@@ -91,16 +92,7 @@ exports.login = async (req, res, next) => {
  * Public — clears the superAdminToken cookie
  */
 exports.logout = async (req, res) => {
-  const serverUrl   = process.env.SERVER_URL || '';
-  const isLocalhost = serverUrl.includes('localhost') ||
-                      serverUrl.includes('127.0.0.1') ||
-                      process.env.NODE_ENV !== 'production';
-
-  res.clearCookie('superAdminToken', {
-    httpOnly: true,
-    secure:   !isLocalhost,
-    sameSite: isLocalhost ? 'Lax' : 'None',
-  });
+  res.clearCookie('superAdminToken', crossSiteCookie(req));
 
   return res.status(200).json({
     success: true,

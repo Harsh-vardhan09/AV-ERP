@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { crossSiteCookie } = require("../utils/cookieOptions");
 
 exports.genereteTokenAndCookies = (res, userid) => {
   if (!process.env.JWT_SECRET) {
@@ -10,16 +11,11 @@ exports.genereteTokenAndCookies = (res, userid) => {
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
   const token = jwt.sign({ userid }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-  const isProduction = process.env.NODE_ENV === 'production';
-
+  // NOTE: Do NOT set domain for Vercel deployments.
+  // Setting domain breaks cross-subdomain cookies on Vercel.
   res.cookie("token", token, {
-    httpOnly: true,
-    secure:   isProduction,                // HTTPS only in production
-    sameSite: isProduction ? 'None' : 'Lax',
-    // NOTE: Do NOT set domain for Vercel deployments.
-    // Setting domain breaks cross-subdomain cookies on Vercel.
+    ...crossSiteCookie(res.req),
     expires: new Date(Date.now() + SEVEN_DAYS_MS),
-    path:    '/',
   });
 
   return token;

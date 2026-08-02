@@ -6,9 +6,17 @@
 
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useCheckSuperAdminAuthQuery } from '../../redux/api/superAdminApi';
+import { useCheckSuperAdminAuthQuery, SUPER_ADMIN_TOKEN_KEY } from '../../redux/api/superAdminApi';
 
 const API_BASE = `${import.meta.env.VITE_PORT}/api/super-admin`;
+
+// Cross-site cookie can be blocked; every other super-admin call sends Bearer too.
+const authHeader = () => {
+  try {
+    const t = localStorage.getItem(SUPER_ADMIN_TOKEN_KEY);
+    return t ? { Authorization: `Bearer ${t}` } : {};
+  } catch { return {}; }
+};
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 const roleBadge = {
@@ -113,7 +121,7 @@ const SchoolStaffAdmin = () => {
   React.useEffect(() => {
     if (fetched) return;
     setLoading(true);
-    fetch(`${API_BASE}/schools/${schoolId}/staff`, { credentials: 'include' })
+    fetch(`${API_BASE}/schools/${schoolId}/staff`, { credentials: 'include', headers: authHeader() })
       .then(r => r.json())
       .then(data => {
         if (data.success) {
@@ -134,7 +142,7 @@ const SchoolStaffAdmin = () => {
       const res  = await fetch(`${API_BASE}/schools/${schoolId}/staff`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify(form),
       });
       const data = await res.json();

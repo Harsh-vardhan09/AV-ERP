@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { crossSiteCookie } = require('./cookieOptions');
 
 /**
  * generateSuperAdminToken
@@ -28,17 +29,8 @@ exports.generateSuperAdminToken = (res, superAdminId) => {
     { expiresIn: '1d' }
   );
 
-  // Detect true production (Vercel/hosted) vs local dev with NODE_ENV=production
-  // On localhost, secure+sameSite=None cookies are NOT sent over plain HTTP
-  const serverUrl = process.env.SERVER_URL || '';
-  const isLocalhost = serverUrl.includes('localhost') ||
-    serverUrl.includes('127.0.0.1') ||
-    process.env.NODE_ENV !== 'production';
-
   res.cookie('superAdminToken', token, {
-    httpOnly: true,
-    secure: !isLocalhost,                               // false on localhost, true on Vercel
-    sameSite: isLocalhost ? 'Lax' : 'None',              // Lax on localhost, None on Vercel
+    ...crossSiteCookie(res.req),
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
   });
 
