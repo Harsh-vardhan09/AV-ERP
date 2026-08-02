@@ -14,6 +14,7 @@ import {
   useGenerateBulkDynamicReportsMutation,
 } from '../../redux/api/dynamicReportApi';
 import { useGetReportTemplatesQuery, useGetTemplateForClassQuery, useGetTemplateSelectionQuery } from '../../redux/api/reportTemplateApi';
+import { authHeaders } from '../../redux/api/authHeader';
 import './reportCard.css';
 
 
@@ -49,7 +50,7 @@ const PreviewModal = ({ studentId, templateId, academicYear, examType, studentNa
     setError('');
     setHtml('');
 
-    fetch(url, { credentials: 'include' })
+    fetch(url, { credentials: 'include', headers: authHeaders() })
       .then(res => {
         if (!res.ok) return res.json().then(j => { throw new Error(j.message || `HTTP ${res.status}`); });
         return res.text();
@@ -295,7 +296,7 @@ const TemplateReportCard = () => {
   const downloadPdf = async (downloadUrl, fileName) => {
     try {
       const fullUrl = `${import.meta.env.VITE_PORT}${downloadUrl}`;
-      const res = await fetch(fullUrl, { credentials: 'include' });
+      const res = await fetch(fullUrl, { credentials: 'include', headers: authHeaders() });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error(json.message || `Server error ${res.status}`);
