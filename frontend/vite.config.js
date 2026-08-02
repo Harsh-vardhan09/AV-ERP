@@ -1,8 +1,31 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  // Every API slice builds its base URL as `${import.meta.env.VITE_PORT}/api/...`.
+  // When VITE_PORT is UNSET, Vite replaces it with `undefined`, producing the
+  // literal URL "undefined/api/v1/..." — every request 404s. Defaulting to ''
+  // instead yields "/api/v1/...", a relative URL that resolves against the app
+  // origin. In production that hits the Vercel /api rewrite (vercel.json), which
+  // proxies to Render — making the API same-origin so the httpOnly auth cookies
+  // are first-party and actually get sent.
+  // A VITE_PORT set in .env or in the hosting dashboard still wins — EXCEPT a
+  // localhost value in a production build. `.env` is developer-local and not
+  // committed, so a `vite build` run on a dev machine would otherwise bake
+  // "http://localhost:4000" into the shipped bundle and every API call in
+  // production would fail. Verified: this exact leak appeared in a build before
+  // the guard was added.
+  const raw     = env.VITE_PORT ?? '';
+  const isLocal = /localhost|127\.0\.0\.1/i.test(raw);
+  const apiBase = mode === 'production' && isLocal ? '' : raw;
+
+  return {
+  define: {
+    'import.meta.env.VITE_PORT': JSON.stringify(apiBase),
+  },
   plugins: [react()],
   resolve: {
     alias: {
@@ -46,4 +69,5 @@ export default defineConfig({
       },
     },
   },
+  };
 });
