@@ -21,6 +21,9 @@ exports.verifySuperAdmin = async (req, res, next) => {
         ? req.headers.authorization.split(' ')[1]
         : null);
 
+        console.log("Cookies:", req.cookies);
+        console.log("Authorization:", req.headers.authorization);
+
     if (!token) {
       return res.status(401).json({
         success: false,

@@ -78,14 +78,6 @@ const Setupserver = async () => {
       'http://localhost:3000',
       'http://localhost:5173',
       'http://localhost:5174',
-      'https://campus-nexus.nexisparkx.com',
-      'https://testing-erp.vercel.app',
-      'https://testing-erp-qqhi.vercel.app',
-      'https://nitaipublicschool.nexisparkx.com',
-      'https://phsschool.nexisparkx.com',
-      'https://gayatrishikshaniketan.nexisparkx.com',
-      'https://gsphsschool.nexisparkx.com',
-      'https://ssnvmschool.nexisparkx.com'
     ].filter(Boolean);
 
     const CF_DOMAIN = process.env.CLOUDFRONT_DOMAIN || '';
