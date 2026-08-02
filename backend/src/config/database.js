@@ -4,9 +4,9 @@ const dns      = require('dns');
 
 const connect = async () => {
     try {
-        const connectionString = process.env.MONGO_URI;
+        const connectionString = process.env.MONGO_URI || process.env.MONGODB_URI || process.env.MONGO_URL;
         if (!connectionString) {
-            throw new Error('MONGO_URI environment variable is not set.');
+            throw new Error('MONGO_URI environment variable is not set in Render Environment Variables.');
         }
 
         // Set Node's DNS resolver to use public DNS servers (Google/Cloudflare).
