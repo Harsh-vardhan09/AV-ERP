@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useLoginSuperAdminMutation, useCheckSuperAdminAuthQuery } from '../../redux/api/superAdminApi';
 import { setSuperAdmin } from '../../redux/slices/superAdminSlice';
+import { setStoredSuperAdminToken } from '../../redux/api/superAdminApi';
 import toast from 'react-hot-toast';
 import Loader from '../../components/Loader';
 
@@ -41,6 +42,10 @@ const SuperAdminLogin = () => {
 
     try {
       const res = await login({ email: email.trim(), password }).unwrap();
+      // Store the JWT before navigating: in production the httpOnly cookie is
+      // cross-site and gets dropped, so every subsequent super-admin request
+      // authenticates with `Authorization: Bearer` from this value instead.
+      setStoredSuperAdminToken(res.token);
       dispatch(setSuperAdmin(res.superAdmin));
       toast.success('Login successful');
       navigate('/superadmin/dashboard', { replace: true });

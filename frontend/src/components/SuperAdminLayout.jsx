@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLogoutSuperAdminMutation } from '../redux/api/superAdminApi';
-import { superAdminApi } from '../redux/api/superAdminApi';
+import { superAdminApi, setStoredSuperAdminToken } from '../redux/api/superAdminApi';
 import { clearSuperAdmin } from '../redux/slices/superAdminSlice';
 import { MdDashboard, MdSchool, MdLogout, MdMenu, MdAdminPanelSettings, MdArticle, MdDescription } from 'react-icons/md';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -47,7 +47,9 @@ const SuperAdminLayout = () => {
       await logout().unwrap();
     } catch (_) { /* server clears cookie regardless */ }
 
-    // 1. Clear Redux state
+    // 1. Clear Redux state + the stored Bearer token (the cookie is cleared
+    //    server-side; this kills the localStorage copy used in production)
+    setStoredSuperAdminToken(null);
     dispatch(clearSuperAdmin());
     // 2. Reset ALL superAdminApi cached data so SuperAdminProtectedRoute
     //    won't re-authenticate and bounce back to dashboard

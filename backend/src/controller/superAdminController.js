@@ -56,14 +56,20 @@ exports.login = async (req, res, next) => {
     superAdmin.lastLogin = new Date();
     await superAdmin.save();
 
-    // Generate token and set cookie
-    generateSuperAdminToken(res, superAdmin._id);
+    // Sets the httpOnly superAdminToken cookie AND returns the raw JWT.
+    const token = generateSuperAdminToken(res, superAdmin._id);
 
     logger.info('[SuperAdmin] Login successful', { superAdminId: superAdmin._id, email: superAdmin.email });
 
     return res.status(200).json({
       success: true,
       message: 'Login successful',
+      // Returned so the client can store it and send `Authorization: Bearer`.
+      // The cookie alone is not enough in production: the frontend and API sit
+      // on different sites, so the SameSite=None cookie is dropped by browsers
+      // that block third-party cookies — which is exactly why every school-side
+      // API slice already sends a Bearer token. verifySuperAdmin accepts either.
+      token,
       superAdmin: {
         _id: superAdmin._id,
         firstName: superAdmin.firstName,

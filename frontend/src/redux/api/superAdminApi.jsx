@@ -10,11 +10,35 @@ const API_URL = `${import.meta.env.VITE_PORT}/api/super-admin/`;
  *  - Hits /api/super-admin/* endpoints (never /api/v1/*)
  *  - credentials: 'include' sends the superAdminToken cookie automatically
  */
+/**
+ * Storage key for the super admin JWT.
+ *
+ * Deliberately NOT 'token' — that belongs to school users. Sharing a key would
+ * let a school-user session leak into super-admin requests (and vice versa),
+ * breaking the isolation the separate cookie + separate JWT secret exist to
+ * enforce.
+ */
+export const SUPER_ADMIN_TOKEN_KEY = 'superAdminToken';
+
+export const setStoredSuperAdminToken = (token) => {
+  try { token ? localStorage.setItem(SUPER_ADMIN_TOKEN_KEY, token)
+              : localStorage.removeItem(SUPER_ADMIN_TOKEN_KEY); } catch { /* storage disabled */ }
+};
+
 export const superAdminApi = createApi({
   reducerPath: 'superAdminApi',
   baseQuery: fetchBaseQuery({
     baseUrl: API_URL,
+    // Cookie is still sent — it works same-site (local dev). The Bearer header
+    // is what makes this work in production, where the cross-site
+    // SameSite=None cookie gets dropped by third-party-cookie blocking.
     credentials: 'include',
+    prepareHeaders: (headers) => {
+      let token = null;
+      try { token = localStorage.getItem(SUPER_ADMIN_TOKEN_KEY); } catch { /* storage disabled */ }
+      if (token) headers.set('Authorization', `Bearer ${token}`);
+      return headers;
+    },
   }),
   tagTypes: ['SuperAdmin', 'Schools', 'SchoolModules', 'SchoolTemplates', 'SchoolAdmissionTemplates', 'GlobalTemplates'],
 
