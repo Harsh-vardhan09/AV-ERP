@@ -486,7 +486,6 @@ const menuConfig = {
     { to: '/teacher/my-students', icon: <FaUserGraduate size={18} />, label: 'My Students' },
     { to: '/teacher/co-scholastic', icon: <MdGrading size={18} />, label: 'Co-Scholastic Marks' },
     { to: '/teacher/report-cards', icon: <MdDescription size={18} />, label: 'Report Cards' },
-    { to: '/teacher/template-report-cards', icon: <MdGridView size={18} />, label: 'Template Report Cards' },
     // ── OASES module ── always shown for teachers
     { to: '/teacher/oases', icon: <MdOutlineAutoStories size={18} />, label: 'OASES – My Copies' },
     // 💰 Payroll — teacher self-service

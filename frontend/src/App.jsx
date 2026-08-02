@@ -592,9 +592,11 @@ function App() {
               <Route path="student-leaves" element={<StudentLeaveApproval />} />
               <Route path="my-students" element={<TeacherMyStudents />} />
               <Route path="co-scholastic" element={<CoScholasticMarks />} />
-              <Route path="report-cards" element={<ReportCardManager />} />
+              {/* Single report-card entry point: the school-admin-chosen template
+                  drives it. Legacy ReportCardManager is unrouted, same as admin. */}
+              <Route path="report-cards" element={<TemplateReportCard />} />
               <Route path="report-cards/:studentId" element={<ReportCardEditor />} />
-              <Route path="template-report-cards" element={<TemplateReportCard />} />
+              <Route path="template-report-cards" element={<Navigate to="/teacher/report-cards" replace />} />
               {/* 💰 Payroll — teacher self-service: view own payslips */}
               <Route path="payroll/my-payslips" element={<PayrollModuleHub />} />
               <Route path="oases/*" element={

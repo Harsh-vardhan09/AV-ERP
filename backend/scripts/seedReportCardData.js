@@ -71,6 +71,7 @@ const seed = async () => {
   const ClassTeacherAssignment   = require('../src/models/ClassTeacherAssignment');
   const StudentProfile           = require('../src/models/StudentProfile');
   const Exam                     = require('../src/models/Exam');
+  const ExamSubjectConfig        = require('../src/models/ExamSubjectConfig');
   const Marks                    = require('../src/models/MarksModel');
   const ReportCard               = require('../src/models/ReportCard');
   const ReportCardMark           = require('../src/models/ReportCardMark');
@@ -324,6 +325,32 @@ const seed = async () => {
     created ? eCreated++ : eSkip++;
   }
   console.log(`✅  Step 8 : Exams — ${eCreated} created / ${eSkip} skipped`);
+
+  // ExamSubjectConfig — max marks per exam+subject. The aggregator reads max
+  // marks ONLY from here; without it every subject renders obtained/0 and the
+  // percentage divides by zero. The real admin exam-creation flow writes these,
+  // so the seed must too.
+  let cCreated = 0, cSkip = 0;
+  for (const ed of EXAM_DEFS) {
+    const maxMarks = ed.slot.startsWith('sa') ? 60 : 10;
+    for (const subj of subjects) {
+      const { created } = await upsert(
+        ExamSubjectConfig,
+        { examId: examMap[ed.slot]._id, classId: class10._id, subjectId: subj._id, schoolId: school._id },
+        {
+          examId:       examMap[ed.slot]._id,
+          classId:      class10._id,
+          subjectId:    subj._id,
+          maxMarks,
+          passingMarks: Math.round(maxMarks * 0.33),
+          examDate:     new Date(ed.start),
+          schoolId:     school._id,
+        }
+      );
+      created ? cCreated++ : cSkip++;
+    }
+  }
+  console.log(`✅  Step 8b: ExamSubjectConfig — ${cCreated} created / ${cSkip} skipped`);
 
   // ══════════════════════════════════════════════════════════════════════════
   // STEP 9 — Raw Marks (Marks collection)

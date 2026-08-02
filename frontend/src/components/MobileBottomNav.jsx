@@ -84,7 +84,6 @@ const MobileBottomNav = ({ role }) => {
     { to: '/teacher/my-students', icon: <FaUserGraduate size={18} />, label: 'My Students' },
     { to: '/teacher/co-scholastic', icon: <MdCheckCircle size={18} />, label: 'Co-Scholastic Marks' },
     { to: '/teacher/report-cards', icon: <MdDescription size={18} />, label: 'Report Cards' },
-    { to: '/teacher/template-report-cards', icon: <MdGridView size={18} />, label: 'Template Report Cards' },
     { to: '/teacher/oases', icon: <MdOutlineAutoStories size={18} />, label: 'OASES Evaluation' },
     { to: '/teacher/payroll/my-payslips', icon: <MdReceipt size={18} />, label: 'My Payslips' },
   ];

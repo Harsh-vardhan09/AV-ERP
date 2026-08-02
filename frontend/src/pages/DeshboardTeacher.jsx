@@ -601,22 +601,6 @@ const TeacherAnalyticsDashboard = () => {
             </NavLink>
 
             <NavLink
-              to="/teacher/template-report-cards"
-              className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="p-2.5 rounded-xl bg-violet-50 text-violet-600 shrink-0 group-hover:scale-105 transition-transform">
-                  <MdGridView size={20} />
-                </div>
-                <div className="min-w-0">
-                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">Template Report Cards</h4>
-                  <p className="text-xs text-gray-500 font-medium truncate">Dynamic Card Templates</p>
-                </div>
-              </div>
-              <MdChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-            </NavLink>
-
-            <NavLink
               to="/teacher/oases"
               className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-gray-200/80 shadow-2xs hover:border-teal-300 hover:bg-teal-50/40 transition-all group"
             >
