@@ -1,10 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { prepareAuthHeaders } from './authHeader';
 
 const BASE = `${import.meta.env.VITE_PORT}/api/v1/custom-forms/`;
 
 export const customFormApi = createApi({
   reducerPath: 'customFormApi',
-  baseQuery: fetchBaseQuery({ baseUrl: BASE, credentials: 'include' }),
+  baseQuery: fetchBaseQuery({ baseUrl: BASE, credentials: 'include', prepareHeaders: prepareAuthHeaders }),
   tagTypes: ['Forms', 'DeletedForms', 'FormLeads', 'FormDetail'],
 
   endpoints: (builder) => ({

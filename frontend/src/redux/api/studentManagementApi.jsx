@@ -1,10 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { prepareAuthHeaders } from './authHeader';
 
 const BASE = `${import.meta.env.VITE_PORT}/api/v1/student-management/`;
 
 export const studentManagementApi = createApi({
   reducerPath: 'studentManagementApi',
-  baseQuery: fetchBaseQuery({ baseUrl: BASE, credentials: 'include' }),
+  baseQuery: fetchBaseQuery({ baseUrl: BASE, credentials: 'include', prepareHeaders: prepareAuthHeaders }),
   tagTypes: ['AllStudents', 'DeletedStudents', 'PassedStudents', 'DroppedStudents', 'SuspendedStudents'],
 
   endpoints: (builder) => ({

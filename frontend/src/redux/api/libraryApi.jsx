@@ -1,8 +1,10 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { prepareAuthHeaders } from './authHeader';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: `${import.meta.env.VITE_PORT}/api/v1/library/`,
   credentials: 'include',
+  prepareHeaders: prepareAuthHeaders,
 });
 
 export const libraryApi = createApi({

@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { prepareAuthHeaders } from './authHeader';
 
 const BASE_URL = import.meta.env.VITE_PORT || import.meta.env.VITE_API_URL || 'http://localhost:4000';
 const API_URL = `${BASE_URL}/api/v1/admission/`;
@@ -7,12 +8,14 @@ const ADMIN_API_URL = `${BASE_URL}/api/v1/admin/`;
 const baseQuery = fetchBaseQuery({
   baseUrl: API_URL,
   credentials: 'include',
+  prepareHeaders: prepareAuthHeaders,
 });
 
 // Separate baseQuery for admin endpoints (classes, sections)
 const adminBaseQuery = fetchBaseQuery({
   baseUrl: ADMIN_API_URL,
   credentials: 'include',
+  prepareHeaders: prepareAuthHeaders,
 });
 
 export const admissionApi = createApi({

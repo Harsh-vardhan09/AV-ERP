@@ -1,9 +1,10 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import toast from 'react-hot-toast';
+import { prepareAuthHeaders } from './authHeader';
 
 const BASE = `${import.meta.env.VITE_PORT}/api/v1/payroll`;
 
-const baseQuery = fetchBaseQuery({ baseUrl: BASE, credentials: 'include' });
+const baseQuery = fetchBaseQuery({ baseUrl: BASE, credentials: 'include', prepareHeaders: prepareAuthHeaders });
 
 const baseQueryWithToast = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions);
