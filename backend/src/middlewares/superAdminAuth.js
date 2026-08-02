@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const SuperAdmin = require('../models/SuperAdmin');
+const jwt = require("jsonwebtoken");
+const SuperAdmin = require("../models/SuperAdmin");
 
 /**
  * verifySuperAdmin middleware
@@ -17,17 +17,20 @@ exports.verifySuperAdmin = async (req, res, next) => {
     // DO NOT read req.cookies.token — that is exclusively for school users
     const token =
       req.cookies.superAdminToken ||
-      (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
-        ? req.headers.authorization.split(' ')[1]
+      (req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer ")
+        ? req.headers.authorization.split(" ")[1]
         : null);
 
-        console.log("Cookies:", req.cookies);
-        console.log("Authorization:", req.headers.authorization);
+    console.log("Origin:", req.headers.origin);
+    console.log("Cookie header:", req.headers.cookie);
+    console.log("Cookies:", req.cookies);
+    console.log("Host:", req.headers.host);
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Super admin access required. Please login.',
+        message: "Super admin access required. Please login.",
       });
     }
 
@@ -38,24 +41,26 @@ exports.verifySuperAdmin = async (req, res, next) => {
     } catch (jwtErr) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid or expired super admin session',
+        message: "Invalid or expired super admin session",
       });
     }
 
     // Fetch super admin from DB — exclude password
-    const superAdmin = await SuperAdmin.findById(decoded.id).select('-password');
+    const superAdmin = await SuperAdmin.findById(decoded.id).select(
+      "-password",
+    );
 
     if (!superAdmin) {
       return res.status(401).json({
         success: false,
-        message: 'Super admin account not found',
+        message: "Super admin account not found",
       });
     }
 
     if (!superAdmin.isActive) {
       return res.status(403).json({
         success: false,
-        message: 'Super admin account has been deactivated',
+        message: "Super admin account has been deactivated",
       });
     }
 
@@ -64,10 +69,10 @@ exports.verifySuperAdmin = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('[superAdminAuth] Authentication error:', error);
+    console.error("[superAdminAuth] Authentication error:", error);
     return res.status(401).json({
       success: false,
-      message: 'Authentication failed',
+      message: "Authentication failed",
     });
   }
 };
