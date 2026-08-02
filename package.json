@@ -1,0 +1,9 @@
+{
+  "name": "av-erp-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd backend && PUPPETEER_SKIP_DOWNLOAD=true npm install",
+    "start": "cd backend && npm start"
+  }
+}
