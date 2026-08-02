@@ -934,8 +934,8 @@ const DashboardLayout = () => {
           <div className="erp-topbar-right">
             <NotificationBell />
 
-            {/* Profile dropdown */}
-            <div ref={profileRef} style={{ position: 'relative' }}>
+            {/* Profile dropdown (Hidden on mobile phones; Account info is in bottom 'Me' drawer) */}
+            <div ref={profileRef} className="hidden md:block" style={{ position: 'relative' }}>
               <button
                 id="topbar-profile-btn"
                 onClick={() => setProfileOpen(prev => !prev)}
@@ -1100,7 +1100,7 @@ const DashboardLayout = () => {
         </header>
 
         {/* Page content */}
-        <main className="erp-main-content" style={{ flex: 1, overflowY: 'auto', padding: '28px', background: 'var(--page-bg)' }}>
+        <main className="erp-main-content p-3.5 sm:p-7" style={{ flex: 1, overflowY: 'auto', background: 'var(--page-bg)' }}>
           <Outlet />
           {(role === 'student' || role === 'teacher') && (
             <div className="h-28 w-full shrink-0 md:hidden pointer-events-none" aria-hidden="true" />

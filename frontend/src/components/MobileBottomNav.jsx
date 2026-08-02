@@ -17,7 +17,11 @@ import {
   MdBarChart,
   MdReceipt,
   MdGridView,
-  MdOutlineAutoStories
+  MdOutlineAutoStories,
+  MdEmail,
+  MdPhone,
+  MdBusiness,
+  MdPersonPin
 } from 'react-icons/md';
 import { FaCalendarCheck, FaCreditCard, FaChalkboardTeacher, FaUserGraduate } from 'react-icons/fa';
 import { userlogout } from '../redux/reducers/userreducer';
@@ -100,18 +104,18 @@ const MobileBottomNav = ({ role }) => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-indigo-600 text-white font-bold text-lg flex items-center justify-center shadow-md">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white font-extrabold text-lg flex items-center justify-center shadow-md">
                   {user?.firstName?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-base leading-tight">
+                  <h4 className="font-extrabold text-slate-900 text-base leading-tight">
                     {user?.firstName} {user?.lastName}
                   </h4>
-                  <p className="text-xs font-medium text-slate-500 capitalize">
-                    {role} • {user?.email || user?.phone || 'Unified Campus'}
-                  </p>
+                  <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {role} Account
+                  </span>
                 </div>
               </div>
               <button
@@ -122,34 +126,54 @@ const MobileBottomNav = ({ role }) => {
               </button>
             </div>
 
-            {/* Quick Navigation Links */}
-            <div className="space-y-1.5">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
-                More Features & Shortcuts
-              </span>
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                {quickLinks.map((item, idx) => (
-                  <NavLink
-                    key={idx}
-                    to={item.to}
-                    onClick={() => setShowMeDrawer(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                        isActive
-                          ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xs'
-                          : 'bg-slate-50/80 border-slate-200/80 text-slate-700 hover:bg-slate-100'
-                      }`
-                    }
-                  >
-                    <span className="text-indigo-600 shrink-0">{item.icon}</span>
-                    <span className="truncate">{item.label}</span>
-                  </NavLink>
-                ))}
+            {/* Account Details Card */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 space-y-2.5">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider pb-1">
+                <MdPersonPin className="text-indigo-600 size-4" />
+                Account Overview
+              </div>
+
+              <div className="space-y-2">
+                {user?.email && (
+                  <div className="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-2xs">
+                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+                      <MdEmail size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">Email Address</p>
+                      <p className="font-semibold text-xs text-slate-900 truncate">{user.email}</p>
+                    </div>
+                  </div>
+                )}
+
+                {user?.phone && (
+                  <div className="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-2xs">
+                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+                      <MdPhone size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">Phone Number</p>
+                      <p className="font-semibold text-xs text-slate-900">{user.phone}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-2xs">
+                  <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+                    <MdBusiness size={16} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">School / Branch</p>
+                    <p className="font-semibold text-xs text-slate-900 truncate">
+                      {user?.school?.name || user?.schoolName || 'Demo Public School'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Logout Action */}
-            <div className="pt-2">
+            <div className="pt-1">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 font-bold text-sm hover:bg-rose-100 transition-colors"

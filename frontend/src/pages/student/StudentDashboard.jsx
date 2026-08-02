@@ -14,6 +14,7 @@ import {
   ClipboardList,
   Award,
   ArrowRight,
+  ArrowUpRight,
   CheckCircle2,
   Clock,
   AlertCircle,
@@ -30,6 +31,26 @@ import {
   Pin,
   CreditCard
 } from 'lucide-react';
+import {
+  MdBarChart,
+  MdMenuBook,
+  MdSchool,
+  MdLocalLibrary,
+  MdReportProblem,
+  MdDescription,
+  MdChevronRight,
+  MdAutoAwesome
+} from 'react-icons/md';
+import {
+  FaCalendarCheck,
+  FaCreditCard,
+  FaFileAlt,
+  FaAward,
+  FaBookOpen,
+  FaGraduationCap,
+  FaBookmark,
+  FaExclamationCircle
+} from 'react-icons/fa';
 import { useGetStudentFeeSummaryQuery } from '../../redux/api/feeApi';
 import { useGetReportCardExamsQuery } from '../../redux/api/reportCardApi';
 import LibraryReminder from '../../components/library/LibraryReminder';
@@ -553,7 +574,7 @@ const StudentDashboard = () => {
   const overallGrade = getGradeBadge(avgMark);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 pb-32">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-7xl mx-auto px-0.5 sm:px-4 pb-32">
 
       {/* ── Top Header Banner & Student Metadata ──────────────────────────── */}
       <div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs flex flex-row items-center justify-between gap-4">
@@ -691,232 +712,120 @@ const StudentDashboard = () => {
 
       </div>
 
-      {/* ── Row 3: Fees Status & Leave Requests ────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* Fees Status Card */}
+      {/* ── Fees Status Card ────────────────────────────────── */}
+      <div className="w-full">
         <StudentFeeStatusCard studentProfileId={user?._id} />
-
-        {/* Leave Status Summary Card */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs h-[220px] flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
-            <h3 className="text-sm font-bold text-slate-900 tracking-tight uppercase">
-              Leave Requests
-            </h3>
-            <span className="text-xs font-bold text-indigo-600">
-              {leaves?.reduce((acc, l) => acc + l.count, 0) || 0} Total
-            </span>
-          </div>
-
-          <div className="space-y-2 overflow-y-auto flex-1 mt-2.5">
-            {leaves?.length > 0 ? (
-              leaves.map((l, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm p-2 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="font-semibold text-slate-700 capitalize">{l._id || 'Pending'}</span>
-                  <span className="font-bold text-slate-900 tabular-nums">{l.count} day(s)</span>
-                </div>
-              ))
-            ) : (
-              <div className="p-6 text-center text-slate-400 text-sm font-medium my-auto">
-                No leave records.
-              </div>
-            )}
-          </div>
-        </div>
-
       </div>
 
-      {/* ── All Student Features & Modules (Fedena ERP Horizontal List Layout) ── */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
-              <Sparkles className="w-4 h-4" />
+      {/* ── Standalone Mobile-Only Quick Nav Modules (Hidden on PC desktop where sidebar exists) ── */}
+      <div className="space-y-3.5 w-full md:hidden">
+        {/* Apply Leave */}
+        <NavLink
+          to="/student/leave"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-amber-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdDescription size={22} />
             </div>
-            <h3 className="text-sm font-bold text-slate-900 tracking-tight uppercase">
-              All Student Features
-            </h3>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
+              Apply Leave
+            </span>
           </div>
-          <span className="text-xs font-semibold text-slate-400">11 Modules</span>
-        </div>
+          <div className="flex items-center text-slate-400 group-hover:text-amber-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
 
-        <div className="flex flex-col gap-2.5">
-          <NavLink
-            to="/student/dashboard"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
-                <Calendar className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Dashboard</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Home Overview & Quick Feed</p>
-              </div>
+        {/* Marks & Performance */}
+        <NavLink
+          to="/student/marks"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-purple-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdBarChart size={22} />
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-purple-600 transition-colors">
+              Marks & Performance
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-purple-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
 
-          <NavLink
-            to="/student/attendance"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 shrink-0 group-hover:scale-105 transition-transform">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Attendance</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Monthly Logs & Donut Breakdown</p>
-              </div>
+        {/* Knowledge Center */}
+        <NavLink
+          to="/student/materials"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-sky-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-sky-50 text-sky-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdMenuBook size={22} />
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-sky-600 transition-colors">
+              Knowledge Center
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-sky-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
 
-          <NavLink
-            to="/student/assignments"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shrink-0 group-hover:scale-105 transition-transform">
-                <ClipboardList className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Assignments</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Homework & Submission Tracker</p>
-              </div>
+        {/* Academic Report Cards */}
+        <NavLink
+          to="/student/report-card"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-violet-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-violet-50 text-violet-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdSchool size={22} />
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-violet-600 transition-colors">
+              Academic Report Cards
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-violet-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
 
-          <NavLink
-            to="/student/marks"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600 shrink-0 group-hover:scale-105 transition-transform">
-                <Award className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Marks & Results</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Exam Scores & Performance</p>
-              </div>
+        {/* Library & Books */}
+        <NavLink
+          to="/student/library"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-teal-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-teal-50 text-teal-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdLocalLibrary size={22} />
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-teal-600 transition-colors">
+              Library & Books
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-teal-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
 
-          <NavLink
-            to="/student/leave"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 shrink-0 group-hover:scale-105 transition-transform">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Apply Leave</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Submit Leave Application</p>
-              </div>
+        {/* Helpdesk & Complaints */}
+        <NavLink
+          to="/student/complaints"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-red-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-red-50 text-red-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdReportProblem size={22} />
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
-
-          <NavLink
-            to="/student/materials"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-sky-50 text-sky-600 shrink-0 group-hover:scale-105 transition-transform">
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Knowledge Center</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Study Materials & Notes</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
-
-          <NavLink
-            to="/student/library"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-teal-50 text-teal-600 shrink-0 group-hover:scale-105 transition-transform">
-                <Bookmark className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Library</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Issued Books & Due Alerts</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
-
-          <NavLink
-            to="/student/notices"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600 shrink-0 group-hover:scale-105 transition-transform">
-                <Bell className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Notices</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">School Circulars & Bulletins</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
-
-          <NavLink
-            to="/student/complaints"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-red-50 text-red-600 shrink-0 group-hover:scale-105 transition-transform">
-                <AlertCircle className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Complaints</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Feedback & Helpdesk Queries</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
-
-          <NavLink
-            to="/student/fees"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 shrink-0 group-hover:scale-105 transition-transform">
-                <CreditCard className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">My Fees</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Receipts & Online Payment</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
-
-          <NavLink
-            to="/student/report-card"
-            className="flex items-center justify-between p-3.5 px-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/60 transition-all group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
-                <GraduationCap className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">Report Card</h4>
-                <p className="text-xs text-slate-500 font-medium truncate">Term & Final Academic Cards</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </NavLink>
-        </div>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-red-600 transition-colors">
+              Helpdesk & Complaints
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-red-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
       </div>
 
       {/* Attendance Breakdown Modal */}

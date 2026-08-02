@@ -268,7 +268,7 @@ const Login = () => {
           {/* ── Submit Button ───────────────────────────────────────── */}
           <button
             type="submit"
-            className="group w-full py-3 px-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-semibold rounded-xl shadow-md shadow-purple-500/20 hover:-translate-y-[2px] hover:shadow-lg hover:shadow-purple-500/30 active:translate-y-0 transition-all duration-200 flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold rounded-xl shadow-xs hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             {isLoading ? (

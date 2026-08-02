@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   useGetMyAssignmentsQuery,
   useGetMyClassTeacherQuery,
@@ -7,8 +7,19 @@ import {
   useGetStudentsForAttendanceQuery,
 } from '../../redux/api/teacherApi';
 import { useGetActiveSessionQuery } from '../../redux/api/adminApi';
-import { MdSubject, MdClass, MdPeople, MdDescription, MdChevronRight } from 'react-icons/md';
-import { FaChalkboardTeacher } from 'react-icons/fa';
+import {
+  MdSubject,
+  MdClass,
+  MdPeople,
+  MdDescription,
+  MdChevronRight,
+  MdAssignment,
+  MdCheckCircle,
+  MdUploadFile,
+  MdBook,
+  MdReceipt
+} from 'react-icons/md';
+import { FaChalkboardTeacher, FaCalendarCheck, FaUserGraduate } from 'react-icons/fa';
 
 const TeacherDashboard = () => {
   const { data: sessionData } = useGetActiveSessionQuery();
@@ -193,6 +204,153 @@ const TeacherDashboard = () => {
             </table>
           </div>
         )}
+      </div>
+
+      {/* ── Standalone Mobile-Only Teacher Modules (Hidden on PC desktop where sidebar exists) ── */}
+      <div className="space-y-3.5 w-full md:hidden mb-6">
+        {/* Attendance */}
+        <NavLink
+          to="/teacher/attendance"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-emerald-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-105 transition-transform">
+              <FaCalendarCheck size={20} />
+            </div>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+              Mark Attendance
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-emerald-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
+
+        {/* Assignments */}
+        <NavLink
+          to="/teacher/assignments"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-blue-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdAssignment size={22} />
+            </div>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+              Assignments
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-blue-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
+
+        {/* Upload Marks */}
+        <NavLink
+          to="/teacher/marks"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-purple-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdUploadFile size={22} />
+            </div>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-purple-600 transition-colors">
+              Upload Marks & Results
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-purple-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
+
+        {/* Student Leaves */}
+        <NavLink
+          to="/teacher/student-leaves"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-indigo-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdCheckCircle size={22} />
+            </div>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+              Student Leave Requests
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-indigo-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
+
+        {/* Knowledge Center */}
+        <NavLink
+          to="/teacher/materials"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-sky-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-sky-50 text-sky-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdBook size={22} />
+            </div>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-sky-600 transition-colors">
+              Knowledge Center
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-sky-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
+
+        {/* My Leave */}
+        <NavLink
+          to="/teacher/leave"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-amber-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdDescription size={22} />
+            </div>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
+              Apply Leave
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-amber-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
+
+        {/* My Students */}
+        <NavLink
+          to="/teacher/my-students"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-rose-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-rose-50 text-rose-600 rounded-xl group-hover:scale-105 transition-transform">
+              <FaUserGraduate size={20} />
+            </div>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-rose-600 transition-colors">
+              My Students
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-rose-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
+
+        {/* My Payslips */}
+        <NavLink
+          to="/teacher/payroll/my-payslips"
+          className="flex items-center justify-between p-4 px-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-teal-300 hover:bg-slate-50/70 transition-all group cursor-pointer w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-teal-50 text-teal-600 rounded-xl group-hover:scale-105 transition-transform">
+              <MdReceipt size={22} />
+            </div>
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-teal-600 transition-colors">
+              My Payslips
+            </span>
+          </div>
+          <div className="flex items-center text-slate-400 group-hover:text-teal-600 transition-colors">
+            <MdChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </NavLink>
       </div>
     </div>
   );
