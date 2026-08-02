@@ -9,8 +9,11 @@ const SCHOOL_API_URL = `${BASE_URL}/api/v1/school/`;
 const baseQuery = fetchBaseQuery({
   baseUrl: API_URL,
   credentials: 'include', // Include credentials for cookies
-  prepareHeaders: (headers) => {
-    // Customize headers if needed (e.g., add auth tokens)
+  prepareHeaders: (headers, { getState }) => {
+    const token = getState()?.user?.user?.token || localStorage.getItem('token');
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
     return headers;
   },
 });
@@ -125,7 +128,17 @@ export const {
 // ── School Info API (separate slice — fetches school name/logo for topbar) ────
 export const schoolApi = createApi({
   reducerPath: 'schoolApi',
-  baseQuery: fetchBaseQuery({ baseUrl: SCHOOL_API_URL, credentials: 'include' }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: SCHOOL_API_URL,
+    credentials: 'include',
+    prepareHeaders: (headers, { getState }) => {
+      const token = getState()?.user?.user?.token || localStorage.getItem('token');
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
   tagTypes: ['School'],
   endpoints: (builder) => ({
     getMySchool: builder.query({
