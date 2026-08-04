@@ -1,1 +1,0 @@
-{"error":"E11000 duplicate key error collection: newERPDB.studentprofiles index: studentId_1_schoolId_1 dup key: { studentId: null, schoolId: ObjectId('69cd3df2cb8e735f68d3ef98') }"}
