@@ -16,7 +16,7 @@ const bcrypt = require('bcryptjs');
  * req.schoolId — user.schoolId (data isolation filter)
  */
 const jwt = require('jsonwebtoken');
-const { User } = require('../models/user');
+const { User } = require('../../../src-old/models/user');
 
 exports.varifyToken = async (req, res, next) => {
   const token =

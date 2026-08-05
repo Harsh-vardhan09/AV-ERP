@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const SuperAdmin = require("../models/SuperAdmin");
+const SuperAdmin = require("../../../src-old/models/SuperAdmin");
 
 /**
  * verifySuperAdmin middleware

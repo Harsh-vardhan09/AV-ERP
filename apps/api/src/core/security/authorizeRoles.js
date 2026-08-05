@@ -38,7 +38,7 @@ exports.guardSelfAccess = async (req, res, next) => {
 
     // Slow path: paramId might be a StudentProfile._id — resolve it
     // SECURITY: also scope to current school to prevent cross-tenant lookup
-    const StudentProfile = require('../models/StudentProfile');
+    const StudentProfile = require('../../../src-old/models/StudentProfile');
     const profile = await StudentProfile.findOne({
       _id: paramId,
       schoolId: req.schoolId

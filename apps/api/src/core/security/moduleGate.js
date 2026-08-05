@@ -11,8 +11,8 @@
  *  - On DB error we FAIL OPEN (allow) to avoid blocking users on infra issues.
  *  - Legacy oases docs (missing modules field) fall back to isOasesEnabled.
  */
-const SchoolSettings = require('../models/SchoolSettings');
-const { isModuleEnabled } = require('../utils/moduleConstants');
+const SchoolSettings = require('../../../src-old/models/SchoolSettings');
+const { isModuleEnabled } = require('../../../src-old/utils/moduleConstants');
 
 const checkModuleAccess = (moduleKey) => {
   return async (req, res, next) => {

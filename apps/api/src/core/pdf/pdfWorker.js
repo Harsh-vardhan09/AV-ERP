@@ -1,7 +1,7 @@
 const queue = require('../config/queue');
-const pdfService = require('../services/payroll/pdfService');
+const pdfService = require('../../../src-old/services/payroll/pdfService');
 const logger = require('../utils/logger');
-const Payslip = require('../models/Payslip');
+const Payslip = require('../../../src-old/models/Payslip');
 
 /**
  * Worker to handle PDF generation jobs

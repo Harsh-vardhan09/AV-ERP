@@ -8,10 +8,6 @@ v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-/**
- * Upload a file (from local disk path) to Cloudinary.
- * Originally used resource_type:'raw' for assignments — kept for backward compat.
- */
 const uploadoncloud = async (localfilepath) => {
   try {
     if (!localfilepath) return null;
@@ -29,12 +25,7 @@ const uploadoncloud = async (localfilepath) => {
   }
 };
 
-/**
- * Upload an image file to Cloudinary under a specific folder.
- * Supports both local disk path (string) and buffer (for memory storage).
- * @param {string|Buffer} source   - local file path or file buffer
- * @param {object} options         - Cloudinary upload options (folder, public_id, etc.)
- */
+
 const uploadImageToCloud = async (source, options = {}) => {
   try {
     const defaults = {
@@ -46,7 +37,7 @@ const uploadImageToCloud = async (source, options = {}) => {
 
     let response;
     if (typeof source === 'string') {
-      // Local file path
+ 
       response = await v2.uploader.upload(source, defaults);
       try { fs.unlinkSync(source); } catch (_) { }
     } else if (Buffer.isBuffer(source)) {
@@ -73,9 +64,6 @@ const uploadImageToCloud = async (source, options = {}) => {
   }
 };
 
-/**
- * Delete a Cloudinary asset by its public_id.
- */
 const deleteFromCloud = async (publicId) => {
   if (!publicId) return;
   try {
@@ -86,13 +74,6 @@ const deleteFromCloud = async (publicId) => {
   }
 };
 
-/**
- * Upload a PDF (Buffer) to Cloudinary as a raw file.
- * Used by OASES upload flow in serverless environments where local disk
- * is read-only. Returns the Cloudinary response (secure_url, public_id, etc.)
- * @param {Buffer} buffer   - PDF file buffer from multer memoryStorage
- * @param {object} options  - Cloudinary upload options (folder, public_id, etc.)
- */
 const uploadPdfToCloud = async (buffer, options = {}) => {
   const defaults = {
     resource_type: 'raw',

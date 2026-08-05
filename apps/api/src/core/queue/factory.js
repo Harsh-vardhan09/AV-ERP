@@ -4,7 +4,7 @@
  * Exports a reusable Bull queue instance
  */
 const Queue = require('bull');
-const logger = require('../utils/logger');
+const logger = require('../../../src-old/middlewares/logger');
 
 const QUEUE_NAME = 'payroll';
 

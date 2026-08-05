@@ -34,7 +34,7 @@ class PDFService {
    * _wrapInDocument is called exactly once here.
    */
   static async generateFromTemplate({ template, data, css = '', fileName, outputDir, options = {} }) {
-    const TemplateParserService = require('./templateParserService');
+    const TemplateParserService = require('../../../src-old/services/templateParserService');
     const startTime = Date.now();
 
     // 1. Render Handlebars/template → inner HTML

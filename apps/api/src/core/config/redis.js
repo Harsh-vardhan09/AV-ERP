@@ -12,7 +12,7 @@
  */
 
 const Redis  = require('ioredis');
-const logger = require('../utils/logger');
+const logger = require('../../../src-old/utils/logger');
 
 // ─── Determine connection parameters ─────────────────────────────────────────
 const REDIS_URL  = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
