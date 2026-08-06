@@ -89,9 +89,12 @@ app.use('/api/v1/payroll', apiLimiter, varifyToken, require('../src-old/routes/p
 // Bulk import — auth is embedded inside importRoutes
 app.use('/api/v1/import', apiLimiter, require('../src-old/import-system/routes/importRoutes'));
 
-// Biometric — /fingerprint is JWT-protected, /device is token-based (MORX hardware)
-app.use('/api/v1/fingerprint', require('../src-old/routes/fingerprintRoutes'));
-app.use('/api/v1/device', require('../src-old/routes/fingerprintRoutes'));
+// Biometric — /fingerprint is JWT-protected, /device is token-based (MORX hardware).
+// Neither mount was rate-limited before the move: apiLimiter here would throttle
+// punch ingestion, and /device carries no JWT to bucket per user
+const biometric = require('./modules/biometric/module');
+app.use(biometric.basePath, biometric.routes);
+for (const mount of biometric.extraMounts) app.use(mount, biometric.routes);
 
 app.use('/api/v1/dynamic-reports', apiLimiter, require('../src-old/routes/dynamicReportRoutes'));
 app.use('/api/v1/report-templates', apiLimiter, require('../src-old/routes/reportTemplateRoutes'));

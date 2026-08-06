@@ -42,7 +42,7 @@ const MarksAuditLog = lazy(() => import('./pages/admin/MarksAuditLog'));
 const SchoolSettingsPage = lazy(() => import('./pages/admin/SchoolSettingsPage'));
 const TeacherLeaveManager = lazy(() => import('./pages/admin/UserManager'));
 const StaffManager = lazy(() => import('./pages/admin/StaffManager'));
-const BiometricDeviceManagement = lazy(() => import('./pages/fringerprint'));
+const BiometricDeviceManagement = lazy(() => import('./modules/biometric/pages/FingerprintAttendance'));
 const FacultyAttendance = lazy(() => import('./pages/FacultyAttendance'));
 
 // Teacher pages (new)

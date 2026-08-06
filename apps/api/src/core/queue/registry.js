@@ -1,7 +1,7 @@
 // Paths follow the workers: each moves to modules/<domain>/jobs as that module migrates
 module.exports = {
   bootWorkers: () => {
-    require('../../../src-old/workers/attendanceWorker');
+    require('../../modules/biometric/jobs/attendanceWorker');
     require('../../../src-old/workers/notificationWorker');
     require('../../../src-old/workers/digestWorker');
     require('../../../src-old/workers/emailWorker');
