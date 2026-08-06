@@ -9,8 +9,8 @@ async function main() {
   console.log('✓ Connected to MongoDB');
 
   // Load models
-  require('../src-old/models/School');
-  require('../src-old/models/user');
+  require('../src/modules/tenancy').School;
+  require('../src/modules/identity');
   require('../src-old/models/AcademicSession');
   require('../src-old/models/ClassModel');
   require('../src-old/models/SectionModel');
@@ -24,7 +24,7 @@ async function main() {
   require('../src-old/models/MarksAuditLog');
   require('../src-old/models/StudentProfile');
   require('../src-old/models/TeacherProfile');
-  require('../src-old/models/SchoolSettings');
+  require('../src/modules/tenancy').SchoolSettings;
   require('../src-old/models/leave');
   require('../src-old/models/fee/FeeHead');
   require('../src-old/models/fee/FeeStructure');

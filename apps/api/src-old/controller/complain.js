@@ -1,5 +1,5 @@
 const complainBox = require("../models/ComplainBox");
-const { User } = require("../models/user");
+const { User } = require("../../src/modules/identity");
 async function soloComplain(req,res){
 console.log(req.body)
     if(!req.body){

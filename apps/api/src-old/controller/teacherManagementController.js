@@ -1,5 +1,5 @@
 const TeacherProfile = require('../models/TeacherProfile');
-const { User } = require('../models/user');
+const { User } = require('../../src/modules/identity');
 const TeacherSubjectAssignment = require('../models/TeacherSubjectAssignment');
 
 // ─── helpers ──────────────────────────────────────────────────────────────────

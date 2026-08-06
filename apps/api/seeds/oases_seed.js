@@ -5,7 +5,7 @@ require('dotenv').config();
 const ExamConfig          = require('../src-old/models/oases/ExamConfig');
 const AnswerSheet         = require('../src-old/models/oases/AnswerSheet');
 const EvaluatorAssignment = require('../src-old/models/oases/EvaluatorAssignment');
-const { User }            = require('../src-old/models/user');
+const { User }            = require('../src/modules/identity');
 
 const {
   SHEET_STATUS,

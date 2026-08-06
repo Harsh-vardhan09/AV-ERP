@@ -20,7 +20,7 @@ const ExamConfig         = require('../src-old/models/oases/ExamConfig');
 const OasesNotification  = require('../src-old/models/oases/OasesNotification');
 const QuestionScheme     = require('../src-old/models/oases/QuestionScheme');
 const ResultSheet        = require('../src-old/models/oases/ResultSheet');
-const { User }           = require('../src-old/models/user');
+const { User }           = require('../src/modules/identity');
 
 (async () => {
   console.log('\n╔══════════════════════════════════════════════════╗');

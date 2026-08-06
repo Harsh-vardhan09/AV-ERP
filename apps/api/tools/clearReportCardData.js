@@ -30,7 +30,7 @@ const DUMMY_SUBJECT_CODES = ['SCI','SST','COMP','SAN']; // codes not in seedMast
 const clear = async () => {
   await connect();
 
-  const { User }          = require('../src-old/models/user');
+  const { User }          = require('../src/modules/identity');
   const StudentProfile    = require('../src-old/models/StudentProfile');
   const Exam              = require('../src-old/models/Exam');
   const Marks             = require('../src-old/models/MarksModel');
@@ -39,7 +39,7 @@ const clear = async () => {
   const CoScholasticMark  = require('../src-old/models/CoScholasticMark');
   const SubjectMaster     = require('../src-old/models/SubjectMaster');
   const ClassSubjectMap   = require('../src-old/models/ClassSubjectMap');
-  const School            = require('../src-old/models/School');
+  const School            = require('../src/modules/tenancy').School;
 
   console.log('\n🗑️  Clearing Report Card Dummy Data...\n');
 

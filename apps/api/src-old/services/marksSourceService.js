@@ -21,8 +21,8 @@
  */
 
 const MarksModel    = require('../models/MarksModel');
-const School        = require('../models/School');
-const SchoolSettings= require('../models/SchoolSettings');
+const School        = require('../../src/modules/tenancy').School;
+const SchoolSettings= require('../../src/modules/tenancy').SchoolSettings;
 
 class MarksSourceService {
 

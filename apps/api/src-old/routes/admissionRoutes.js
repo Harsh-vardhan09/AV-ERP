@@ -3,7 +3,7 @@ const router = express.Router();
 const { varifyToken } = require('../../src/core/security/authenticate.js');
 const { authorize } = require('../../src/core/security/roleMiddleware.js');
 const admission = require('../controller/admissionController');
-const otp = require('../controller/otpController');
+const otp = require('../../src/modules/identity').otpController;
 const { uploadPhoto } = require('../../src/core/http/upload.disk.js');
 
 // All admission routes are protected (admission + admin + teacher can access)

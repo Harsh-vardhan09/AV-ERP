@@ -9,8 +9,8 @@
 // tools can verify the module is alive without a valid token.
 // ══════════════════════════════════════════════════════════════════
 const jwt           = require('jsonwebtoken');
-const SchoolSettings = require('../models/SchoolSettings');
-const { User }      = require('../models/user');
+const SchoolSettings = require('../../src/modules/tenancy').SchoolSettings;
+const { User }      = require('../../src/modules/identity');
 
 if (!process.env.JWT_SECRET) {
   throw new Error(

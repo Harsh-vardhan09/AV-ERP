@@ -2,7 +2,7 @@
 require('dotenv').config();
 const mongoose    = require('mongoose');
 const AnswerSheet = require('../src-old/models/oases/AnswerSheet');
-const { User }    = require('../src-old/models/user');
+const { User }    = require('../src/modules/identity');
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || process.env.DB_URL;
 

@@ -1,13 +1,13 @@
 // const Assignment = require('../models/assignment');
 // const Assignmentupload = require('../models/uploadassignment');
-// const { User } = require('../models/user');
+// const { User } = require('../../src/modules/identity');
 // const fs = require('fs');
 // const crypto = require('crypto'); 
 // const { uploadoncloud } = require('../../src/core/config/storage.js');
 
 const Assignment = require('../models/assignment');
 const Assignmentupload = require('../models/uploadassignment');
-const { User } = require('../models/user');
+const { User } = require('../../src/modules/identity');
 const fs = require('fs');
 const crypto = require('crypto'); 
 const { uploadoncloud } = require('../../src/core/config/storage.js');

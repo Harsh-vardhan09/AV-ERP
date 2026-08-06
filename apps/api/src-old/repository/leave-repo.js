@@ -1,5 +1,5 @@
 const Leave=require("../models/leave");
-const { User } = require("../models/user");
+const { User } = require("../../src/modules/identity");
 
 class LEAVE{
     async create(data){

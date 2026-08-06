@@ -4,8 +4,8 @@ const connect = require('../src/core/config/database');
 
 const run = async () => {
   await connect();
-  const School = require('../src-old/models/School');
-  const { User } = require('../src-old/models/user');
+  const School = require('../src/modules/tenancy').School;
+  const { User } = require('../src/modules/identity');
   const AcademicSession = require('../src-old/models/AcademicSession');
   const StudentProfile = require('../src-old/models/StudentProfile');
 

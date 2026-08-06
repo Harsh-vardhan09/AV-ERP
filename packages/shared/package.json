@@ -1,0 +1,11 @@
+{
+  "name": "@av-erp/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Definitions shared by apps/api and apps/web",
+  "main": "modules.js",
+  "exports": {
+    ".": "./modules.js",
+    "./modules": "./modules.js"
+  }
+}

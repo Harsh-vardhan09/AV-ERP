@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const logger = require('../logging/logger');
-// TEMP: moves to modules/identity
-const { User } = require('../../../src-old/models/user');
+const { User } = require('../../modules/identity/models/user');
 
 const authenticate = async (req, res, next) => {
   const token =

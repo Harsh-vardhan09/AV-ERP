@@ -5,7 +5,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 // Models
-const School = require('../src-old/models/School');
+const School = require('../src/modules/tenancy').School;
 const AdmissionFormSettings = require('../src-old/models/AdmissionFormSettings');
 
 // Field config — exact order from screenshot

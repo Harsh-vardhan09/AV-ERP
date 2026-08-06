@@ -14,9 +14,9 @@ const BaseAdapter = require('./baseAdapter');
 const bcryptjs    = require('bcryptjs');
 
 const getModels = () => ({
-  User:           require('../../models/user').User,
+  User:           require('../../../src/modules/identity').User,
   TeacherProfile: require('../../models/TeacherProfile'),
-  SchoolSettings: require('../../models/SchoolSettings'),
+  SchoolSettings: require('../../../src/modules/tenancy').SchoolSettings,
 });
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

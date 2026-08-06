@@ -66,7 +66,7 @@ const checkConflict = async (sheetId, schoolId) => {
       });
 
       // Notify all head examiners for this school
-      const { User } = require('../../models/user.js');
+      const { User } = require('../../../src/modules/identity');
       const heads = await User.find({ schoolId, oasesRole: 'HEAD_EXAMINER' }).select('_id').lean();
       if (heads.length) {
         await OasesNotification.insertMany(

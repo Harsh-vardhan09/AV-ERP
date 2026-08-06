@@ -11,7 +11,7 @@
 // Logic for existing oasesRole users is UNCHANGED.
 // ══════════════════════════════════════════════════════════════════
 const jwt       = require('jsonwebtoken');
-const { User }  = require('../models/user');
+const { User }  = require('../../src/modules/identity');
 const { safeRedisOperation } = require('../config/oasesRedis');
 
 if (!process.env.JWT_SECRET) {

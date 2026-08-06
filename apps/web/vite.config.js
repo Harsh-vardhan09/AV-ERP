@@ -33,6 +33,12 @@ export default defineConfig(({ mode }) => {
     },
   },
   build: {
+    // @av-erp/shared is CommonJS (Node requires it too) and symlinked by npm
+    // workspaces, so it resolves outside node_modules and Rollup's commonjs
+    // plugin skips it by default — named imports then fail to resolve.
+    commonjsOptions: {
+      include: [/packages[\\/]shared/, /node_modules/],
+    },
     // Sprint 7: manual code splitting for optimal chunk size
     rollupOptions: {
       output: {

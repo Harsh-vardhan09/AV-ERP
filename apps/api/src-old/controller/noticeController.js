@@ -2,9 +2,9 @@ const NOTICE = require("../models/notice");
 const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ──────────────────────────────────────────
-const { notifyMultipleUsers } = require('../services/notificationService');
-const { noticePublishedTemplate } = require('../utils/emailTemplates');
-const { User } = require('../models/user');
+const { notifyMultipleUsers } = require('../../src/modules/notifications').notificationService;
+const { noticePublishedTemplate } = require('../../src/modules/notifications').emailTemplates;
+const { User } = require('../../src/modules/identity');
 
 // Create a notice
 const CreateNotice = async (req, res) => {
@@ -30,7 +30,7 @@ const CreateNotice = async (req, res) => {
         if (!schoolId) return;
 
         const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-        const School = require('../models/School');
+        const School = require('../../src/modules/tenancy').School;
         const school = await School.findById(schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
 
@@ -117,4 +117,4 @@ module.exports = {
   getone,
   Delete,
   getphoto,
-};
+};

@@ -48,7 +48,8 @@
     "socket.io-client": "^4.8.3",
     "web-vitals": "^2.1.4",
     "zod": "^4.3.6",
-    "zustand": "^4.5.7"
+    "zustand": "^4.5.7",
+    "@av-erp/shared": "*"
   },
   "scripts": {
     "dev": "vite",

@@ -1,6 +1,6 @@
 const { uploadoncloud } = require('../../src/core/config/storage.js');
 const Assignment = require('../models/assignment.js');
-const { User } = require('../models/user.js');
+const { User } = require('../../src/modules/identity');
 
 exports.createAssignment = async (req, res) => {
   try {

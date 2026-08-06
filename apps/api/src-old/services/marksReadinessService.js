@@ -20,7 +20,7 @@ const ExamSubjectConfig = require('../models/ExamSubjectConfig');
 const ClassSubjectMap   = require('../models/ClassSubjectMap');
 const Marks             = require('../models/MarksModel');
 const SubjectMaster     = require('../models/SubjectMaster');
-const SchoolSettings    = require('../models/SchoolSettings');
+const SchoolSettings    = require('../../src/modules/tenancy').SchoolSettings;
 const logger            = require('../../src/core/logging/logger.js');
 
 /**

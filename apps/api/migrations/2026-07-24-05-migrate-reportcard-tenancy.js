@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 
 const Exam = require('../src-old/models/Exam');
 const ExamSubjectConfig = require('../src-old/models/ExamSubjectConfig');
-const { User } = require('../src-old/models/user');
+const { User } = require('../src/modules/identity');
 const Marks = require('../src-old/models/MarksModel');
 
 async function main() {

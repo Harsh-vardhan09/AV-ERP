@@ -1,5 +1,5 @@
 const StudentProfile = require('../models/StudentProfile');
-const { User } = require('../models/user');
+const { User } = require('../../src/modules/identity');
 const ClassModel = require('../models/ClassModel');
 const SectionModel = require('../models/SectionModel');
 const AcademicSession = require('../models/AcademicSession');

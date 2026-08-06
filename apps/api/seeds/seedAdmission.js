@@ -8,8 +8,8 @@ const seedAdmission = async () => {
   try {
     await connect();
 
-    const School = require('../src-old/models/School');
-    const { User } = require('../src-old/models/user');
+    const School = require('../src/modules/tenancy').School;
+    const { User } = require('../src/modules/identity');
 
     const admissionEmail = 'admission@demo2.com';
 

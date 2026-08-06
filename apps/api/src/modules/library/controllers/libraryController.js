@@ -4,11 +4,11 @@ const logger = require('../../../core/logging/logger');
 const bcryptjs = require('bcryptjs');
 // TEMP: User/StudentProfile move to modules/people; School and the mail
 // utils follow when their modules exist
-const { User } = require('../../../../src-old/models/user');
-const School = require('../../../../src-old/models/School');
+const { User } = require('../../identity');
+const School = require('../../tenancy').School;
 const StudentProfile = require('../../../../src-old/models/StudentProfile');
-const { generateTempPassword } = require('../../../../src-old/utils/generatePassword');
-const { sendStaffCredentials } = require('../../../../src-old/utils/emailService');
+const { generateTempPassword } = require('../../identity').generatePassword;
+const { sendStaffCredentials } = require('../../notifications').emailService;
 
 const safeUser = (u) => {
   const obj = u.toObject ? u.toObject() : { ...u };

@@ -40,8 +40,8 @@ const calcTotal = (m) => {
 const seed = async () => {
   await connect();
 
-  const School                   = require('../src-old/models/School');
-  const { User }                 = require('../src-old/models/user');
+  const School                   = require('../src/modules/tenancy').School;
+  const { User }                 = require('../src/modules/identity');
   const AcademicSession          = require('../src-old/models/AcademicSession');
   const ClassModel               = require('../src-old/models/ClassModel');
   const SectionModel             = require('../src-old/models/SectionModel');

@@ -11,7 +11,7 @@
 // ══════════════════════════════════════════════════════════════════
 const crypto = require('crypto');
 const AnswerSheet = require('../../models/oases/AnswerSheet');
-const SchoolSettings = require('../../models/SchoolSettings');
+const SchoolSettings = require('../../../src/modules/tenancy').SchoolSettings;
 const ExamConfig = require('../../models/oases/ExamConfig');
 const oasesAsync = require('../../utils/oasesAsyncHandler');
 const { oasesSuccess, oasesError } = require('../../utils/oasesResponse');
@@ -200,7 +200,7 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
       try {
         const TeacherSubjectAssignment = require('../../models/TeacherSubjectAssignment');
         const ClassTeacherAssignment = require('../../models/ClassTeacherAssignment');
-        const { User } = require('../../models/user');
+        const { User } = require('../../../src/modules/identity');
         const EvaluatorAssignment = require('../../models/oases/EvaluatorAssignment');
         const OasesNotification = require('../../models/oases/OasesNotification');
         const { EVAL_ROUNDS, NOTIFICATION_TYPES, OASES_ROLES } = require('../../utils/oasesConstants');

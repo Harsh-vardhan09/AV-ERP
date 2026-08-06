@@ -9,7 +9,7 @@ const Marks = require('../models/MarksModel');
 const ReportCard = require('../models/ReportCard');
 const ReportCardMark = require('../models/ReportCardMark');
 const StudentProfile = require('../models/StudentProfile');
-const SchoolSettings = require('../models/SchoolSettings');
+const SchoolSettings = require('../../src/modules/tenancy').SchoolSettings;
 const {
   SLOT_MAX,
   CO_SCHOLASTIC_MAX,
@@ -22,7 +22,7 @@ const { getExamReadiness } = require('../services/marksReadinessService');
 const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
-const { createInAppNotification, sendEmailNotification } = require('../services/notificationService');
+const { createInAppNotification, sendEmailNotification } = require('../../src/modules/notifications').notificationService;
 
 const SLOT_FIELDS = [
   'fa1_1',
@@ -1246,7 +1246,7 @@ exports.finalizeReportCard = async (req, res) => {
     ;(async () => {
       try {
         const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-        const School = require('../models/School');
+        const School = require('../../src/modules/tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
 

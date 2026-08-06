@@ -1,5 +1,5 @@
-// The 'library' key is not yet registered in src-old/utils/moduleConstants, so this
-// module is not gated by checkModuleAccess — adding it there changes school defaults
+// 'library' is registered in @av-erp/shared (defaultEnabled true). The routes still
+// do not call checkModuleAccess, so the toggle is declared but not enforced yet
 module.exports = {
   key:            'library',
   label:          'Library',

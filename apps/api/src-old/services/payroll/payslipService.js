@@ -186,7 +186,7 @@ const resendEmail = async (schoolId, payslipId) => {
   }
 
   try {
-    const emailService = require('../../utils/emailService');
+    const emailService = require('../../../src/modules/notifications').emailService;
     // Compute full name — main ERP stores firstName + lastName separately
     const teacherName =
       payslip.teacherId

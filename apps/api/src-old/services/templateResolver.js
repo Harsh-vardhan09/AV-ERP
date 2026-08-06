@@ -26,7 +26,7 @@
 
 const ReportTemplate = require('../models/ReportTemplate');
 const StudentProfile  = require('../models/StudentProfile');
-const SchoolSettings  = require('../models/SchoolSettings');
+const SchoolSettings  = require('../../src/modules/tenancy').SchoolSettings;
 const logger          = require('../../src/core/logging/logger.js');
 
 /**

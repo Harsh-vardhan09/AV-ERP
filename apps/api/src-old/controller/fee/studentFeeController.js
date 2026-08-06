@@ -8,9 +8,9 @@ const { assignFeeToStudent, getStudentFeeSummary } = require('../../services/fee
 const logger = require('../../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
-const { createInAppNotification, sendEmailNotification } = require('../../services/notificationService');
-const { feePaymentReceiptTemplate } = require('../../utils/emailTemplates');
-const { User } = require('../../models/user');
+const { createInAppNotification, sendEmailNotification } = require('../../../src/modules/notifications').notificationService;
+const { feePaymentReceiptTemplate } = require('../../../src/modules/notifications').emailTemplates;
+const { User } = require('../../../src/modules/identity');
 
 const sendError = (res, status, message) =>
     res.status(status).json({ success: false, message });
@@ -190,7 +190,7 @@ exports.collectPayment = async (req, res) => {
             if (!schoolId) return;
 
             const loginUrl  = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-            const School    = require('../../models/School');
+            const School    = require('../../../src/modules/tenancy').School;
             const school    = await School.findById(schoolId).select('name').lean();
             const schoolName = school?.name || 'School';
 

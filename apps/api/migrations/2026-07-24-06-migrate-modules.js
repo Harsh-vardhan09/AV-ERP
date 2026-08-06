@@ -3,10 +3,10 @@
 
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const mongoose = require('mongoose');
-const { DEFAULT_MODULES } = require('../src-old/utils/moduleConstants');
+const { DEFAULT_MODULES } = require('@av-erp/shared');
 
 // Inline minimal schema to avoid circular imports
-const SchoolSettings = require('../src-old/models/SchoolSettings');
+const SchoolSettings = require('../src/modules/tenancy').SchoolSettings;
 
 async function migrate() {
   const uri = process.env.MONGO_URI;

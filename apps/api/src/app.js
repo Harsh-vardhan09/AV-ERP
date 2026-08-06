@@ -13,7 +13,18 @@ const { apiLimiter, authLimiter } = require('./core/security/rateLimiters');
 const errorMiddleware = require('./core/http/errorMiddleware');
 const { varifyToken } = require('./core/security/authenticate');
 
+
 const app = express();
+// Mounts a module's extraMounts. Each entry is { path, routes, auth, limiter };
+// `limiter` names a limiter or is null for deliberately unlimited paths.
+const LIMITERS = { api: apiLimiter, auth: authLimiter };
+const mountExtras = (mod) => {
+  for (const m of mod.extraMounts || []) {
+    const limiter = LIMITERS[m.limiter];
+    if (limiter) app.use(m.path, limiter, m.routes);
+    else app.use(m.path, m.routes);
+  }
+};
 
 // Render/Vercel terminate TLS at a proxy: without this req.secure is always
 // false and rate-limiting buckets every client into the proxy's single IP.
@@ -49,7 +60,7 @@ app.get('/api/v1/health', (req, res) =>
   }));
 
 // Temporary: one line moves to its module manifest as each module is migrated
-app.use('/api/v1/user', authLimiter, require('../src-old/routes/authenticates'));
+app.use('/api/v1/user', authLimiter, require('./modules/identity/module').routes);
 
 app.use('/api/v1/admin', apiLimiter, require('../src-old/routes/adminRoutes'));
 app.use('/api/v1/teacher', apiLimiter, require('../src-old/routes/teacherRoutes'));
@@ -57,7 +68,7 @@ app.use('/api/v1/student', apiLimiter, require('../src-old/routes/studentRoutes'
 app.use('/api/v1/admission', apiLimiter, require('../src-old/routes/admissionRoutes'));
 app.use('/api/v1/exam-controller', apiLimiter, require('../src-old/routes/examControllerRoutes'));
 app.use('/api/v1/report-card', apiLimiter, require('../src-old/routes/reportCardRoutes'));
-app.use('/api/v1/documents', apiLimiter, require('../src-old/routes/documentRoutes'));
+app.use('/api/v1/documents', apiLimiter, require('./modules/documents/module').routes);
 
 app.use('/api/v1/assignment', apiLimiter, require('../src-old/routes/assignment'));
 app.use('/api/v1/knowledgecenter', apiLimiter, require('../src-old/routes/knowledgecenter'));
@@ -70,18 +81,19 @@ app.use('/application', apiLimiter, require('../src-old/routes/applicationRoutes
 app.use('/api/v1/fee', require('../src-old/routes/feeRoutes'));
 app.use('/api/v1/oases', require('../src-old/routes/oases'));
 
-// Platform owner (X-Platform-Secret header, not JWT)
-app.use('/api/platform', require('../src-old/routes/platformRoutes'));
-// Super Admin — separate JWT secret + cookie
-app.use('/api/super-admin', apiLimiter, require('../src-old/routes/superAdminRoutes'));
+// Tenancy — three mounts, three auth models. /api/platform stays unlimited and
+// /api/super-admin keeps apiLimiter, exactly as before the move
+const tenancy = require('./modules/tenancy/module');
+mountExtras(tenancy);
 
 app.use('/api/v1/staff', apiLimiter, require('../src-old/routes/staffRoutes'));
-app.use('/api/v1/notifications', apiLimiter, require('../src-old/routes/notificationRoutes'));
-app.use('/api/v1/notification-preferences', apiLimiter, require('../src-old/routes/notificationPreferenceRoutes'));
+const notifications = require('./modules/notifications/module');
+app.use(notifications.basePath, apiLimiter, notifications.routes);
+mountExtras(notifications);
 app.use('/api/v1/student-management', apiLimiter, require('../src-old/routes/studentManagementRoutes'));
 app.use('/api/v1/teacher-management', apiLimiter, require('../src-old/routes/teacherManagementRoutes'));
 app.use('/api/v1/custom-forms', apiLimiter, require('../src-old/routes/customFormRoutes'));
-app.use('/api/v1/school', apiLimiter, require('../src-old/routes/schoolRoutes'));
+app.use(tenancy.basePath, apiLimiter, tenancy.routes);
 
 // Payroll — varifyToken applied here, not inside the router
 app.use('/api/v1/payroll', apiLimiter, varifyToken, require('../src-old/routes/payroll/payrollRoutes'));
@@ -94,7 +106,7 @@ app.use('/api/v1/import', apiLimiter, require('../src-old/import-system/routes/i
 // punch ingestion, and /device carries no JWT to bucket per user
 const biometric = require('./modules/biometric/module');
 app.use(biometric.basePath, biometric.routes);
-for (const mount of biometric.extraMounts) app.use(mount, biometric.routes);
+mountExtras(biometric);
 
 app.use('/api/v1/dynamic-reports', apiLimiter, require('../src-old/routes/dynamicReportRoutes'));
 app.use('/api/v1/report-templates', apiLimiter, require('../src-old/routes/reportTemplateRoutes'));

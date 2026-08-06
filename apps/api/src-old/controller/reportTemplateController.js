@@ -8,7 +8,7 @@ const ReportTemplate = require('../models/ReportTemplate');
 const TemplateFieldExtractor = require('../services/templateFieldExtractor');
 const { resolveTemplate }     = require('../services/templateResolver');
 const Class                   = require('../models/ClassModel');
-const SchoolSettings          = require('../models/SchoolSettings');
+const SchoolSettings          = require('../../src/modules/tenancy').SchoolSettings;
 const logger = require('../../src/core/logging/logger.js');
 
 /**

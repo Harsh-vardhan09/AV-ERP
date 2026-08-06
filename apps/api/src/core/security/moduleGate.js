@@ -1,7 +1,7 @@
 const logger = require('../logging/logger');
 // TEMP: moves to modules/schools
-const SchoolSettings = require('../../../src-old/models/SchoolSettings');
-const { isModuleEnabled } = require('../../../src-old/utils/moduleConstants');
+const SchoolSettings = require('../../modules/tenancy').SchoolSettings;
+const { isModuleEnabled } = require('@av-erp/shared');
 
 // Runs after authenticate so req.schoolId is set. 'core' always passes and DB
 // errors fail open, so this can never lock users out on an infra blip.

@@ -6,7 +6,7 @@ try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
 } catch (err) {}
 const bcrypt   = require('bcryptjs');
-const { User } = require('../src-old/models/user');
+const { User } = require('../src/modules/identity');
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || process.env.DB_URL;
 

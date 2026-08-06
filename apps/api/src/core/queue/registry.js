@@ -2,9 +2,9 @@
 module.exports = {
   bootWorkers: () => {
     require('../../modules/biometric/jobs/attendanceWorker');
-    require('../../../src-old/workers/notificationWorker');
-    require('../../../src-old/workers/digestWorker');
-    require('../../../src-old/workers/emailWorker');
+    require('../../modules/notifications/jobs/notificationWorker');
+    require('../../modules/notifications/jobs/digestWorker');
+    require('../../modules/notifications/jobs/emailWorker');
     require('../../../src-old/workers/payrollWorker');
     require('../../modules/payroll/jobs/pdfWorker');
   },

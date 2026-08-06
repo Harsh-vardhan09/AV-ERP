@@ -1,10 +1,10 @@
-const { User } = require('../models/user');
+const { User } = require('../../src/modules/identity');
 const StudentProfile = require('../models/StudentProfile');
 const TeacherProfile = require('../models/TeacherProfile');
 const AcademicSession = require('../models/AcademicSession');
 const ClassModel = require('../models/ClassModel');
 const SectionModel = require('../models/SectionModel');
-const SchoolSettings = require('../models/SchoolSettings');
+const SchoolSettings = require('../../src/modules/tenancy').SchoolSettings;
 const validator = require('validator');
 const bcryptjs = require('bcryptjs');
 const mongoose = require('mongoose');
@@ -13,8 +13,8 @@ const { assignFeeToStudent } = require('../services/fee/studentFeeService');
 const { uploadImageToCloud, deleteFromCloud } = require('../../src/core/config/storage.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
-const { createInAppNotification, sendEmailNotification } = require('../services/notificationService');
-const { welcomeStudentTemplate, welcomeTeacherTemplate } = require('../utils/emailTemplates');
+const { createInAppNotification, sendEmailNotification } = require('../../src/modules/notifications').notificationService;
+const { welcomeStudentTemplate, welcomeTeacherTemplate } = require('../../src/modules/notifications').emailTemplates;
 const logger = require('../../src/core/logging/logger.js');
 
 // ========================
@@ -311,7 +311,7 @@ exports.registerStudent = async (req, res) => {
     // ── NOTIFICATION BLOCK — non-blocking ───────────────────────────────────
     ;(async () => {
       try {
-        const School = require('../models/School');
+        const School = require('../../src/modules/tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
         const loginUrl   = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
@@ -534,7 +534,7 @@ exports.registerTeacher = async (req, res) => {
     // ── NOTIFICATION BLOCK — non-blocking ───────────────────────────────────
     ;(async () => {
       try {
-        const School = require('../models/School');
+        const School = require('../../src/modules/tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
         const loginUrl   = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';

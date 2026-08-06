@@ -13,7 +13,7 @@ const seedAdmissions = async () => {
     const ClassModel = require('../src-old/models/ClassModel');
     const SectionModel = require('../src-old/models/SectionModel');
     const StudentProfile = require('../src-old/models/StudentProfile');
-    const { User } = require('../src-old/models/user');
+    const { User } = require('../src/modules/identity');
 
     // 1. Academic Session
     let session = await AcademicSession.findOne({ name: '2025-26' });

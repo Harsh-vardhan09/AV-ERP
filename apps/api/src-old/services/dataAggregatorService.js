@@ -28,8 +28,8 @@ const Attendance        = require('../models/attendance');
 const AcademicSession   = require('../models/AcademicSession');
 const CoScholasticMark  = require('../models/CoScholasticMark');
 const ReportCardMark    = require('../models/ReportCardMark');
-const School            = require('../models/School');
-const SchoolSettings    = require('../models/SchoolSettings');
+const School            = require('../../src/modules/tenancy').School;
+const SchoolSettings    = require('../../src/modules/tenancy').SchoolSettings;
 
 // ─── CBSE co-scholastic part membership ───────────────────────────────────────
 // Normalised skill names (lowercase, alphanumeric only). Anything not listed

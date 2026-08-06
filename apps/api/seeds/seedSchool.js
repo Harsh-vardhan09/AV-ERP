@@ -13,8 +13,8 @@ const ADMIN_PASS   = 'admin123';
 const run = async () => {
   await connect();
 
-  const School = require('../src-old/models/School');
-  const { User } = require('../src-old/models/user');
+  const School = require('../src/modules/tenancy').School;
+  const { User } = require('../src/modules/identity');
 
   
   // Check if school already exists

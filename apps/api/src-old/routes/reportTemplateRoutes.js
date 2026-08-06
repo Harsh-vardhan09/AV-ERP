@@ -1,6 +1,6 @@
 const express = require('express');
 const reportTemplateController = require('../controller/reportTemplateController');
-const superAdminController     = require('../controller/superAdminController');
+const superAdminController     = require('../../src/modules/tenancy').superAdminController;
 const { varifyToken } = require('../../src/core/security/authenticate.js');
 const { authorize } = require('../../src/core/security/roleMiddleware.js');
 const { checkModuleAccess } = require('../../src/core/security/moduleGate.js');

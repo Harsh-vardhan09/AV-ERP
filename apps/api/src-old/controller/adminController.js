@@ -11,7 +11,7 @@ const Marks = require('../models/MarksModel');
 const MarksAuditLog = require('../models/MarksAuditLog');
 const StudentProfile = require('../models/StudentProfile');
 const TeacherProfile = require('../models/TeacherProfile');
-const { User } = require('../models/user');
+const { User } = require('../../src/modules/identity');
 const Leave = require('../models/leave');
 const logger = require('../../src/core/logging/logger.js');
 
@@ -19,8 +19,8 @@ const logger = require('../../src/core/logging/logger.js');
 const {
   createInAppNotification,
   sendEmailNotification,
-} = require('../services/notificationService');
-const { scheduleMarksDeadlineReminder } = require('../utils/scheduleNotifications');
+} = require('../../src/modules/notifications').notificationService;
+const { scheduleMarksDeadlineReminder } = require('../../src/modules/notifications').scheduleNotifications;
 
 // ========================
 // SESSION MANAGEMENT
@@ -1087,7 +1087,7 @@ exports.createExam = async (req, res) => {
     // ── NOTIFICATION BLOCK — non-blocking ───────────────────────────────────
     ;(async () => {
       try {
-        const School = require('../models/School');
+        const School = require('../../src/modules/tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
 
@@ -1100,7 +1100,7 @@ exports.createExam = async (req, res) => {
 
         const studentUserIds = studentsInClasses.map(s => s.userId).filter(Boolean);
         if (studentUserIds.length > 0) {
-          const { notifyMultipleUsers } = require('../services/notificationService');
+          const { notifyMultipleUsers } = require('../../src/modules/notifications').notificationService;
           const fromDate = exam.startDate
             ? new Date(exam.startDate).toLocaleDateString('en-IN') : '';
           await notifyMultipleUsers(studentUserIds, {
@@ -1411,7 +1411,7 @@ exports.approveTeacherLeave = async (req, res) => {
     ;(async () => {
       try {
         const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-        const School = require('../models/School');
+        const School = require('../../src/modules/tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
 
@@ -1439,7 +1439,7 @@ exports.approveTeacherLeave = async (req, res) => {
         });
 
         // Email to teacher
-        const { leaveDecisionTemplate } = require('../utils/emailTemplates');
+        const { leaveDecisionTemplate } = require('../../src/modules/notifications').emailTemplates;
         const { subject, html } = leaveDecisionTemplate({
           applicantName:  teacherName,
           leaveType:      leave.leaveType || 'Leave',

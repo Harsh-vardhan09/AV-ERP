@@ -20,12 +20,12 @@ const bcryptjs    = require('bcryptjs');
 
 // Lazy requires to avoid circular deps
 const getModels = () => ({
-  User:            require('../../models/user').User,
+  User:            require('../../../src/modules/identity').User,
   StudentProfile:  require('../../models/StudentProfile'),
   ClassModel:      require('../../models/ClassModel'),
   SectionModel:    require('../../models/SectionModel'),
   AcademicSession: require('../../models/AcademicSession'),
-  SchoolSettings:  require('../../models/SchoolSettings'),
+  SchoolSettings:  require('../../../src/modules/tenancy').SchoolSettings,
 });
 
 // ── Helpers (same as admissionController) ────────────────────────────────────

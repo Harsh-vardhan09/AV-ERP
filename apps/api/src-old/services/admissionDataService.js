@@ -62,8 +62,8 @@
 
 const StudentProfile = require('../models/StudentProfile');
 const AdmissionFieldRegistry = require('./admissionFieldRegistry');
-const School = require('../models/School');
-const SchoolSettings = require('../models/SchoolSettings');
+const School = require('../../src/modules/tenancy').School;
+const SchoolSettings = require('../../src/modules/tenancy').SchoolSettings;
 
 // Checkbox tick character used in PDF output
 const TICK = '\u2713';

@@ -9,7 +9,7 @@ const seedAdmin = async () => {
     await connect();
     
     // Import User model after connection
-    const { User } = require('../src-old/models/user');
+    const { User } = require('../src/modules/identity');
     
     const adminEmail = 'admin@school.com';
     

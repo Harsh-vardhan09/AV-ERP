@@ -1,6 +1,6 @@
 const { uploadoncloud } = require("../../src/core/config/storage.js");
 const knowledgecenter = require("../models/knowledgecenter");
-const { User } = require("../models/user");
+const { User } = require("../../src/modules/identity");
 
 // exports.addknowledgecenter=async (req,res)=>{
 //    const {title,teacherid,subject,section,semester } = req.body;

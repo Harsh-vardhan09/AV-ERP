@@ -1,5 +1,5 @@
 // key/label/description/defaultEnabled mirror the 'biometric' entry in
-// src-old/utils/moduleConstants — the routes are gated on it via checkModuleAccess
+// @av-erp/shared — the routes are gated on it via checkModuleAccess
 module.exports = {
   key:            'biometric',
   label:          'Biometric Attendance',
@@ -10,9 +10,17 @@ module.exports = {
   // reaches into src-old for, marked TEMP in the controller and the worker
   dependsOn:      ['core', 'people'],
   basePath:       '/api/v1/fingerprint',
-  // The MORX hardware posts to /api/v1/device/punch. Same router, no JWT — the
-  // device authenticates with X-Device-Token, so the mount must stay reachable
-  extraMounts:    ['/api/v1/device'],
+  // The MORX hardware posts to /api/v1/device/punch. Same router as basePath, so
+  // the admin routes are reachable here too — /punch is the reason it exists.
+  // Unlimited on purpose: apiLimiter would throttle punch ingestion.
+  extraMounts: [
+    {
+      path:    '/api/v1/device',
+      routes:  require('./routes'),
+      auth:    'deviceToken',
+      limiter: null,
+    },
+  ],
   routes:         require('./routes'),
   permissions:    require('./permissions'),
   jobs:           [require.resolve('./jobs/attendanceWorker')],

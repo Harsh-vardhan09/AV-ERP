@@ -16,7 +16,7 @@ const ClassSubjectMap = require('../models/ClassSubjectMap');
 const ReportTemplate = require('../models/ReportTemplate');
 const TemplateFieldExtractor = require('../services/templateFieldExtractor');
 const { refreshExamEvaluationStatus } = require('../services/marksReadinessService');
-const { User } = require('../models/user');
+const { User } = require('../../src/modules/identity');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
 const { uploadoncloud } = require('../../src/core/config/storage.js');
@@ -28,11 +28,11 @@ const {
   notifyMultipleUsers,
   sendEmailNotification,
   sendBulkEmails,
-} = require('../services/notificationService');
+} = require('../../src/modules/notifications').notificationService;
 const {
   attendanceAbsentTemplate,
   marksPublishedTemplate,
-} = require('../utils/emailTemplates');
+} = require('../../src/modules/notifications').emailTemplates;
 
 const toObjectId = (value) => {
   if (!value) return null;
@@ -89,7 +89,7 @@ exports.getMyClassTeacherAssignment = async (req, res) => {
 // ========================
 // ATTENDANCE
 // ========================
-const SchoolSettings = require('../models/SchoolSettings');
+const SchoolSettings = require('../../src/modules/tenancy').SchoolSettings;
 // const Leave = require('../models/leave');
 
 // GET students for a class+section for taking attendance (any teacher)
@@ -221,7 +221,7 @@ exports.takeAttendance = async (req, res) => {
       ;(async () => {
         try {
           const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-          const School = require('../models/School');
+          const School = require('../../src/modules/tenancy').School;
           const school = await School.findById(req.schoolId).select('name').lean();
           const schoolName = school?.name || 'School';
 
@@ -369,7 +369,7 @@ exports.takeAttendance = async (req, res) => {
       ;(async () => {
         try {
           const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-          const School = require('../models/School');
+          const School = require('../../src/modules/tenancy').School;
           const school = await School.findById(req.schoolId).select('name').lean();
           const schoolName = school?.name || 'School';
 
@@ -694,7 +694,7 @@ exports.approveStudentLeave = async (req, res) => {
     ;(async () => {
       try {
         const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-        const School = require('../models/School');
+        const School = require('../../src/modules/tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
 
@@ -722,7 +722,7 @@ exports.approveStudentLeave = async (req, res) => {
         });
 
         // Email to student
-        const { leaveDecisionTemplate } = require('../utils/emailTemplates');
+        const { leaveDecisionTemplate } = require('../../src/modules/notifications').emailTemplates;
         const { subject, html } = leaveDecisionTemplate({
           applicantName:  studentName,
           leaveType:      leave.leaveType || 'Leave',
@@ -1377,7 +1377,7 @@ exports.uploadMarks = async (req, res) => {
         if (sanitizedMarks.length === 0) return;
 
         const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-        const School = require('../models/School');
+        const School = require('../../src/modules/tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
 

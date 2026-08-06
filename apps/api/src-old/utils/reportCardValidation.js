@@ -3,7 +3,7 @@
  * Supports dual workflows: OASES ON (evaluation-based) and OASES OFF (direct marks entry)
  */
 
-const SchoolSettings = require('../models/SchoolSettings');
+const SchoolSettings = require('../../src/modules/tenancy').SchoolSettings;
 const Marks = require('../models/MarksModel');
 
 /**

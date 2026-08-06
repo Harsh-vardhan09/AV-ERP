@@ -4,7 +4,7 @@ const { processPayment } = require("../../services/fee/paymentService");
 const Payment = require("../../models/fee/Payment");
 const StudentFee = require("../../models/fee/StudentFee");
 const StudentProfile = require("../../models/StudentProfile");
-const notificationService = require("../../services/notificationService");
+const notificationService = require("../../../src/modules/notifications").notificationService;
 const logger = require("../../../src/core/logging/logger.js"); // BUG-16 FIX: use structured logger, not console.log
 
 // Resolve StudentProfile._id from a userId (User._id)

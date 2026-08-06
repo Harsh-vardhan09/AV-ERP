@@ -92,14 +92,14 @@ const ReportCardEditor = lazy(() => import('./pages/reportcard/ReportCardEditor'
 const DynamicReportManager = lazy(() => import('./pages/reportcard/DynamicReportManager'));
 const TemplateManager = lazy(() => import('./pages/reportcard/TemplateManager'));
 const TemplateReportCard = lazy(() => import('./pages/reportcard/TemplateReportCard'));
-const DocumentHub = lazy(() => import('./pages/documents/DocumentHub'));
-const DocumentStudentList = lazy(() => import('./pages/documents/DocumentStudentList'));
-const TransferCertificatePage = lazy(() => import('./pages/documents/TransferCertificatePage'));
-const MigrationCertificatePage = lazy(() => import('./pages/documents/MigrationCertificatePage'));
+const DocumentHub = lazy(() => import('./modules/documents/pages/DocumentHub'));
+const DocumentStudentList = lazy(() => import('./modules/documents/pages/DocumentStudentList'));
+const TransferCertificatePage = lazy(() => import('./modules/documents/pages/TransferCertificatePage'));
+const MigrationCertificatePage = lazy(() => import('./modules/documents/pages/MigrationCertificatePage'));
 const OasesModuleHub = lazy(() => import('./pages/oases/OasesModuleHub')); // OASES module
-const TemplateConfigPage = lazy(() => import('./pages/documents/TemplateConfigPage'));
-const NewDocumentForm = lazy(() => import('./pages/documents/NewDocumentForm'));
-const CertificatePreview = lazy(() => import('./pages/documents/CertificatePreview'));
+const TemplateConfigPage = lazy(() => import('./modules/documents/pages/TemplateConfigPage'));
+const NewDocumentForm = lazy(() => import('./modules/documents/pages/NewDocumentForm'));
+const CertificatePreview = lazy(() => import('./modules/documents/pages/CertificatePreview'));
 // ── Admission Forms module ──
 const PrintAdmissionForm = lazy(() => import('./pages/admin/admissionForms/PrintAdmissionForm'));
 const AdmissionFormSettings = lazy(() => import('./pages/admin/admissionForms/AdmissionFormSettings'));

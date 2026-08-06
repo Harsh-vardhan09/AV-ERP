@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const logger = require('../logging/logger');
 // TEMP: moves to modules/identity
-const SuperAdmin = require("../../../src-old/models/SuperAdmin");
+const SuperAdmin = require("../../modules/tenancy").SuperAdmin;
 
 // SECURITY: reads the superAdminToken cookie and SUPER_ADMIN_JWT_SECRET, never the
 // school-user "token"/JWT_SECRET pair, and never sets req.user/schoolId/schoolFilter

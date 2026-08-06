@@ -15,9 +15,9 @@ const { uploadoncloud } = require('../../src/core/config/storage.js');
 const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
-const { createInAppNotification } = require('../services/notificationService');
+const { createInAppNotification } = require('../../src/modules/notifications').notificationService;
 const ClassTeacherAssignment = require('../models/ClassTeacherAssignment');
-const { User } = require('../models/user');
+const { User } = require('../../src/modules/identity');
 
 // Helper: get student profile
 const getStudentProfile = async (userId) => {

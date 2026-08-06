@@ -4,7 +4,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require("path");
 const { Console } = require("console");
-const { User } = require("../models/user");
+const { User } = require("../../src/modules/identity");
 const createLeave=async(data)=>{
 const Leave=await leave.create(data);
 return (Leave);
