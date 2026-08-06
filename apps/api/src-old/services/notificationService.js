@@ -21,7 +21,7 @@ const NotificationPreference  = require('../models/NotificationPreference');
 const SchoolSettings          = require('../models/SchoolSettings');
 const nodemailer              = require('nodemailer');
 const { getIo }               = require('../socket');
-const logger                  = require('../utils/logger');
+const logger                  = require('../../src/core/logging/logger.js');
 
 // ── Nodemailer transporter (mirrors existing emailService.js pattern) ──────────
 const createTransporter = () =>

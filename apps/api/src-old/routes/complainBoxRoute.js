@@ -1,6 +1,6 @@
 const express = require("express");
-const { varifyToken } = require('../middlewares/varifyToken');
-const { schoolIsolation } = require('../middlewares/schoolIsolation');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { schoolIsolation } = require('../../src/core/security/tenantScope.js');
 const {soloComplain,multiAllComplain,multiSelectedComplain} = require("../controller/complain.js");
 const updateStatus = require("../controller/updatComplainStatus.js")
 const complains = require("../controller/getcomplains")

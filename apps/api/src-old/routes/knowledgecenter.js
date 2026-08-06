@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router(); 
 const {addknowledgecenter, getknowledgecenters} = require('../controller/knowledgecenter');
-const upload = require('../middlewares/multer.js'); 
-const { varifyToken } = require('../middlewares/varifyToken');
-const { schoolIsolation } = require('../middlewares/schoolIsolation');
+const upload = require('../../src/core/http/upload.disk.js'); 
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { schoolIsolation } = require('../../src/core/security/tenantScope.js');
 
 // ── Security: require authenticated school user for ALL knowledge center routes ──
 router.use(varifyToken);

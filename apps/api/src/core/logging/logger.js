@@ -12,7 +12,7 @@ const logFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
 
 const loggerTransports = [];
 
-// ✅ Always allow console (Vercel logs will capture this)
+// Console is always on — it is the only transport Vercel captures
 loggerTransports.push(
   new transports.Console({
     format: isProd
@@ -21,7 +21,6 @@ loggerTransports.push(
   })
 );
 
-// ❌ Only use file logging if NOT on Vercel
 if (isProd && !isVercel) {
   const path = require('path');
 

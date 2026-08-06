@@ -5,7 +5,7 @@ const bcryptjs = require('bcryptjs');
 const { genereteVarificationCode } = require("../features/genereteVarificationCode.js");
 const { genereteTokenAndCookies } = require("../features/generateTokenAndCookies.js");
 const crypto = require('crypto');
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 /**
  * Signup — creates a minimal User account.

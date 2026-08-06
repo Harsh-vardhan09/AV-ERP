@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const admin = require('../controller/adminController');
-const { varifyToken } = require('../middlewares/varifyToken');
-const { authorize } = require('../middlewares/roleMiddleware');
-const validateObjectId = require('../middlewares/validateObjectId');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { authorize } = require('../../src/core/security/roleMiddleware.js');
+const validateObjectId = require('../../src/core/http/validateObjectId.js');
 
 // ── Guards ────────────────────────────────────────────────────────────────────
 // All admin routes require authentication

@@ -3,8 +3,8 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const { getStudentInstallments } = require("../../controller/fee/installmentController");
 const { applyFines, getOverdueSummary } = require("../../controller/fee/fineController");
-const { varifyToken } = require("../../middlewares/varifyToken");
-const { authorizeRoles } = require("../../middlewares/authorizeRoles");
+const { varifyToken } = require("../../../src/core/security/authenticate.js");
+const { authorizeRoles } = require("../../../src/core/security/authorizeRoles.js");
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 

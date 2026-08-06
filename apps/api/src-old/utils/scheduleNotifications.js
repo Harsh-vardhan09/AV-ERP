@@ -1,4 +1,4 @@
-const logger = require('./logger');
+const logger = require('../../src/core/logging/logger.js');
 
 // Lazy-load queues to avoid circular deps at boot time
 const getQueues = () => {

@@ -5,7 +5,7 @@
 const PaymentBatch = require('../../models/PaymentBatch');
 const Payroll = require('../../models/Payroll');
 const bankFileService = require('./bankFileService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * Generate a new payment batch

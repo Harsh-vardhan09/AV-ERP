@@ -9,9 +9,9 @@ const StudentProfile    = require('../models/StudentProfile');
 const School            = require('../models/School');
 const DocumentTemplate  = require('../models/DocumentTemplate');
 const { buildStudentData } = require('../utils/templateEngine');
-const { uploadImageToCloud } = require('../config/cloudnary');
+const { uploadImageToCloud } = require('../../src/core/config/storage.js');
 const { renderCertificateHtml, DEFAULT_TC_LAYOUT, DEFAULT_MIGRATION_LAYOUT } = require('../utils/htmlCertificateRenderer');
-const { generatePdfFromHtml } = require('../utils/puppeteerPdf');
+const { generatePdfFromHtml } = require('../../src/core/pdf/puppeteerPdf.js');
 
 const DOC_TYPES = SchoolCertificate.DOC_TYPES;
 const CERT_PDF_DIR = path.join(__dirname, '..', 'uploads', 'certificates');

@@ -12,10 +12,10 @@ const {
   deactivateUser,
   changeFirstPassword
 } = require('../controller/authenticates.js');
-const { varifyToken } = require('../middlewares/varifyToken.js');
-const { authorize } = require('../middlewares/roleMiddleware.js');
-const { platformOwnerOnly } = require('../middlewares/schoolIsolation');
-const upload = require('../middlewares/multer.js');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { authorize } = require('../../src/core/security/roleMiddleware.js');
+const { platformOwnerOnly } = require('../../src/core/security/tenantScope.js');
+const upload = require('../../src/core/http/upload.disk.js');
 const router = express.Router();
 
 // Public routes

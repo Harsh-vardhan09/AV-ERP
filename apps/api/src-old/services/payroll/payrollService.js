@@ -17,8 +17,8 @@ const SalaryStructure = require('../../models/SalaryStructure');
 const TeacherAttendance = require('../../models/TeacherAttendance');
 const taxConfigService = require('./taxConfigService');
 const payrollProcessingService = require('./payrollProcessingService');
-const payrollQueue = require('../../config/queue');
-const logger = require('../../utils/logger');
+const payrollQueue = require('../../../src/modules/payroll/jobs/payrollQueue');
+const logger = require('../../../src/core/logging/logger.js');
 
 // ========================
 // LIST

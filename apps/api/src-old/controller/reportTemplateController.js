@@ -9,7 +9,7 @@ const TemplateFieldExtractor = require('../services/templateFieldExtractor');
 const { resolveTemplate }     = require('../services/templateResolver');
 const Class                   = require('../models/ClassModel');
 const SchoolSettings          = require('../models/SchoolSettings');
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 /**
  * Create new template

@@ -7,7 +7,7 @@ const FileSecurityScanner = require('../utils/fileSecurityScanner');
 const CSVParser = require('../utils/csvParser');
 const XLSXParser = require('../utils/xlsxParser');
 const { FILE, MESSAGES, ERROR_CODES } = require('../constants/importConstants');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * Middleware to validate uploaded import files

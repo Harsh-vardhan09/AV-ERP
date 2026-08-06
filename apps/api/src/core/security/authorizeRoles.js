@@ -1,43 +1,33 @@
 const { authorize } = require('./roleMiddleware');
 
-/**
- * Shim: re-export `authorize` as `authorizeRoles` for compatibility
- * with fee route files that import { authorizeRoles } from this path.
- */
+// Fee routes import { authorizeRoles } from this path
 const authorizeRoles = authorize;
 
-/**
- * `guardSelfAccess` — allows admins/operators through unconditionally;
- * for students, verifies that req.params matches their own User._id OR
- * the StudentProfile._id that belongs to them.
- *
- * FIX 12: The old version compared req.user._id (User._id) directly to
- * studentProfileId (StudentProfile._id) which are different ObjectIds,
- * always returning 403. Now resolves the profile to find the linked userId.
- */
+// req.user._id is a User._id and the param may be a StudentProfile._id — comparing
+// them directly always 403s, so the profile has to be resolved to its linked userId
 exports.guardSelfAccess = async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Authentication required' });
     }
     if (req.user.role !== 'student') {
-      return next(); // admin / operator can access anyone
+      return next();
     }
 
-    // Check all possible param names used across routes
+    // Routes disagree on the param name
     const paramId = req.params.studentProfileId || req.params.studentId || req.params.id;
 
     if (!paramId) {
       return res.status(400).json({ success: false, message: 'Missing resource ID' });
     }
 
-    // Fast path: paramId is a User._id (some routes pass userId directly)
+    // Some routes pass the userId directly
     if (String(req.user._id) === String(paramId)) {
       return next();
     }
 
-    // Slow path: paramId might be a StudentProfile._id — resolve it
-    // SECURITY: also scope to current school to prevent cross-tenant lookup
+    // SECURITY: scoped to the current school to prevent cross-tenant lookup
+    // TEMP: moves to modules/students
     const StudentProfile = require('../../../src-old/models/StudentProfile');
     const profile = await StudentProfile.findOne({
       _id: paramId,

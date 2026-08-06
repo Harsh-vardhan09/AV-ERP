@@ -3,7 +3,7 @@
  * Provides flexible duplicate handling: skip, update, or stop on duplicate
  */
 
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class DuplicateChecker {
   /**

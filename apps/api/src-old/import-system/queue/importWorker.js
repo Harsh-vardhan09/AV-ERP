@@ -5,7 +5,7 @@
 
 const ImportService = require('../services/importService');
 const ImportLog = require('../models/ImportLog');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class ImportWorker {
   constructor(dependencies = {}) {

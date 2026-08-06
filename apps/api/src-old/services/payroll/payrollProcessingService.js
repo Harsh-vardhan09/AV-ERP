@@ -10,7 +10,7 @@
  *    because it was reading .amount which is never set on raw structure components).
  *  - proratedComponents now correctly uses resolved amounts.
  */
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * 1. LOP (Loss of Pay) Calculations

@@ -9,7 +9,7 @@ const ImportController = require('./controller/importController');
 const ImportService = require('./services/importService');
 const STUDENT_IMPORT_CONFIG = require('./configs/studentImportConfig');
 const StudentAdapter = require('./adapters/studentAdapter');
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 class ImportSystemInitializer {
   constructor(app, redis, services) {

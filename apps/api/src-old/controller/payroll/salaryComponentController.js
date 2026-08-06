@@ -1,5 +1,5 @@
 const salaryComponentService = require('../../services/payroll/salaryComponentService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * GET /api/payroll/salary-components

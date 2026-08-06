@@ -1,5 +1,5 @@
 const TaxConfig = require('../../models/TaxConfig');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * Get all tax configurations for a school with optional filters

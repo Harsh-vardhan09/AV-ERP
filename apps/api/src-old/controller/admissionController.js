@@ -10,12 +10,12 @@ const bcryptjs = require('bcryptjs');
 const mongoose = require('mongoose');
 // Fee auto-assignment (fire-and-forget on student registration)
 const { assignFeeToStudent } = require('../services/fee/studentFeeService');
-const { uploadImageToCloud, deleteFromCloud } = require('../config/cloudnary');
+const { uploadImageToCloud, deleteFromCloud } = require('../../src/core/config/storage.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
 const { createInAppNotification, sendEmailNotification } = require('../services/notificationService');
 const { welcomeStudentTemplate, welcomeTeacherTemplate } = require('../utils/emailTemplates');
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 // ========================
 // HELPERS — AUTO GENERATION

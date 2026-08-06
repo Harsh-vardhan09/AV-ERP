@@ -7,7 +7,7 @@
 const { Readable } = require('stream');
 const csv = require('fast-csv');
 const { FILE } = require('../constants/importConstants');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class CSVParser {
   /**

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-// const { comments } = require('moongose/models');
 
 const item = new mongoose.Schema({
     scholar_no:{

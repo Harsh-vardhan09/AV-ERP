@@ -7,7 +7,7 @@
 const { User } = require('../models/user');
 const School    = require('../models/School');
 const bcryptjs  = require('bcryptjs');
-const logger    = require('../utils/logger');
+const logger    = require('../../src/core/logging/logger.js');
 const { generateTempPassword } = require('../utils/generatePassword');
 const { sendStaffCredentials } = require('../utils/emailService');
 

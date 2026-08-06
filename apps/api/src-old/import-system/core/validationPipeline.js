@@ -11,7 +11,7 @@
 const BaseValidator = require('../validators/baseValidator');
 const DuplicateChecker = require('../utils/duplicateChecker');
 const { SEVERITY, ERROR_TYPES, VALIDATION_STRICTNESS } = require('../constants/importConstants');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class ValidationPipeline {
   constructor(config = {}) {

@@ -1,18 +1,4 @@
-/**
- * validateObjectId.js — Middleware to validate MongoDB ObjectId params.
- *
- * Prevents invalid ObjectId values from reaching DB queries
- * (which would throw CastError instead of returning a clean 400).
- *
- * USAGE in routes:
- *   const validateObjectId = require('../middlewares/validateObjectId');
- *
- *   // Single param
- *   router.get('/session/:id', validateObjectId('id'), admin.updateSession);
- *
- *   // Multiple params
- *   router.get('/marks/:examId/:studentId', validateObjectId('examId', 'studentId'), ...);
- */
+// Stops bad ids reaching the DB, where they throw CastError instead of a clean 400
 const mongoose = require('mongoose');
 
 const validateObjectId = (...paramNames) => (req, res, next) => {

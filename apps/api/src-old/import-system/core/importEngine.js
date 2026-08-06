@@ -13,7 +13,7 @@ const NormalizationPipeline = require('./normalizationPipeline');
 const ReferenceResolver = require('./referenceResolver');
 const ImportLog = require('../models/ImportLog');
 const ImportError = require('../models/ImportError');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class ImportEngine {
   constructor(config = {}) {

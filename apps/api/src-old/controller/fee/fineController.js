@@ -17,7 +17,7 @@ const mongoose    = require('mongoose');
 const Installment = require('../../models/fee/Installment');
 const StudentFee  = require('../../models/fee/StudentFee');
 const { applyFines } = require('../../services/fee/autoFineService');
-const logger      = require('../../utils/logger');
+const logger      = require('../../../src/core/logging/logger.js');
 
 const sendError   = (res, status, msg) => res.status(status).json({ success: false, message: msg });
 const sendSuccess = (res, status, msg, data = null) => {

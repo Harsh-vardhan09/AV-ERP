@@ -11,8 +11,8 @@ const ExamSubjectConfig = require('../models/ExamSubjectConfig');
 const Exam = require('../models/Exam');
 const ClassSubjectMap = require('../models/ClassSubjectMap');
 const AcademicSession = require('../models/AcademicSession');
-const { uploadoncloud } = require('../config/cloudnary');
-const logger = require('../utils/logger');
+const { uploadoncloud } = require('../../src/core/config/storage.js');
+const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
 const { createInAppNotification } = require('../services/notificationService');

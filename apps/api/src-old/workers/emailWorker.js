@@ -4,9 +4,9 @@
  * NOTE: DB connection handled by main ERP's index.js.
  *       No connectDB() call needed here.
  */
-const queue        = require('../config/queue');
+const queue        = require('../../src/modules/payroll/jobs/payrollQueue');
 const emailService = require('../utils/emailService');
-const logger       = require('../utils/logger');
+const logger       = require('../../src/core/logging/logger.js');
 const Payslip      = require('../models/Payslip');
 const School       = require('../models/School');
 

@@ -1,58 +1,60 @@
-/**
- * Bull Queue Configuration (Production-Ready)
- * Handles Redis connection for Bull (Upstash/Cloud/Local)
- * Exports a reusable Bull queue instance
- */
 const Queue = require('bull');
-const logger = require('../../../src-old/middlewares/logger');
+const logger = require('../logging/logger');
+const { REDIS_URL, REDIS_DISABLED, redisOpts } = require('../config/redis');
 
-const QUEUE_NAME = 'payroll';
+// redis.js defaults REDIS_URL, so read the raw env var to tell "unset" from "defaulted"
+const disabled = REDIS_DISABLED || !process.env.REDIS_URL;
 
-// Support graceful fallback if Redis is missing (Local Dev)
-if (!process.env.REDIS_URL) {
-  logger.warn('⚠️ REDIS_URL is not set. Background jobs (Queues) will be disabled. Processing will happen on-the-fly.');
-  module.exports = {
-    add: async (name, data) => { logger.info('Queue Mock: Job added (on-the-fly execution)'); return { id: 'mock' }; },
-    process: () => {},
-    on: () => {}
-  };
-  return;
-}
-
-const redisUrl = process.env.REDIS_URL;
-
-// Support fallback config variables if URL doesn't cover it (Requirement 1)
-const redisOpts = {
-  // Connection stability & retry strategy (Requirement 6)
-  retryStrategy: function (times) {
-    const delay = Math.min(times * 500, 10000); // exponential backoff up to 10s
-    logger.warn('Redis reconnect attempt', { times, delay });
-    return delay;
-  },
-  maxRetriesPerRequest: null,
-  enableReadyCheck: false
+let warned = false;
+const warnOnce = () => {
+  if (warned) return;
+  warned = true;
+  logger.warn('⚠️ Redis unavailable (REDIS_DISABLED set or REDIS_URL missing). Queues are no-ops; processing happens on-the-fly.');
 };
 
-// Upstash / cloud TLS support (Requirement 1)
-if (redisUrl.startsWith('rediss://')) {
-  redisOpts.tls = { rejectUnauthorized: false };
-}
+const defaultJobOptions = {
+  attempts: 3,
+  backoff: { type: 'exponential', delay: 5000 },
+  removeOnComplete: true,
+  removeOnFail: false,
+};
 
-// Fallback configs
-if (process.env.REDIS_HOST) redisOpts.host = process.env.REDIS_HOST;
-if (process.env.REDIS_PORT) redisOpts.port = process.env.REDIS_PORT;
-if (process.env.REDIS_PASSWORD) redisOpts.password = process.env.REDIS_PASSWORD;
-
-// Initialize queue (Requirement 2)
-const queue = new Queue(QUEUE_NAME, redisUrl, {
-  redis: redisOpts,
-  // Default job options (Requirement 5)
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 5000 },
-    removeOnComplete: true,
-    removeOnFail: false,
+const createStub = (name) => ({
+  add: async () => {
+    logger.info('Queue Mock: Job added (on-the-fly execution)', { queue: name });
+    return { id: 'mock' };
   },
+  process: () => {},
+  on: () => {},
 });
 
-module.exports = queue;
+const buildRedisOpts = () => {
+  const opts = {
+    ...redisOpts,
+    retryStrategy: (times) => {
+      const delay = Math.min(times * 500, 10000);
+      logger.warn('Redis reconnect attempt', { times, delay });
+      return delay;
+    },
+  };
+  if (process.env.REDIS_HOST)     opts.host     = process.env.REDIS_HOST;
+  if (process.env.REDIS_PORT)     opts.port     = process.env.REDIS_PORT;
+  if (process.env.REDIS_PASSWORD) opts.password = process.env.REDIS_PASSWORD;
+  return opts;
+};
+
+// One instance per name — workers register their processors on the queue they get back
+const queues = new Map();
+
+const createQueue = (name) => {
+  if (queues.has(name)) return queues.get(name);
+
+  const queue = disabled
+    ? (warnOnce(), createStub(name))
+    : new Queue(name, REDIS_URL, { redis: buildRedisOpts(), defaultJobOptions });
+
+  queues.set(name, queue);
+  return queue;
+};
+
+module.exports = { createQueue };

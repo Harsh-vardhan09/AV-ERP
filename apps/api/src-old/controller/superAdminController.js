@@ -5,8 +5,8 @@ const School = require('../models/School');
 const { User } = require('../models/user');
 const SchoolSettings = require('../models/SchoolSettings');
 const { generateSuperAdminToken } = require('../utils/generateSuperAdminToken');
-const { crossSiteCookie } = require('../utils/cookieOptions');
-const logger = require('../utils/logger');
+const { crossSiteCookie } = require('../../src/core/security/cookieOptions.js');
+const logger = require('../../src/core/logging/logger.js');
 const { MODULES, DEFAULT_MODULES, MODULE_KEYS, isModuleEnabled } = require('../utils/moduleConstants');
 
 // ─────────────────────────────────────────────────────────────────────────────

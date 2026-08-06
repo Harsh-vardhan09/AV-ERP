@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { processPayment, getPaymentsByAccountFee } = require("../../services/fee/paymentService");
-const { sendError, sendSuccess } = require("../../utils/helpers");
+const { sendError, sendSuccess } = require("../../../src/shared/helpers.js");
 
 // ─── MAKE PAYMENT ─────────────────────────────────────────────────────────────
 //

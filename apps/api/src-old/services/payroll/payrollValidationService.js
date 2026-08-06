@@ -2,7 +2,7 @@ const TeacherProfile = require('../../models/TeacherProfile');
 const EmployeeSalary = require('../../models/EmployeeSalary');
 const TeacherAttendance = require('../../models/TeacherAttendance');
 const TaxConfig = require('../../models/TaxConfig');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * Validate if a payroll run can be initiated for a school and period

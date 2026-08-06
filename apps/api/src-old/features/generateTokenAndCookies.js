@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { crossSiteCookie } = require("../utils/cookieOptions");
+const { crossSiteCookie } = require("../../src/core/security/cookieOptions.js");
 
 exports.genereteTokenAndCookies = (res, userid) => {
   if (!process.env.JWT_SECRET) {

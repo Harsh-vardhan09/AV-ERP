@@ -3,7 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd backend && PUPPETEER_SKIP_DOWNLOAD=true npm install",
-    "start": "cd backend && npm start"
-  }
+    "build": "cd apps/api && PUPPETEER_SKIP_DOWNLOAD=true npm install",
+    "start": "cd apps/api && npm start",
+    "dev:api": "cd apps/api && npm run dev",
+    "dev:web": "cd apps/web && npm run dev",
+    "build:web": "cd apps/web && npm install && npm run build",
+    "smoke": "node scripts/smoke.js"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

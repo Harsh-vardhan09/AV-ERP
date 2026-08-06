@@ -4,7 +4,7 @@ const AccountFee = require("../../models/fee/AccountFee");
 const Installment = require("../../models/fee/Installment");
 const Refund = require("../../models/fee/Refund");
 const LedgerEntry = require("../../models/fee/LedgerEntry");
-const { round } = require("../../utils/helpers");
+const { round } = require("../../../src/shared/helpers.js");
 
 // ─── Optional Event Hooks ──────────────────────────────────────────────────────
 //
@@ -12,7 +12,6 @@ const { round } = require("../../utils/helpers");
 // needing to import User or any notification system.
 //
 // Usage in host app:
-//   const refundService = require("fee-module/services/refundService");
 //   refundService.setHooks({
 //     onRefundRequested: async ({ refund, payment }) => { ... },
 //     onRefundApproved:  async ({ refund }) => { ... },

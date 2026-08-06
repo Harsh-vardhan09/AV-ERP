@@ -7,8 +7,8 @@ const express = require('express');
 const multer = require('multer');
 const ImportController = require('../controller/importController');
 // ── FIX: use real middleware functions from the main codebase ──────────────
-const { varifyToken } = require('../../middlewares/varifyToken');
-const { authorize }   = require('../../middlewares/authorize');
+const { varifyToken } = require('../../../src/core/security/authenticate.js');
+const { authorize }   = require('../../../src/core/security/authorize.js');
 const { fileUploadValidator } = require('../middlewares/fileUploadValidator');
 
 const router = express.Router();

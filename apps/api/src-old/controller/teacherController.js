@@ -19,8 +19,8 @@ const { refreshExamEvaluationStatus } = require('../services/marksReadinessServi
 const { User } = require('../models/user');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
-const { uploadoncloud } = require('../config/cloudnary');
-const logger = require('../utils/logger');
+const { uploadoncloud } = require('../../src/core/config/storage.js');
+const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
 const {

@@ -1,8 +1,8 @@
 const express = require('express');
-const { varifyToken } = require('../middlewares/varifyToken');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
 const documentController = require('../controller/documentController');
 const documentConfigController = require('../controller/documentConfigController');
-const { checkModuleAccess } = require('../middlewares/checkModuleAccess');
+const { checkModuleAccess } = require('../../src/core/security/moduleGate.js');
 
 const router = express.Router();
 

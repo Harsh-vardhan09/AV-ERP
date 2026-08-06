@@ -287,7 +287,7 @@ const HomePage = () => {
   ];
 
   const studentItems = [
-    { name: 'Dashboard', icon: <FaChartLine className="text-blue-600" size={24} />, path: '/dashboardstd' },
+    { name: 'Dashboard', icon: <FaChartLine className="text-blue-600" size={24} />, path: '/student/dashboard' },
     { name: 'Attendance', icon: <FaUserGraduate className="text-green-600" size={24} />, path: '/attendance' },
     { name: 'Online Exams', icon: <MdQuiz className="text-purple-600" size={24} />, path: '/quiz' },
     { name: 'Events Calendar', icon: <MdEvent className="text-orange-500" size={24} />, path: '/events' },

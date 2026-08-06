@@ -4,7 +4,7 @@
  * Converts data to internal system format ready for database insertion
  */
 
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class NormalizationPipeline {
   constructor(config = {}) {

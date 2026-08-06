@@ -3,14 +3,14 @@
 // const { User } = require('../models/user');
 // const fs = require('fs');
 // const crypto = require('crypto'); 
-// const { uploadoncloud } = require('../config/cloudnary');
+// const { uploadoncloud } = require('../../src/core/config/storage.js');
 
 const Assignment = require('../models/assignment');
 const Assignmentupload = require('../models/uploadassignment');
 const { User } = require('../models/user');
 const fs = require('fs');
 const crypto = require('crypto'); 
-const { uploadoncloud } = require('../config/cloudnary');
+const { uploadoncloud } = require('../../src/core/config/storage.js');
 const pdfParse = require('pdf-parse'); // Import pdfParse for metadata extraction
 
 exports.uploadassignment = async (req, res, next) => {

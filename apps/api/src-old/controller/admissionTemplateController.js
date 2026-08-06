@@ -25,8 +25,8 @@ const AdmissionFormSettings  = require('../models/AdmissionFormSettings');
 const TemplateFieldExtractor = require('../services/templateFieldExtractor');
 const TemplateParserService  = require('../services/templateParserService');
 const AdmissionDataService   = require('../services/admissionDataService');
-const PDFService             = require('../services/pdfService');
-const logger                 = require('../utils/logger');
+const PDFService             = require('../../src/core/pdf/htmlToPdf.js');
+const logger                 = require('../../src/core/logging/logger.js');
 
 const OUTPUT_DIR = path.join(__dirname, '../../output/admission-forms');
 

@@ -4,8 +4,8 @@ const {
     getThreeInstallments,
     payThreeInstallment,
 } = require('../../controller/fee/threeInstallmentController');
-const { varifyToken } = require('../../middlewares/varifyToken');
-const { authorizeRoles } = require('../../middlewares/authorizeRoles');
+const { varifyToken } = require('../../../src/core/security/authenticate.js');
+const { authorizeRoles } = require('../../../src/core/security/authorizeRoles.js');
 
 // GET /api/v1/three-installments/:studentFeeId
 router.get(

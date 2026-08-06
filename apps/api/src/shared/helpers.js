@@ -32,4 +32,15 @@ const generateReceiptNumber = () => {
   return `RCP-${datePart}-${randomPart}`;
 };
 
-module.exports = { round, generateReceiptNumber };
+// Response shape used by every fee controller; several defined it locally and
+// several imported it from here, so both spellings must resolve to one behaviour
+const sendError = (res, status, message) =>
+  res.status(status).json({ success: false, message });
+
+const sendSuccess = (res, status, message, data = null) => {
+  const response = { success: true, message };
+  if (data !== null) response.data = data;
+  return res.status(status).json(response);
+};
+
+module.exports = { round, generateReceiptNumber, sendError, sendSuccess };

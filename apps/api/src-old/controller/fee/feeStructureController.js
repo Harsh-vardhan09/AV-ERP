@@ -5,7 +5,7 @@ const StudentProfile = require('../../models/StudentProfile');
 const AcademicSession = require('../../models/AcademicSession');
 const ClassModel     = require('../../models/ClassModel');
 const { assignFeeToStudent } = require('../../services/fee/studentFeeService');
-const logger         = require('../../utils/logger');
+const logger         = require('../../../src/core/logging/logger.js');
 
 const sendError = (res, status, message) =>
     res.status(status).json({ success: false, message });

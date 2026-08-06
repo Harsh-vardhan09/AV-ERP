@@ -1,5 +1,5 @@
 const paymentBatchService = require('../../services/payroll/paymentBatchService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * POST /api/v1/payroll/payment-batches

@@ -17,7 +17,7 @@
 const ReportTemplate         = require('../models/ReportTemplate');
 const TemplateFieldExtractor = require('../services/templateFieldExtractor');
 const TemplateParserService  = require('../services/templateParserService');
-const logger                 = require('../utils/logger');
+const logger                 = require('../../src/core/logging/logger.js');
 
 /** Fields a Super Admin may set. Anything else in the body is ignored. */
 const WRITABLE = [

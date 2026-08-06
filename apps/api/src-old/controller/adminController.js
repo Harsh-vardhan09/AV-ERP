@@ -13,7 +13,7 @@ const StudentProfile = require('../models/StudentProfile');
 const TeacherProfile = require('../models/TeacherProfile');
 const { User } = require('../models/user');
 const Leave = require('../models/leave');
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
 const {

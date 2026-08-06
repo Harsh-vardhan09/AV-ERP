@@ -4,7 +4,7 @@
  */
 const mongoose = require('mongoose');
 const Payslip = require('../../models/Payslip');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * List payslips with filters and pagination (admin/accounts)
@@ -132,7 +132,7 @@ const getById = async (schoolId, payslipId, user) => {
  */
 const download = async (schoolId, payslipId, user) => {
   const payslip = await getById(schoolId, payslipId, user);
-  const pdfGenerator = require('../../utils/pdfGenerator');
+  const pdfGenerator = require('../../../src/modules/payroll/services/payslipPdf');
 
   // 🛡️ Fallback: If no PDF URL exists, generate it on-the-fly and return as base64/buffer
   // In production, we'd upload this to S3, but for now we provide a direct data link or signed URL
@@ -224,7 +224,7 @@ const bulkDownload = async (schoolId, payrollId) => {
   }
 
   try {
-    const payrollQueue = require('../../config/queue');
+    const payrollQueue = require('../../../src/modules/payroll/jobs/payrollQueue');
     const job = await payrollQueue.add('BULK_ZIP_DOWNLOAD', { schoolId, payrollId });
     return { jobId: job.id, totalPayslips: count };
   } catch (e) {

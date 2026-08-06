@@ -19,7 +19,7 @@ const School                                     = require('../models/School');
 // User model uses NAMED export: { User }
 const { User }                                   = require('../models/user');
 const { notifyMultipleUsers, sendBulkEmails }    = require('../services/notificationService');
-const logger                                     = require('../utils/logger');
+const logger                                     = require('../../src/core/logging/logger.js');
 
 const VALID_TYPES = [
   'attendance', 'marks', 'fee', 'leave', 'assignment',

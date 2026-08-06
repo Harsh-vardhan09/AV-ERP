@@ -5,7 +5,7 @@ const AccountFee = require("../../models/fee/AccountFee");
 const Installment = require("../../models/fee/Installment");
 const Ledger = require("../../models/fee/LedgerEntry");
 const { calculateFine } = require("../../utils/fee/fineCalculator");
-const { round } = require("../../utils/helpers");
+const { round } = require("../../../src/shared/helpers.js");
 
 // ─── Dynamic Installment Plan Generator ───────────────────────────────────────
 //

@@ -16,7 +16,7 @@ const TeacherAdapter   = require('../adapters/teacherAdapter');
 const XLSXParser       = require('../utils/xlsxParser');
 const CSVParser        = require('../utils/csvParser');
 const ColumnMapper     = require('../utils/columnMapper');
-const logger           = require('../../utils/logger');
+const logger           = require('../../../src/core/logging/logger.js');
 
 class ImportController {
   constructor(dependencies = {}) {

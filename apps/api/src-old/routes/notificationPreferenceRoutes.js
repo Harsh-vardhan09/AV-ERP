@@ -1,8 +1,8 @@
 const express               = require('express');
 const router                = express.Router();
-const { varifyToken }       = require('../middlewares/varifyToken');
-const { schoolIsolation }   = require('../middlewares/schoolIsolation');
-const { authorize }         = require('../middlewares/roleMiddleware');
+const { varifyToken }       = require('../../src/core/security/authenticate.js');
+const { schoolIsolation }   = require('../../src/core/security/tenantScope.js');
+const { authorize }         = require('../../src/core/security/roleMiddleware.js');
 const ctrl                  = require('../controller/notificationPreferenceController');
 
 // All routes require authentication + school scoping

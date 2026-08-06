@@ -1,4 +1,3 @@
-// Memory storage multer for Excel file uploads (buffer-based)
 const multer = require('multer');
 
 const memStorage = multer.memoryStorage();
@@ -12,7 +11,7 @@ const uploadMemory = multer({
       cb(new Error('Only .xlsx, .xls, and .csv files are allowed'), false);
     }
   },
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
 
 module.exports = uploadMemory;

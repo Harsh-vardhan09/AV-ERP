@@ -1,5 +1,5 @@
 const BillingPeriod = require("../../models/fee/BillingPeriod");
-const logger        = require("../../utils/logger");
+const logger        = require("../../../src/core/logging/logger.js");
 
 const sendError   = (res, status, message) => res.status(status).json({ success: false, message });
 const sendSuccess = (res, status, message, data = null) => {

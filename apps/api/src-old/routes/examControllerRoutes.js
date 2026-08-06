@@ -11,12 +11,12 @@
  */
 const express = require('express');
 const router = express.Router();
-const { varifyToken } = require('../middlewares/varifyToken');
-const { authorize } = require('../middlewares/roleMiddleware');
-const validateObjectId = require('../middlewares/validateObjectId');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { authorize } = require('../../src/core/security/roleMiddleware.js');
+const validateObjectId = require('../../src/core/http/validateObjectId.js');
 const teacher = require('../controller/teacherController');
 const admin = require('../controller/adminController');
-const uploadMemory = require('../middlewares/multerMemory');
+const uploadMemory = require('../../src/core/http/upload.memory.js');
 
 // ── Security guard ────────────────────────────────────────────────────────────
 router.use(varifyToken, authorize('exam_controller'));

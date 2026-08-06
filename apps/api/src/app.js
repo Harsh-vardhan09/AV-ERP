@@ -1,4 +1,3 @@
-// apps/api/src/app.js
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -12,8 +11,7 @@ const helmetConfig = require('./core/config/helmet');
 const { corsOptions } = require('./core/config/cors');
 const { apiLimiter, authLimiter } = require('./core/security/rateLimiters');
 const errorMiddleware = require('./core/http/errorMiddleware');
-const { varifyToken } = require('./core/security/authenticates');
-// const { registerModules } = require('./core/moduleLoader');   // ← enable after ~5 modules
+const { varifyToken } = require('./core/security/authenticate');
 
 const app = express();
 
@@ -21,28 +19,23 @@ const app = express();
 // false and rate-limiting buckets every client into the proxy's single IP.
 app.set('trust proxy', 1);
 
-// ── Security headers ────────────────────────────────────────────────────────
 app.use(helmet(helmetConfig));
-
-// ── Compression ─────────────────────────────────────────────────────────────
 app.use(compression({ threshold: 1024 }));
 
-// ── Body parsing ────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '50mb' }));            // large import metadata
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 app.use(morgan('short'));
 app.use(mongoSanitize({ replaceWith: '_' }));        // strip $ and . from input
 
-// ── CORS ────────────────────────────────────────────────────────────────────
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));                 // preflight, SAME options
 
-// ── Static uploads (legacy — both destinations, for backward compat) ────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads')));
 
-// ── Health — MUST be before the routes, complainRoutes mounts on bare /api/v1 ─
+// Health must precede the route block: complainBoxRoute mounts on the bare
+// '/api/v1' path and would otherwise shadow /api/v1/health
 app.get('/', (req, res) =>
   res.json({ status: 'ok', message: 'School ERP API is running' }));
 
@@ -55,67 +48,56 @@ app.get('/api/v1/health', (req, res) =>
     env: process.env.NODE_ENV || 'development',
   }));
 
-// ════════════════════════════════════════════════════════════════════════════
-// TEMPORARY ROUTING — one line disappears each time a module moves.
-// When all 35 are gone, delete this block and uncomment registerModules below.
-// ════════════════════════════════════════════════════════════════════════════
+// Temporary: one line moves to its module manifest as each module is migrated
+app.use('/api/v1/user', authLimiter, require('../src-old/routes/authenticates'));
 
-// Auth — strict rate limit
-app.use('/api/v1/user', authLimiter, require('./routes/authenticates'));
+app.use('/api/v1/admin', apiLimiter, require('../src-old/routes/adminRoutes'));
+app.use('/api/v1/teacher', apiLimiter, require('../src-old/routes/teacherRoutes'));
+app.use('/api/v1/student', apiLimiter, require('../src-old/routes/studentRoutes'));
+app.use('/api/v1/admission', apiLimiter, require('../src-old/routes/admissionRoutes'));
+app.use('/api/v1/exam-controller', apiLimiter, require('../src-old/routes/examControllerRoutes'));
+app.use('/api/v1/report-card', apiLimiter, require('../src-old/routes/reportCardRoutes'));
+app.use('/api/v1/documents', apiLimiter, require('../src-old/routes/documentRoutes'));
 
-// Role-based module routes
-app.use('/api/v1/admin', apiLimiter, require('./routes/adminRoutes'));
-app.use('/api/v1/teacher', apiLimiter, require('./routes/teacherRoutes'));
-app.use('/api/v1/student', apiLimiter, require('./routes/studentRoutes'));
-app.use('/api/v1/admission', apiLimiter, require('./routes/admissionRoutes'));
-app.use('/api/v1/exam-controller', apiLimiter, require('./routes/examControllerRoutes'));
-app.use('/api/v1/report-card', apiLimiter, require('./routes/reportCardRoutes'));
-app.use('/api/v1/documents', apiLimiter, require('./routes/documentRoutes'));
+app.use('/api/v1/assignment', apiLimiter, require('../src-old/routes/assignment'));
+app.use('/api/v1/knowledgecenter', apiLimiter, require('../src-old/routes/knowledgecenter'));
+app.use('/api/v1/chat', apiLimiter, require('../src-old/routes/chatroutes'));
+app.use('/api/v1', apiLimiter, require('../src-old/routes/complainBoxRoute'));
+app.use('/notice', apiLimiter, require('../src-old/routes/noticeRoutes'));
+app.use('/events', apiLimiter, require('../src-old/routes/eventRoutes'));
+app.use('/application', apiLimiter, require('../src-old/routes/applicationRoutes'));
 
-// Feature routes (legacy paths, kept for backward compatibility)
-app.use('/api/v1/assignment', apiLimiter, require('./routes/assignment'));
-app.use('/api/v1/knowledgecenter', apiLimiter, require('./routes/knowledgecenter'));
-app.use('/api/v1/chat', apiLimiter, require('./routes/chatroutes'));
-app.use('/api/v1', apiLimiter, require('./routes/complainBoxRoute'));
-app.use('/notice', apiLimiter, require('./routes/noticeRoutes'));
-app.use('/events', apiLimiter, require('./routes/eventRoutes'));
-app.use('/application', apiLimiter, require('./routes/applicationRoutes'));
-
-app.use('/api/v1/fee', require('./routes/feeRoutes'));
-app.use('/api/v1/oases', require('./routes/oases'));
+app.use('/api/v1/fee', require('../src-old/routes/feeRoutes'));
+app.use('/api/v1/oases', require('../src-old/routes/oases'));
 
 // Platform owner (X-Platform-Secret header, not JWT)
-app.use('/api/platform', require('./routes/platformRoutes'));
+app.use('/api/platform', require('../src-old/routes/platformRoutes'));
 // Super Admin — separate JWT secret + cookie
-app.use('/api/super-admin', apiLimiter, require('./routes/superAdminRoutes'));
+app.use('/api/super-admin', apiLimiter, require('../src-old/routes/superAdminRoutes'));
 
-app.use('/api/v1/staff', apiLimiter, require('./routes/staffRoutes'));
-app.use('/api/v1/notifications', apiLimiter, require('./routes/notificationRoutes'));
-app.use('/api/v1/notification-preferences', apiLimiter, require('./routes/notificationPreferenceRoutes'));
-app.use('/api/v1/student-management', apiLimiter, require('./routes/studentManagementRoutes'));
-app.use('/api/v1/teacher-management', apiLimiter, require('./routes/teacherManagementRoutes'));
-app.use('/api/v1/custom-forms', apiLimiter, require('./routes/customFormRoutes'));
-app.use('/api/v1/school', apiLimiter, require('./routes/schoolRoutes'));
+app.use('/api/v1/staff', apiLimiter, require('../src-old/routes/staffRoutes'));
+app.use('/api/v1/notifications', apiLimiter, require('../src-old/routes/notificationRoutes'));
+app.use('/api/v1/notification-preferences', apiLimiter, require('../src-old/routes/notificationPreferenceRoutes'));
+app.use('/api/v1/student-management', apiLimiter, require('../src-old/routes/studentManagementRoutes'));
+app.use('/api/v1/teacher-management', apiLimiter, require('../src-old/routes/teacherManagementRoutes'));
+app.use('/api/v1/custom-forms', apiLimiter, require('../src-old/routes/customFormRoutes'));
+app.use('/api/v1/school', apiLimiter, require('../src-old/routes/schoolRoutes'));
 
 // Payroll — varifyToken applied here, not inside the router
-app.use('/api/v1/payroll', apiLimiter, varifyToken, require('./routes/payroll/payrollRoutes'));
+app.use('/api/v1/payroll', apiLimiter, varifyToken, require('../src-old/routes/payroll/payrollRoutes'));
 
 // Bulk import — auth is embedded inside importRoutes
-app.use('/api/v1/import', apiLimiter, require('./import-system/routes/importRoutes'));
+app.use('/api/v1/import', apiLimiter, require('../src-old/import-system/routes/importRoutes'));
 
 // Biometric — /fingerprint is JWT-protected, /device is token-based (MORX hardware)
-app.use('/api/v1/fingerprint', require('./routes/fingerprintRoutes'));
-app.use('/api/v1/device', require('./routes/fingerprintRoutes'));
+app.use('/api/v1/fingerprint', require('../src-old/routes/fingerprintRoutes'));
+app.use('/api/v1/device', require('../src-old/routes/fingerprintRoutes'));
 
-app.use('/api/v1/dynamic-reports', apiLimiter, require('./routes/dynamicReportRoutes'));
-app.use('/api/v1/report-templates', apiLimiter, require('./routes/reportTemplateRoutes'));
-app.use('/api/v1/admission-templates', apiLimiter, require('./routes/admissionTemplateRoutes'));
-app.use('/api/v1/library', apiLimiter, require('./routes/libraryRoutes'));
+app.use('/api/v1/dynamic-reports', apiLimiter, require('../src-old/routes/dynamicReportRoutes'));
+app.use('/api/v1/report-templates', apiLimiter, require('../src-old/routes/reportTemplateRoutes'));
+app.use('/api/v1/admission-templates', apiLimiter, require('../src-old/routes/admissionTemplateRoutes'));
+app.use('/api/v1/library', apiLimiter, require('./modules/library/module').routes);
 
-// ── All API routes (enable when the block above is empty) ───────────────────
-// registerModules(app, { apiLimiter, authLimiter });
-
-// ── Errors — must be last, and only once ───────────────────────────────────
 app.use(errorMiddleware);
 
 module.exports = app;

@@ -1,9 +1,9 @@
 const express = require('express');
 const reportTemplateController = require('../controller/reportTemplateController');
 const superAdminController     = require('../controller/superAdminController');
-const { varifyToken } = require('../middlewares/varifyToken');
-const { authorize } = require('../middlewares/roleMiddleware');
-const { checkModuleAccess } = require('../middlewares/checkModuleAccess');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { authorize } = require('../../src/core/security/roleMiddleware.js');
+const { checkModuleAccess } = require('../../src/core/security/moduleGate.js');
 
 const router = express.Router();
 

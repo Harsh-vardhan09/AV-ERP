@@ -8,8 +8,8 @@
  * a try/catch with graceful stubs — a Redis hiccup at boot time can
  * no longer crash the entire server.
  */
-const logger = require('../utils/logger');
-const { REDIS_URL, REDIS_DISABLED } = require('../config/redis');
+const logger = require('../../src/core/logging/logger.js');
+const { REDIS_URL, REDIS_DISABLED } = require('../../src/core/config/redis.js');
 
 // ── Graceful stub (used when Redis is unavailable) ────────────────
 const makeStub = (name) => ({

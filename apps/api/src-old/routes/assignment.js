@@ -1,10 +1,10 @@
 const express = require('express');
 const { createAssignment, getassignmentteacher, getassignmentbysubject, Allsubjects, getassignmentbyid,  getExpiredAssignmentById, getNotExpiredAssignmentById } = require('../controller/assignment.js'); 
-const upload = require('../middlewares/multer.js'); 
+const upload = require('../../src/core/http/upload.disk.js'); 
 const { uploadassignment, getalluploadassignment, getassignmentbyidupload, getassignmentstudentscount } = require('../controller/uploadassignment.js');
-const { checkModuleAccess } = require('../middlewares/checkModuleAccess');
-const { varifyToken } = require('../middlewares/varifyToken');
-const { schoolIsolation } = require('../middlewares/schoolIsolation');
+const { checkModuleAccess } = require('../../src/core/security/moduleGate.js');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { schoolIsolation } = require('../../src/core/security/tenantScope.js');
 const router = express.Router(); 
 
 // ── Security: require authenticated school user for ALL assignment routes ──

@@ -17,7 +17,7 @@
 'use strict';
 
 const nodemailer = require('nodemailer');
-const logger     = require('./logger');
+const logger     = require('../../src/core/logging/logger.js');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Transporter factory

@@ -6,7 +6,7 @@
 const Payslip = require('../../models/Payslip');
 const Payroll = require('../../models/Payroll');
 const mongoose = require('mongoose');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * @param {string} schoolId
@@ -239,7 +239,7 @@ const exportReport = async (schoolId, data, userId) => {
     error.statusCode = 400; throw error;
   }
   try {
-    const payrollQueue = require('../../config/queue');
+    const payrollQueue = require('../../../src/modules/payroll/jobs/payrollQueue');
     const job = await payrollQueue.add('EXPORT_REPORT', {
       schoolId, reportType: data.reportType,
       month: data.month, year: data.year,
@@ -260,7 +260,7 @@ const exportReport = async (schoolId, data, userId) => {
  */
 const getExportStatus = async (jobId) => {
   try {
-    const payrollQueue = require('../../config/queue');
+    const payrollQueue = require('../../../src/modules/payroll/jobs/payrollQueue');
     const job = await payrollQueue.getJob(jobId);
     if (!job) {
       const error = new Error('Export job not found');

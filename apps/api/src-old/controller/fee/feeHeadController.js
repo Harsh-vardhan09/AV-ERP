@@ -1,6 +1,6 @@
 const FeeHead     = require('../../models/fee/FeeHead');
 const FeeStructure = require('../../models/fee/FeeStructure');
-const logger       = require('../../utils/logger');
+const logger       = require('../../../src/core/logging/logger.js');
 
 const sendError = (res, status, message) =>
     res.status(status).json({ success: false, message });

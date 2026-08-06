@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { varifyToken } = require('../middlewares/varifyToken');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
 const School = require('../models/School');
 
 /**

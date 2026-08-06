@@ -20,8 +20,8 @@
 const express = require('express');
 const router  = express.Router();
 
-const { varifyToken } = require('../middlewares/varifyToken');
-const { authorize }   = require('../middlewares/roleMiddleware');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { authorize }   = require('../../src/core/security/roleMiddleware.js');
 const ctrl = require('../controller/admissionTemplateController');
 
 // All routes require school-user authentication

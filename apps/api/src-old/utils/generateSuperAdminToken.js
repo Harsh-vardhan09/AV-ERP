@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { crossSiteCookie } = require('./cookieOptions');
+const { crossSiteCookie } = require('../../src/core/security/cookieOptions.js');
 
 /**
  * generateSuperAdminToken

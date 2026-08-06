@@ -6,7 +6,7 @@ const {
 const BillingPeriod = require("../../models/fee/BillingPeriod");
 const FeeStructure = require("../../models/fee/FeeStructure");
 const AccountFee = require("../../models/fee/AccountFee");
-const { sendError, sendSuccess } = require("../../utils/helpers");
+const { sendError, sendSuccess } = require("../../../src/shared/helpers.js");
 
 // ─── Known business-level errors → 400 ───────────────────────────────────────
 

@@ -1,8 +1,4 @@
-/**
- * Role-based authorization middleware.
- * Usage: authorize('admin', 'teacher') — only these roles can access the route.
- * Must be used AFTER varifyToken middleware (which sets req.user).
- */
+// Must run after authenticate, which sets req.user
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {

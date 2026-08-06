@@ -21,7 +21,7 @@ const ClassSubjectMap   = require('../models/ClassSubjectMap');
 const Marks             = require('../models/MarksModel');
 const SubjectMaster     = require('../models/SubjectMaster');
 const SchoolSettings    = require('../models/SchoolSettings');
-const logger            = require('../utils/logger');
+const logger            = require('../../src/core/logging/logger.js');
 
 /**
  * Subjects a class is expected to submit marks for, in this exam.

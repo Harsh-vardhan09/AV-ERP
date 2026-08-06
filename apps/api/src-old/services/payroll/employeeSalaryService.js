@@ -1,6 +1,6 @@
 const EmployeeSalary = require('../../models/EmployeeSalary');
 const SalaryStructure = require('../../models/SalaryStructure');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * @param {string} schoolId

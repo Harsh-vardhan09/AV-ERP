@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const School = require('../models/School');
 const { User } = require('../models/user');
 const SchoolSettings = require('../models/SchoolSettings');
-const { platformOwnerOnly } = require('../middlewares/schoolIsolation');
+const { platformOwnerOnly } = require('../../src/core/security/tenantScope.js');
 
 // ─── All routes protected by platform secret ──────────────────────────────────
 router.use(platformOwnerOnly);

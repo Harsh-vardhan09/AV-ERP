@@ -6,7 +6,7 @@
 
 const DateNormalizer = require('../utils/dateNormalizer');
 const PhoneNormalizer = require('../utils/phoneNormalizer');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class TransformationPipeline {
   constructor(config = {}) {

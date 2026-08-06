@@ -4,7 +4,7 @@ const ClassModel = require('../models/ClassModel');
 const SectionModel = require('../models/SectionModel');
 const AcademicSession = require('../models/AcademicSession');
 const mongoose = require('mongoose');
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 // ─── 1. getAllStudentsEnhanced ────────────────────────────────────────────────
 exports.getAllStudentsEnhanced = async (req, res, next) => {

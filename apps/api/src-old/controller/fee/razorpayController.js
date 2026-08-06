@@ -5,7 +5,7 @@ const Payment = require("../../models/fee/Payment");
 const StudentFee = require("../../models/fee/StudentFee");
 const StudentProfile = require("../../models/StudentProfile");
 const notificationService = require("../../services/notificationService");
-const logger = require("../../utils/logger"); // BUG-16 FIX: use structured logger, not console.log
+const logger = require("../../../src/core/logging/logger.js"); // BUG-16 FIX: use structured logger, not console.log
 
 // Resolve StudentProfile._id from a userId (User._id)
 const resolveProfileId = async (userId) => {
@@ -212,7 +212,7 @@ exports.verifyPayment = async (req, res) => {
         // ── Settle installments ─────────────────────────────────────────────
         const Installment = require("../../models/fee/Installment");
         const LedgerEntry = require("../../models/fee/LedgerEntry");
-        const { generateReceiptNumber } = require("../../utils/helpers");
+        const { generateReceiptNumber } = require("../../../src/shared/helpers.js");
         const round = (v) => Math.round(v * 100) / 100;
 
         const pendingInstallments = await Installment.find({

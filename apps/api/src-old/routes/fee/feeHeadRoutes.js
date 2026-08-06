@@ -7,8 +7,8 @@ const {
     updateFeeHead,
     deleteFeeHead,
 } = require("../../controller/fee/feeHeadController");
-const { varifyToken } = require("../../middlewares/varifyToken");
-const { authorizeRoles } = require("../../middlewares/authorizeRoles");
+const { varifyToken } = require("../../../src/core/security/authenticate.js");
+const { authorizeRoles } = require("../../../src/core/security/authorizeRoles.js");
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 

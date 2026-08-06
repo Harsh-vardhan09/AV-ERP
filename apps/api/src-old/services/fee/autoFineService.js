@@ -20,7 +20,7 @@
 
 const Installment = require('../../models/fee/Installment');
 const StudentFee  = require('../../models/fee/StudentFee');
-const logger      = require('../../utils/logger');
+const logger      = require('../../../src/core/logging/logger.js');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 // Default fine policy when FeeStructure has no explicit config.

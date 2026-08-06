@@ -7,7 +7,7 @@
  */
 
 const Queue = require('bull');
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 

@@ -1,6 +1,6 @@
 const PDFDocument = require('pdfkit');
 const AWS = require('aws-sdk');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 const Payslip = require('../../models/Payslip');
 
 /**

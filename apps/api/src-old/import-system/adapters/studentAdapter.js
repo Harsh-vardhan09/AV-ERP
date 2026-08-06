@@ -369,7 +369,7 @@ class StudentAdapter extends BaseAdapter {
       // ── 12. Fee auto-assignment (fire and forget) ────────────────────────
       setImmediate(async () => {
         try {
-          const { assignFeeToStudent } = require('../services/fee/studentFeeService');
+          const { assignFeeToStudent } = require('../../services/fee/studentFeeService');
           await assignFeeToStudent(studentProfile._id);
         } catch (_) { /* No fee structure set up yet — that's OK */ }
       });

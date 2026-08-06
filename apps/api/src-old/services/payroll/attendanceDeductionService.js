@@ -1,5 +1,5 @@
 const TeacherAttendance = require('../../models/TeacherAttendance');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * Calculate attendance-based deductions (Loss of Pay)

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const SalaryComponent = require('../../models/SalaryComponent');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * Get all salary components for a school with optional filters

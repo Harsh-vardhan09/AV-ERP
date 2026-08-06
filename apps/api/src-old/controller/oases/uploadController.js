@@ -20,7 +20,7 @@ const { addPdfJob } = require('../../services/oases/pdfQueue');
 const { getSignedPageUrl, processAnswerSheet } = require('../../services/oases/pdfService');
 const auditService = require('../../services/oases/auditService');
 const { emitToAll } = require('../../socket');
-const { uploadPdfToCloud } = require('../../config/cloudnary');
+const { uploadPdfToCloud } = require('../../../src/core/config/storage.js');
 
 // ── Helpers ─────────────────────────────────────────────────────
 const generateAnonymousCode = () =>

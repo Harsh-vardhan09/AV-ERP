@@ -4,7 +4,7 @@
  */
 
 const { COLUMN_ALIASES } = require('../constants/importConstants');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class ColumnMapper {
   /**

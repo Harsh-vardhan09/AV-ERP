@@ -9,8 +9,8 @@ const {
     backfillAllStudentFees,
     updatePreviousDues,
 } = require("../../controller/fee/studentFeeController");
-const { varifyToken } = require("../../middlewares/varifyToken");
-const { authorizeRoles, guardSelfAccess } = require("../../middlewares/authorizeRoles");
+const { varifyToken } = require("../../../src/core/security/authenticate.js");
+const { authorizeRoles, guardSelfAccess } = require("../../../src/core/security/authorizeRoles.js");
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 

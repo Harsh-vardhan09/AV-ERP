@@ -27,7 +27,7 @@
 const ReportTemplate = require('../models/ReportTemplate');
 const StudentProfile  = require('../models/StudentProfile');
 const SchoolSettings  = require('../models/SchoolSettings');
-const logger          = require('../utils/logger');
+const logger          = require('../../src/core/logging/logger.js');
 
 /**
  * Resolve the best-matching template for a student's class.

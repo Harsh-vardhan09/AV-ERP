@@ -1,5 +1,5 @@
 const reportService = require('../../services/payroll/reportService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * GET /api/v1/payroll/reports/monthly-summary

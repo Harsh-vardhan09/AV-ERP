@@ -4,7 +4,7 @@
 // Queue name: 'oases-pdf'
 // ══════════════════════════════════════════════════════════════════
 const Bull = require('bull');
-const { REDIS_URL, redisOpts, REDIS_DISABLED } = require('../../config/redis');
+const { REDIS_URL, redisOpts, REDIS_DISABLED } = require('../../../src/core/config/redis.js');
 
 let pdfQueue;
 try {

@@ -147,21 +147,16 @@ const OTPVerification = lazy(() => import('./pages/Otppage'));
 const ForgotPassword = lazy(() => import('./pages/Resetpass'));
 const ChangePassword = lazy(() => import('./pages/Changepassword'));
 const ForcePasswordChange = lazy(() => import('./pages/ForcePasswordChange'));
-const Dashboard = lazy(() => import('./pages/Deshboard'));
-const TeacherAnalyticsDashboard = lazy(() => import('./pages/DeshboardTeacher.jsx'));
 const TimeTable = lazy(() => import('./pages/timetable'));
 const TeacherAssign = lazy(() => import('./pages/TeacherAssign'));
 const UploadedFiles = lazy(() => import('./pages/UploadedFiles'));
 const Eventpage = lazy(() => import('./pages/Eventpage'));
 const Teachersassignment = lazy(() => import('./pages/teachersassignment'));
 const KnowlegedgeCenter = lazy(() => import('./pages/Knowledgecenter'));
-const Knowledgeadmin = lazy(() => import('./pages/knowlegeadmin'));
 const AttendanceApp = lazy(() => import('./pages/Signal'));
 const Roadmap = lazy(() => import('./pages/Roadmap'));
 const Roadmapshow = lazy(() => import('./pages/Roadmapshow'));
 const Finance = lazy(() => import('./pages/finance.jsx'));
-const Finaceentry = lazy(() => import('./pages/financeentry.jsx'));
-const FeeManagement = lazy(() => import('./pages/feepage.jsx'));
 const StudentRegistration = lazy(() => import('./pages/Registration.jsx'));
 const StudentManagementDashboard = lazy(() => import('./pages/Students_data.jsx'));
 const TeacherMyStudents = lazy(() => import('./pages/teacher/TeacherMyStudents'));
@@ -701,17 +696,13 @@ function App() {
             <Route path="/teacherassignment" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><TeacherAssign /></ProtectedRoute>} />
             <Route path="/createtimetable" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><AdminTt /></ProtectedRoute>} />
             <Route path="/register" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><StudentRegistration /></ProtectedRoute>} />
-            <Route path="/Dashboard" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><TeacherAnalyticsDashboard /></ProtectedRoute>} />
             <Route path="/teacherassignmentupload" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><Teachersassignment /></ProtectedRoute>} />
             <Route path="/teacherassignmentupload/:id" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><UploadedFiles /></ProtectedRoute>} />
             <Route path="/takeattendance" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><TakeAttendance /></ProtectedRoute>} />
             <Route path="/leavesection" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><LeaveSection /></ProtectedRoute>} />
-            <Route path="/knowlegecentercreate" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><Knowledgeadmin /></ProtectedRoute>} />
-            <Route path="/entry" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><Finaceentry /></ProtectedRoute>} />
             <Route path="/studentdesh" element={<ProtectedRoute allowedRoles={[ROLES.TEACHER]}><StudentManagementDashboard /></ProtectedRoute>} />
 
             {/* Student-only legacy routes */}
-            <Route path="/dashboardstd" element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]}><Dashboard /></ProtectedRoute>} />
             <Route path="/attendance" element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]}><AttendancePage /></ProtectedRoute>} />
             <Route path="/assignment" element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]}><AssignmentPage /></ProtectedRoute>} />
             <Route path="/assignment/:subject" element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]}><AssignmentsDetails /></ProtectedRoute>} />
@@ -720,7 +711,6 @@ function App() {
 
             {/* Finance / Admin — open */}
             <Route path="/finance" element={<Finance />} />
-            <Route path="/admin/fees" element={<FeeManagement />} />
 
             {/* 🎓 Exam Controller Module — MARKS_ALL_ACCESS school-wide marks management */}
             <Route

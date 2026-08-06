@@ -1,5 +1,5 @@
 const bankFileService = require('../../services/payroll/bankFileService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * Generate bank transfer CSV

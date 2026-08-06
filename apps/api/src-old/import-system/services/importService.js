@@ -10,7 +10,7 @@ const ImportProfile = require('../models/ImportProfile');
 const CSVParser     = require('../utils/csvParser');
 const XLSXParser    = require('../utils/xlsxParser');
 const ColumnMapper  = require('../utils/columnMapper');
-const logger        = require('../../utils/logger');
+const logger        = require('../../../src/core/logging/logger.js');
 
 class ImportService {
   constructor(config = {}, dependencies = {}) {

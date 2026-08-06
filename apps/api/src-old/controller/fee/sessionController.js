@@ -1,5 +1,5 @@
 const AcademicSession = require("../../models/AcademicSession");
-const logger  = require("../../utils/logger");
+const logger  = require("../../../src/core/logging/logger.js");
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const sendError   = (res, status, message) => res.status(status).json({ success: false, message });

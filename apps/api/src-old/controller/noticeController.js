@@ -1,5 +1,5 @@
 const NOTICE = require("../models/notice");
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ──────────────────────────────────────────
 const { notifyMultipleUsers } = require('../services/notificationService');

@@ -3,7 +3,7 @@ const AccountFee = require("../../models/fee/AccountFee");
 const FeeStructure = require("../../models/fee/FeeStructure");
 const Payment = require("../../models/fee/Payment");
 const { generateReceiptPDF } = require("../../services/fee/receiptService");
-const { sendError } = require("../../utils/helpers");
+const { sendError } = require("../../../src/shared/helpers.js");
 
 // ─── DOWNLOAD RECEIPT PDF ─────────────────────────────────────────────────────
 //

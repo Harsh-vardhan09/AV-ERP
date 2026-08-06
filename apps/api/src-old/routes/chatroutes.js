@@ -1,7 +1,7 @@
 const express = require('express');
 const { newgroup, getchat, addmembers, removemembers, leavegroup, message, getmessage, renamegroupname, getAllMessages, newchat, getunfriends, sendfriendrequest, acceptfriendrequest } = require('../controller/chat');
-const upload = require('../middlewares/multer');
-const { varifyToken } = require('../middlewares/varifyToken');
+const upload = require('../../src/core/http/upload.disk.js');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
 const route = express.Router();
 
 

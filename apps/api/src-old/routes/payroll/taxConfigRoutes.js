@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authorize } = require('../../middlewares/authorize');
+const { authorize } = require('../../../src/core/security/authorize.js');
 const taxConfigController = require('../../controller/payroll/taxConfigController');
 
 // GET    /api/payroll/tax-config                              — List all configs

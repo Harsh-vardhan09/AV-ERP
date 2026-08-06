@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-const { varifyToken }    = require('../middlewares/varifyToken');
-const { authorizeRoles } = require('../middlewares/authorizeRoles');
-const { checkModuleAccess } = require('../middlewares/checkModuleAccess');
+const { varifyToken }    = require('../../src/core/security/authenticate.js');
+const { authorizeRoles } = require('../../src/core/security/authorizeRoles.js');
+const { checkModuleAccess } = require('../../src/core/security/moduleGate.js');
 
 // ─── Plain Express Routers (self-contained auth) ──────────────────────────────
 const feeHeadRoutes          = require('./fee/feeHeadRoutes');

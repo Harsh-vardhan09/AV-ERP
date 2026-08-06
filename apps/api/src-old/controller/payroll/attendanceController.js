@@ -1,5 +1,5 @@
 const attendanceService = require('../../services/payroll/attendanceService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * GET /api/v1/payroll/attendance

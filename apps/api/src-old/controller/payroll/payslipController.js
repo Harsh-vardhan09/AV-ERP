@@ -1,5 +1,5 @@
 const payslipService = require('../../services/payroll/payslipService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * GET /api/v1/payroll/payslips

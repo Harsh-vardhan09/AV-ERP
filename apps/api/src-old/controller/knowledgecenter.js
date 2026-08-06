@@ -1,4 +1,4 @@
-const { uploadoncloud } = require("../config/cloudnary");
+const { uploadoncloud } = require("../../src/core/config/storage.js");
 const knowledgecenter = require("../models/knowledgecenter");
 const { User } = require("../models/user");
 

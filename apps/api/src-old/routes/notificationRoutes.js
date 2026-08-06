@@ -6,8 +6,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { varifyToken } = require('../middlewares/varifyToken');
-const { schoolIsolation } = require('../middlewares/schoolIsolation');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { schoolIsolation } = require('../../src/core/security/tenantScope.js');
 const ctrl = require('../controller/notificationController');
 
 // All notification routes require auth + school context

@@ -2,7 +2,7 @@
  * Tax Calculation Service
  * Handles Old Regime and New Regime Indian tax slabs, Section 80C, HRA exemption
  */
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * Calculate annual tax under New Regime (FY 2025-26)

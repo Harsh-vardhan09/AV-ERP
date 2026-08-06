@@ -5,7 +5,7 @@
 
 const moment = require('moment');
 const { DATE_FORMATS } = require('../constants/importConstants');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class DateNormalizer {
   /**

@@ -5,7 +5,7 @@ const Installment = require('../../models/fee/Installment');
 const StudentProfile = require('../../models/StudentProfile');
 const AcademicSession = require('../../models/AcademicSession');
 const { assignFeeToStudent, getStudentFeeSummary } = require('../../services/fee/studentFeeService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
 const { createInAppNotification, sendEmailNotification } = require('../../services/notificationService');

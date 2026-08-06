@@ -1,5 +1,5 @@
 const employeeSalaryService = require('../../services/payroll/employeeSalaryService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * GET /api/v1/payroll/employee-salaries

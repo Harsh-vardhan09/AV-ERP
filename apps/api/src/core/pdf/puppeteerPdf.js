@@ -1,25 +1,14 @@
-/**
- * puppeteerPdf.js
- * ─────────────────────────────────────────────────────
- * Converts an HTML string → PDF Buffer using Puppeteer.
- *
- * Browser instance is cached and reused across calls for performance.
- * Falls back gracefully if Puppeteer unavailable.
- */
-
+// Browser instance is cached and reused: a cold Chromium launch costs ~1s per call
 'use strict';
 
 let _browser = null;
 let _launching = false;
 const _queue = [];
 
-/**
- * Get (or lazily launch) the shared Puppeteer browser instance.
- */
 async function getBrowser() {
   if (_browser) return _browser;
 
-  // If already launching, queue this request
+  // Concurrent callers during launch must wait, not launch a second browser
   if (_launching) {
     return new Promise((resolve, reject) => _queue.push({ resolve, reject }));
   }
@@ -38,12 +27,11 @@ async function getBrowser() {
       ],
     });
 
-    // Flush queue
     _queue.forEach(({ resolve }) => resolve(_browser));
     _queue.length = 0;
     _launching = false;
 
-    // Reset on crash
+    // Chromium can die independently of this process
     _browser.on('disconnected', () => {
       _browser = null;
     });
@@ -57,12 +45,6 @@ async function getBrowser() {
   }
 }
 
-/**
- * Generate a PDF buffer from an HTML string.
- *
- * @param {string} htmlString  Complete HTML document
- * @returns {Promise<Buffer>}  Raw PDF bytes
- */
 async function generatePdfFromHtml(htmlString) {
   const browser = await getBrowser();
   const page = await browser.newPage();
@@ -70,7 +52,7 @@ async function generatePdfFromHtml(htmlString) {
   try {
     await page.setContent(htmlString, { waitUntil: 'networkidle0', timeout: 30000 });
 
-    // Disable animations / transitions so snapshot is instant
+    // Animations would otherwise be captured mid-transition
     await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important; }' });
 
     const pdfBuffer = await page.pdf({
@@ -91,11 +73,7 @@ async function generatePdfFromHtml(htmlString) {
   }
 }
 
-/**
- * Check whether Puppeteer + Chromium are available on this system.
- * Call this at startup and log a warning if false.
- * @returns {Promise<boolean>}
- */
+// Call at startup: Chromium is frequently absent on slim container images
 async function isPuppeteerAvailable() {
   try {
     require.resolve('puppeteer');
@@ -106,9 +84,6 @@ async function isPuppeteerAvailable() {
   }
 }
 
-/**
- * Gracefully close the shared browser instance (e.g. on process exit).
- */
 async function closeBrowser() {
   if (_browser) {
     await _browser.close().catch(() => {});
@@ -116,7 +91,6 @@ async function closeBrowser() {
   }
 }
 
-// Close browser on process exit
 process.on('exit', () => { if (_browser) _browser.close().catch(() => {}); });
 process.on('SIGINT',  () => closeBrowser().finally(() => process.exit(0)));
 process.on('SIGTERM', () => closeBrowser().finally(() => process.exit(0)));

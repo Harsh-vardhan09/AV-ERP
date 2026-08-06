@@ -4,7 +4,7 @@
  * Each entity (Student, Teacher, etc.) extends this class
  */
 
-const logger = require('../../utils/logger'); // Assuming logger exists
+const logger = require('../../../src/core/logging/logger.js'); // Assuming logger exists
 
 class BaseAdapter {
   constructor(config = {}, services = {}) {

@@ -1,5 +1,5 @@
 const taxConfigService = require('../../services/payroll/taxConfigService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * SUCCESS: { success: true, message: "...", data: ... }

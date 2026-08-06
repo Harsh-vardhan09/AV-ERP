@@ -7,7 +7,7 @@
 // ✅ NOW: delegates entirely to config/redis.js which provides
 //    a single shared client with correct TLS + retry strategy.
 // ══════════════════════════════════════════════════════════════════
-const { getRedisClient, safeRedisOp } = require('./redis');
+const { getRedisClient, safeRedisOp } = require('../../src/core/config/redis.js');
 
 /**
  * Returns the singleton ioredis client.

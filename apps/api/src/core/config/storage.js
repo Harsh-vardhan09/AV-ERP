@@ -1,12 +1,6 @@
-
 const { v2 } = require('cloudinary');
 const fs = require('fs');
 
-v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 const uploadoncloud = async (localfilepath) => {
   try {
@@ -15,7 +9,6 @@ const uploadoncloud = async (localfilepath) => {
       resource_type: 'raw',
     });
     console.log(`Uploading successfully`, response.url);
-    // Clean up local temp file after successful upload
     try { fs.unlinkSync(localfilepath); } catch (_) { }
     return response;
   } catch (error) {
@@ -37,11 +30,9 @@ const uploadImageToCloud = async (source, options = {}) => {
 
     let response;
     if (typeof source === 'string') {
- 
       response = await v2.uploader.upload(source, defaults);
       try { fs.unlinkSync(source); } catch (_) { }
     } else if (Buffer.isBuffer(source)) {
-      // Buffer from multer memoryStorage
       response = await new Promise((resolve, reject) => {
         const uploadStream = v2.uploader.upload_stream(defaults, (err, result) => {
           if (err) return reject(err);

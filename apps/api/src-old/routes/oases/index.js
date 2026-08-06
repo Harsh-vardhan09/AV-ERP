@@ -12,7 +12,7 @@ const { generalOasesLimiter } = require('../../middlewares/oasesRateLimiter');
 // Phase 2: unified module guard (replaces checkOasesEnabled).
 // Reads modules.oases from SchoolSettings; falls back to isOasesEnabled for
 // legacy documents that haven't been migrated yet. Backward-compatible.
-const { checkModuleAccess } = require('../../middlewares/checkModuleAccess');
+const { checkModuleAccess } = require('../../../src/core/security/moduleGate.js');
 
 const authRoutes       = require('./authRoutes');       // Sprint 1
 const schemeRoutes     = require('./schemeRoutes');     // Sprint 1

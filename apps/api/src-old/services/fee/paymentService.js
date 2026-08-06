@@ -4,7 +4,7 @@ const Installment = require("../../models/fee/Installment");
 const Payment = require("../../models/fee/Payment");
 const Ledger = require("../../models/fee/LedgerEntry");
 const { calculateFine } = require("../../utils/fee/fineCalculator");
-const { round, generateReceiptNumber } = require("../../utils/helpers");
+const { round, generateReceiptNumber } = require("../../../src/shared/helpers.js");
 const config = require("../../config/feeConfig");
 
 const VALID_METHODS = config.payment.validMethods;

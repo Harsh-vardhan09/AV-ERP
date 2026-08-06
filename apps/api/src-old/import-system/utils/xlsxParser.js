@@ -6,7 +6,7 @@
 
 const xlsx = require('xlsx');
 const { FILE } = require('../constants/importConstants');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class XLSXParser {
   /**

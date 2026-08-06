@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authorize } = require('../../middlewares/authorize');
+const { authorize } = require('../../../src/core/security/authorize.js');
 const ctrl = require('../../controller/payroll/reportController');
 
 // GET    /api/v1/payroll/reports/monthly-summary        — Monthly summary

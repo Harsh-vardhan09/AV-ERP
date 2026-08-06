@@ -1,14 +1,14 @@
-// src/middlewares/multer.js
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// ─── Generic disk storage (assignments, etc.) ─────────────────────────────────
+// app.js serves /uploads from src/uploads — this file sits two levels below it
+const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+
 const genericStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const dest = path.join(__dirname, '..', 'uploads');
-    fs.mkdirSync(dest, { recursive: true });
-    cb(null, dest);
+    fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
+    cb(null, UPLOAD_ROOT);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -19,7 +19,6 @@ const genericStorage = multer.diskStorage({
 });
 const upload = multer({ storage: genericStorage });
 
-// ─── Image-only storage for student/staff photos ─────────────────────────────
 const imageFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
@@ -30,7 +29,7 @@ const imageFilter = (req, file, cb) => {
 
 const photoStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const dest = path.join(__dirname, '..', 'uploads', 'students');
+    const dest = path.join(UPLOAD_ROOT, 'students');
     fs.mkdirSync(dest, { recursive: true });
     cb(null, dest);
   },
@@ -45,15 +44,15 @@ const photoStorage = multer.diskStorage({
 const uploadPhoto = multer({
   storage: photoStorage,
   fileFilter: imageFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-// ─── In-memory storage (used when uploading directly to Cloudinary) ───────────
+// Used when the file goes straight to Cloudinary and never touches disk
 const memoryStorage = multer.memoryStorage();
 const uploadMemory = multer({
   storage: memoryStorage,
   fileFilter: imageFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB for template images
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 const templateFileFilter = (req, file, cb) => {

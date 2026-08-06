@@ -6,7 +6,7 @@
  */
 
 const Notification = require('../models/Notification');
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 // ── GET /api/v1/notifications ─────────────────────────────────────────────────
 // Query params: page, limit, type, isRead

@@ -1,13 +1,9 @@
-/**
- * Role-based authorization middleware
- * Usage: authorize('admin', 'accounts')
- * Must be used AFTER verifyToken middleware
- */
+const logger = require('../logging/logger');
 
+// Must run after authenticate, which sets req.user
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
     try {
-      // ❌ No user
       if (!req.user || !req.user.role) {
         return res.status(401).json({
           success: false,
@@ -15,10 +11,10 @@ const authorize = (...allowedRoles) => {
         });
       }
 
-      // ❌ No roles passed
+      // Fails open by design: a route that forgot its roles stays reachable
       if (!allowedRoles || allowedRoles.length === 0) {
-        console.warn('⚠️ authorize middleware used without roles');
-        return next(); // allow (or you can block if you prefer strict mode)
+        logger.warn('⚠️ authorize middleware used without roles');
+        return next();
       }
 
       const userRole = String(req.user.role).toLowerCase();
@@ -37,7 +33,7 @@ const authorize = (...allowedRoles) => {
       next();
 
     } catch (error) {
-      console.error('Authorization error:', error);
+      logger.error('Authorization error:', error);
 
       return res.status(500).json({
         success: false,

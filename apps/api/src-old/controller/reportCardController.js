@@ -19,7 +19,7 @@ const {
 } = require('../utils/marksValidation');
 const { canGenerateReport } = require('../utils/reportCardValidation');
 const { getExamReadiness } = require('../services/marksReadinessService');
-const logger = require('../utils/logger');
+const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
 const { createInAppNotification, sendEmailNotification } = require('../services/notificationService');

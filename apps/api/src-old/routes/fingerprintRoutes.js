@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const fp = require('../controller/fingerprintController');
-const { varifyToken } = require('../middlewares/varifyToken');
-const { authorize } = require('../middlewares/roleMiddleware');
-const { checkModuleAccess } = require('../middlewares/checkModuleAccess');
+const { varifyToken } = require('../../src/core/security/authenticate.js');
+const { authorize } = require('../../src/core/security/roleMiddleware.js');
+const { checkModuleAccess } = require('../../src/core/security/moduleGate.js');
 const multer = require('multer');
 
 // All admin routes require JWT + admin role

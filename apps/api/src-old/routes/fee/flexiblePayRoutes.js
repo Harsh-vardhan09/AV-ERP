@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { flexiblePay, getFlexibleHistory } = require('../../controller/fee/flexiblePayController');
-const { varifyToken } = require('../../middlewares/varifyToken');
-const { authorizeRoles } = require('../../middlewares/authorizeRoles');
+const { varifyToken } = require('../../../src/core/security/authenticate.js');
+const { authorizeRoles } = require('../../../src/core/security/authorizeRoles.js');
 
 // POST /api/v1/flexible-pay — student or admin can record a flexible payment
 router.post(

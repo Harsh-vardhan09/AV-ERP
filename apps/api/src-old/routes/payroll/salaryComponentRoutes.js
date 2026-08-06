@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authorize } = require('../../middlewares/authorize');
+const { authorize } = require('../../../src/core/security/authorize.js');
 const salaryComponentController = require('../../controller/payroll/salaryComponentController');
 
 // GET    /api/payroll/salary-components          — List all components (with optional filters)

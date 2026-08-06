@@ -1,19 +1,12 @@
 const jwt = require("jsonwebtoken");
+const logger = require('../logging/logger');
+// TEMP: moves to modules/identity
 const SuperAdmin = require("../../../src-old/models/SuperAdmin");
 
-/**
- * verifySuperAdmin middleware
- *
- * Reads "superAdminToken" cookie (NOT "token" — that belongs to school users).
- * Verifies against SUPER_ADMIN_JWT_SECRET (NOT JWT_SECRET).
- * Attaches req.superAdmin — does NOT set req.user, req.schoolId, req.schoolFilter.
- *
- * Usage:
- *   router.get('/schools', verifySuperAdmin, ctrl.getAllSchools)
- */
+// SECURITY: reads the superAdminToken cookie and SUPER_ADMIN_JWT_SECRET, never the
+// school-user "token"/JWT_SECRET pair, and never sets req.user/schoolId/schoolFilter
 exports.verifySuperAdmin = async (req, res, next) => {
   try {
-    // Read from superAdminToken cookie OR Authorization Bearer header
     // DO NOT read req.cookies.token — that is exclusively for school users
     const token =
       req.cookies.superAdminToken ||
@@ -34,7 +27,6 @@ exports.verifySuperAdmin = async (req, res, next) => {
       });
     }
 
-    // Verify with the super admin-specific secret
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.SUPER_ADMIN_JWT_SECRET);
@@ -45,7 +37,6 @@ exports.verifySuperAdmin = async (req, res, next) => {
       });
     }
 
-    // Fetch super admin from DB — exclude password
     const superAdmin = await SuperAdmin.findById(decoded.id).select(
       "-password",
     );
@@ -64,12 +55,11 @@ exports.verifySuperAdmin = async (req, res, next) => {
       });
     }
 
-    // Attach to request — explicitly NOT touching req.user / req.schoolId / req.schoolFilter
     req.superAdmin = superAdmin;
 
     next();
   } catch (error) {
-    console.error("[superAdminAuth] Authentication error:", error);
+    logger.error("[superAdminAuth] Authentication error:", error);
     return res.status(401).json({
       success: false,
       message: "Authentication failed",

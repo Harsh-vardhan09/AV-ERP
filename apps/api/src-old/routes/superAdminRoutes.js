@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controller/superAdminController');
-const { verifySuperAdmin } = require('../middlewares/superAdminAuth');
+const { verifySuperAdmin } = require('../../src/core/security/superAdminAuth.js');
 
 // ─── PUBLIC AUTH ROUTES ───────────────────────────────────────────────────────
 router.post('/auth/login',  ctrl.login);

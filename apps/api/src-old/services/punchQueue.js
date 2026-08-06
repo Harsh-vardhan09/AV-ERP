@@ -3,7 +3,7 @@
 // ── Uses centralized Redis config from config/redis.js ──────────
 // ══════════════════════════════════════════════════════════════════
 const Bull = require('bull');
-const { REDIS_URL, redisOpts, REDIS_DISABLED } = require('../config/redis');
+const { REDIS_URL, redisOpts, REDIS_DISABLED } = require('../../src/core/config/redis.js');
 
 // ─── Punch Queue ──────────────────────────────────────────────────────────────
 // Gracefully degrade when Redis is unavailable (e.g. local dev without Redis).

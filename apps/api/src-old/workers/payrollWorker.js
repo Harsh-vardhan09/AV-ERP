@@ -4,8 +4,8 @@
  * NOTE: DB connection and dotenv are handled by the main index.js.
  *       This worker registers queue processors only — no connectDB() call.
  */
-const logger = require('../utils/logger');
-const queue  = require('../config/queue');
+const logger = require('../../src/core/logging/logger.js');
+const queue  = require('../../src/modules/payroll/jobs/payrollQueue');
 
 // Services & Models
 const processingService = require('../services/payroll/payrollProcessingService');

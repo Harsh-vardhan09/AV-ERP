@@ -23,10 +23,10 @@ const ReportCard          = require('../models/ReportCard');
 
 const DataAggregatorService   = require('../services/dataAggregatorService');
 const TemplateParserService   = require('../services/templateParserService');
-const PDFService              = require('../services/pdfService');
+const PDFService              = require('../../src/core/pdf/htmlToPdf.js');
 const { resolveTemplateForStudent } = require('../services/templateResolver');
 const { getExamReadiness }    = require('../services/marksReadinessService');
-const logger                  = require('../utils/logger');
+const logger                  = require('../../src/core/logging/logger.js');
 
 const OUTPUT_DIR = path.join(__dirname, '../../output/reports');
 

@@ -1,7 +1,7 @@
 const SalaryStructure = require('../../models/SalaryStructure');
 const EmployeeSalary = require('../../models/EmployeeSalary');
 const taxConfigService = require('./taxConfigService');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 /**
  * List all salary structures for a school with pagination

@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 const { Parser } = require('json2csv');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 const Payslip = require('../../models/Payslip');
 const Payroll = require('../../models/Payroll');
 const PaymentBatch = require('../../models/PaymentBatch');

@@ -4,7 +4,7 @@
  */
 
 const { FILE, ERROR_TYPES } = require('../constants/importConstants');
-const logger = require('../../utils/logger');
+const logger = require('../../../src/core/logging/logger.js');
 
 class FileSecurityScanner {
   /**

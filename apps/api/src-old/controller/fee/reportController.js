@@ -3,7 +3,7 @@ const AccountFee = require("../../models/fee/AccountFee");
 const StudentFee = require("../../models/fee/StudentFee");
 const FeeStructure = require("../../models/fee/FeeStructure");
 const Payment = require("../../models/fee/Payment");
-const { sendError } = require("../../utils/helpers");
+const { sendError } = require("../../../src/shared/helpers.js");
 const config = require("../../config/feeConfig");
 
 const VALID_METHODS = config.payment.validMethods;
