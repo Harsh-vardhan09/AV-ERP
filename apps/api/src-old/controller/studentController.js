@@ -20,6 +20,7 @@ const ClassTeacherAssignment = require('../models/ClassTeacherAssignment');
 const { User } = require('../../src/modules/identity');
 
 const studentProfileService = require('../../src/modules/people/services/studentProfileService');
+const studentSelfService = require('../../src/modules/communication/services/studentSelfServiceService');
 
 // Helper: get student profile
 const getStudentProfile = (userId) => studentProfileService.findByUserId(userId);
@@ -297,9 +298,7 @@ exports.applyLeave = async (req, res) => {
 
 exports.getMyLeaves = async (req, res) => {
   try {
-    const leaves = await Leave.find({ appliedBy: req.user._id, role: 'student' })
-      .populate('approvedBy', 'firstName lastName')
-      .sort({ createdAt: -1 });
+    const leaves = await studentSelfService.listLeavesForUser(req.user._id);
     res.status(200).json({ success: true, data: leaves });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
