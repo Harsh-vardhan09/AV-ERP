@@ -12,7 +12,7 @@ async function main() {
 
   const MarksModel    = require('../src-old/models/MarksModel');
   const SubjectMaster = require('../src-old/models/SubjectMaster');
-  const StudentProfile = require('../src-old/models/StudentProfile');
+  const StudentProfile = require('../src/modules/people/models/StudentProfile');
 
   console.log('\n🔍 Dynamic Marks Diagnostic\n');
   console.log(DELETE_MODE ? '⚠️  DELETE MODE — records WILL be removed\n' : '📋 DRY-RUN MODE — run with --delete to actually remove records\n');

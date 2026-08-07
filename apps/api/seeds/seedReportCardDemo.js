@@ -45,10 +45,10 @@ const seed = async () => {
   const SectionModel             = require('../src-old/models/SectionModel');
   const SubjectMaster            = require('../src-old/models/SubjectMaster');
   const ClassSubjectMap          = require('../src-old/models/ClassSubjectMap');
-  const TeacherProfile           = require('../src-old/models/TeacherProfile');
+  const TeacherProfile           = require('../src/modules/people/models/TeacherProfile');
   const TeacherSubjectAssignment = require('../src-old/models/TeacherSubjectAssignment');
   const ClassTeacherAssignment   = require('../src-old/models/ClassTeacherAssignment');
-  const StudentProfile           = require('../src-old/models/StudentProfile');
+  const StudentProfile           = require('../src/modules/people/models/StudentProfile');
   const Exam                     = require('../src-old/models/Exam');
   const ExamSubjectConfig        = require('../src-old/models/ExamSubjectConfig');
 

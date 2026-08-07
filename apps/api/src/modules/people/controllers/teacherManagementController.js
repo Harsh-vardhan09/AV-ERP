@@ -1,6 +1,6 @@
-const TeacherProfile = require('../models/TeacherProfile');
-const { User } = require('../../src/modules/identity');
-const TeacherSubjectAssignment = require('../models/TeacherSubjectAssignment');
+const TeacherProfile = require('../../../modules/people/models/TeacherProfile');
+const { User } = require('../../../modules/identity');
+const TeacherSubjectAssignment = require('../../../../src-old/models/TeacherSubjectAssignment');
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 

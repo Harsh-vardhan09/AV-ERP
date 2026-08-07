@@ -4,8 +4,8 @@ const mongoose = require('mongoose');
 const LibraryBook = require('../models/LibraryBook');
 const BookIssue   = require('../models/BookIssue');
 const logger = require('../../../core/logging/logger');
-// TEMP: moves to modules/people
-const StudentProfile = require('../../../../src-old/models/StudentProfile');
+
+const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
 
 // Overdue is derived on read, never stored, so it cannot go stale
 const effectiveStatus = (issue) => {

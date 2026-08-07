@@ -13,7 +13,7 @@ const uuidv4 = async () => {
 
 const ReportTemplate      = require('../models/ReportTemplate');
 const GeneratedReport     = require('../models/GeneratedReport');
-const StudentProfile      = require('../../../../src-old/models/StudentProfile');  // TEMP: moves to modules/academics
+const StudentProfile      = require('../../../../src/modules/people/models/StudentProfile');
 const AcademicSession     = require('../../../../src-old/models/AcademicSession');  // TEMP: moves to modules/academics
 const Exam                = require('../../../../src-old/models/Exam');  // TEMP: moves to modules/examination
 const ReportCard          = require('../models/ReportCard');

@@ -1,4 +1,4 @@
-const TeacherAttendance = require('../../../../src-old/models/TeacherAttendance');
+const TeacherAttendance = require('../../../../src/modules/attendance/models/TeacherAttendance');
 const logger = require('../../../core/logging/logger.js');
 
 /**

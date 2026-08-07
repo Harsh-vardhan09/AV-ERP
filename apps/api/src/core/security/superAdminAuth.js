@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const logger = require('../logging/logger');
-// TEMP: moves to modules/identity
+
 const SuperAdmin = require("../../modules/tenancy").SuperAdmin;
 
 // SECURITY: reads the superAdminToken cookie and SUPER_ADMIN_JWT_SECRET, never the

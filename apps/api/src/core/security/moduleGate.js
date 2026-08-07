@@ -1,5 +1,5 @@
 const logger = require('../logging/logger');
-// TEMP: moves to modules/schools
+
 const SchoolSettings = require('../../modules/tenancy').SchoolSettings;
 const { isModuleEnabled } = require('@av-erp/shared');
 

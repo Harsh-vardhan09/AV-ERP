@@ -17,14 +17,14 @@
  *   Global     : {{name}}, {{className}}, {{rollNo}}, {{grandTotal}}, {{grade}}, ...
  */
 
-const StudentProfile    = require('../../../../src-old/models/StudentProfile');  // TEMP: moves to modules/academics
+const StudentProfile    = require('../../../../src/modules/people/models/StudentProfile');
 const ReportCard        = require('../models/ReportCard');
 const ClassSubjectMap   = require('../../../../src-old/models/ClassSubjectMap');  // TEMP: moves to modules/academics
 const Marks             = require('../../../../src-old/models/MarksModel');  // TEMP: moves to modules/examination — kept for direct-use edge cases
 const MarksSourceService= require('../../../../src-old/services/marksSourceService');  // TEMP: moves to modules/examination — OASES-ready abstraction
 const ExamSubjectConfig = require('../../../../src-old/models/ExamSubjectConfig');  // TEMP: moves to modules/examination
 const Exam              = require('../../../../src-old/models/Exam');  // TEMP: moves to modules/examination
-const Attendance        = require('../../../../src-old/models/attendance');  // TEMP: moves to modules/core
+const Attendance        = require('../../../../src/modules/attendance/models/attendance');
 const AcademicSession   = require('../../../../src-old/models/AcademicSession');  // TEMP: moves to modules/academics
 const CoScholasticMark  = require('../../../../src-old/models/CoScholasticMark');  // TEMP: moves to modules/examination
 const School            = require('../../tenancy').School;

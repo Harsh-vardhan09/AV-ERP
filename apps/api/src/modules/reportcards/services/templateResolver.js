@@ -25,7 +25,7 @@
  */
 
 const ReportTemplate = require('../models/ReportTemplate');
-const StudentProfile  = require('../../../../src-old/models/StudentProfile');  // TEMP: moves to modules/academics
+const StudentProfile  = require('../../../../src/modules/people/models/StudentProfile');
 const SchoolSettings  = require('../../tenancy').SchoolSettings;
 const logger          = require('../../../core/logging/logger.js');
 

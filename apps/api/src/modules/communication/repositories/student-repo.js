@@ -1,4 +1,4 @@
-const studentinfo=require("../../../../src-old/models/Student");  // TEMP: moves to modules/people
+const studentinfo=require("../../../../src/modules/people/models/Student");
 const logger = require('../../../core/logging/logger.js');
 class STUDENT{
     async create(name,number){

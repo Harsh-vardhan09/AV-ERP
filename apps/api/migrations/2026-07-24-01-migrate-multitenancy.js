@@ -22,8 +22,8 @@ async function main() {
   require('../src-old/models/ExamSubjectConfig');
   require('../src-old/models/MarksModel');
   require('../src-old/models/MarksAuditLog');
-  require('../src-old/models/StudentProfile');
-  require('../src-old/models/TeacherProfile');
+  require('../src/modules/people/models/StudentProfile');
+  require('../src/modules/people/models/TeacherProfile');
   require('../src/modules/tenancy').SchoolSettings;
   require('../src/modules/communication').Leave;
   require('../src/modules/fees/models/FeeHead');

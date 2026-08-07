@@ -25,8 +25,8 @@ const main = async () => {
   const ClassModel               = require('../src-old/models/ClassModel');
   const SectionModel             = require('../src-old/models/SectionModel');
   const SubjectMaster            = require('../src-old/models/SubjectMaster');
-  const TeacherProfile           = require('../src-old/models/TeacherProfile');
-  const StudentProfile           = require('../src-old/models/StudentProfile');
+  const TeacherProfile           = require('../src/modules/people/models/TeacherProfile');
+  const StudentProfile           = require('../src/modules/people/models/StudentProfile');
   const ClassSubjectMap          = require('../src-old/models/ClassSubjectMap');
   const ClassTeacherAssignment   = require('../src-old/models/ClassTeacherAssignment');
   const TeacherSubjectAssignment = require('../src-old/models/TeacherSubjectAssignment');

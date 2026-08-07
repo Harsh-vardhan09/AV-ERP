@@ -1,6 +1,6 @@
-const TeacherProfile = require('../../../../src-old/models/TeacherProfile');
+const TeacherProfile = require('../../../../src/modules/people/models/TeacherProfile');
 const EmployeeSalary = require('../models/EmployeeSalary');
-const TeacherAttendance = require('../../../../src-old/models/TeacherAttendance');
+const TeacherAttendance = require('../../../../src/modules/attendance/models/TeacherAttendance');
 const TaxConfig = require('../models/TaxConfig');
 const logger = require('../../../core/logging/logger.js');
 

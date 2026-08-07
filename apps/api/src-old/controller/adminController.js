@@ -9,8 +9,8 @@ const Exam = require('../models/Exam');
 const ExamSubjectConfig = require('../models/ExamSubjectConfig');
 const Marks = require('../models/MarksModel');
 const MarksAuditLog = require('../models/MarksAuditLog');
-const StudentProfile = require('../models/StudentProfile');
-const TeacherProfile = require('../models/TeacherProfile');
+const StudentProfile = require('../../src/modules/people/models/StudentProfile');
+const TeacherProfile = require('../../src/modules/people/models/TeacherProfile');
 const { User } = require('../../src/modules/identity');
 const Leave = require('../../src/modules/communication').Leave;
 const logger = require('../../src/core/logging/logger.js');
@@ -119,7 +119,7 @@ exports.deleteSession = async (req, res, next) => {
     }
 
     // Extended dependency checks: students, exams, attendance
-    const Attendance = require('../models/attendance');
+    const Attendance = require('../../src/modules/attendance/models/attendance');
     const [studentCount, examCount, attendanceCount] = await Promise.all([
       StudentProfile.countDocuments({ session: sessionId, schoolId: req.schoolId, isDeleted: false }),
       Exam.countDocuments({ session: sessionId, schoolId: req.schoolId }),
@@ -1502,7 +1502,7 @@ exports.getDashboardStats = async (req, res) => {
 exports.getDashboardAnalytics = async (req, res) => {
   try {
     const sid         = req.schoolId;
-    const Attendance  = require('../models/attendance');
+    const Attendance  = require('../../src/modules/attendance/models/attendance');
     const { FeeReceipt } = require('../../src/modules/fees');
     const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const DAY_NAMES    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1577,7 +1577,7 @@ exports.getDashboardAnalytics = async (req, res) => {
     }));
 
     // ─── 4. Staff Snapshot — biometric today (FacultyAttendance) ─────────
-    const FacultyAttendance = require('../models/FacultyAttendance');
+    const FacultyAttendance = require('../../src/modules/attendance/models/FacultyAttendance');
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd   = new Date(todayStart.getTime() + 86400000);
     const todayStaff = await FacultyAttendance.find({ schoolId: sid, date: { $gte: todayStart, $lt: todayEnd } })
@@ -1677,7 +1677,7 @@ exports.getKnowledgeCenterMaterials = async (req, res, next) => {
 // ========================
 // ADMIN: STUDENT DIRECTORY
 // ========================
-const Attendance = require('../models/attendance');
+const Attendance = require('../../src/modules/attendance/models/attendance');
 const Assignment = require('../models/assignment');
 
 exports.getAdminStudents = async (req, res, next) => {

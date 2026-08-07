@@ -1,5 +1,5 @@
-const StudentProfile = require('../models/StudentProfile');
-const Attendance = require('../models/attendance');
+const StudentProfile = require('../../src/modules/people/models/StudentProfile');
+const Attendance = require('../../src/modules/attendance/models/attendance');
 const Assignment = require('../models/assignment');
 const Assignmentupload = require('../models/uploadassignment');
 const Leave = require('../../src/modules/communication').Leave;

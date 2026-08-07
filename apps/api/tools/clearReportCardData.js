@@ -31,7 +31,7 @@ const clear = async () => {
   await connect();
 
   const { User }          = require('../src/modules/identity');
-  const StudentProfile    = require('../src-old/models/StudentProfile');
+  const StudentProfile    = require('../src/modules/people/models/StudentProfile');
   const Exam              = require('../src-old/models/Exam');
   const Marks             = require('../src-old/models/MarksModel');
   const ReportCard        = require('../src/modules/reportcards').ReportCard;

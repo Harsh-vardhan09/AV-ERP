@@ -1,7 +1,7 @@
 // Collapses attendance rows duplicated on (class, section, subject, date, type), keeping the newest
 
 const mongoose = require('mongoose');
-const Attendance = require('../src-old/models/attendance');
+const Attendance = require('../src/modules/attendance/models/attendance');
 require('dotenv').config();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/erp';

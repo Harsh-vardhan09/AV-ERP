@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const DocumentTemplateConfig = require('../models/DocumentTemplateConfig');
 const GeneratedDocument = require('../models/GeneratedDocument');
 // TEMP: StudentProfile/School move to modules/people
-const StudentProfile = require('../../../../src-old/models/StudentProfile');
+const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
 const School = require('../../tenancy').School;
 
 const DEFAULT_FIELDS = [

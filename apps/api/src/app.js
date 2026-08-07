@@ -62,9 +62,9 @@ app.get('/api/v1/health', (req, res) =>
 // Temporary: one line moves to its module manifest as each module is migrated
 app.use('/api/v1/user', authLimiter, require('./modules/identity/module').routes);
 
-app.use('/api/v1/admin', apiLimiter, require('../src-old/routes/adminRoutes'));
-app.use('/api/v1/teacher', apiLimiter, require('../src-old/routes/teacherRoutes'));
-app.use('/api/v1/student', apiLimiter, require('../src-old/routes/studentRoutes'));
+app.use('/api/v1/admin', apiLimiter, require('./modules/people/routes/adminRoutes'));
+app.use('/api/v1/teacher', apiLimiter, require('./modules/people/routes/teacherRoutes'));
+app.use('/api/v1/student', apiLimiter, require('./modules/people/routes/studentRoutes'));
 const admissions = require('./modules/admissions/module');
 app.use(admissions.basePath, apiLimiter, admissions.routes);
 app.use('/api/v1/exam-controller', apiLimiter, require('../src-old/routes/examControllerRoutes'));
@@ -100,12 +100,12 @@ app.use(oases.basePath, oases.routes);
 const tenancy = require('./modules/tenancy/module');
 mountExtras(tenancy);
 
-app.use('/api/v1/staff', apiLimiter, require('../src-old/routes/staffRoutes'));
+app.use('/api/v1/staff', apiLimiter, require('./modules/people/routes/staffRoutes'));
 const notifications = require('./modules/notifications/module');
 app.use(notifications.basePath, apiLimiter, notifications.routes);
 mountExtras(notifications);
-app.use('/api/v1/student-management', apiLimiter, require('../src-old/routes/studentManagementRoutes'));
-app.use('/api/v1/teacher-management', apiLimiter, require('../src-old/routes/teacherManagementRoutes'));
+app.use('/api/v1/student-management', apiLimiter, require('./modules/people/routes/studentManagementRoutes'));
+app.use('/api/v1/teacher-management', apiLimiter, require('./modules/people/routes/teacherManagementRoutes'));
 app.use(tenancy.basePath, apiLimiter, tenancy.routes);
 
 // Payroll — varifyToken applied here, not inside the router

@@ -1,5 +1,5 @@
 const event=require("../models/event");
-const studentinfo=require("../models/Student");
+const studentinfo=require("../../src/modules/people/models/Student");
 class EVENTRepo{
 
     // create event 

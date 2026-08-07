@@ -8,7 +8,7 @@ const ExamSubjectConfig = require('../../../../src-old/models/ExamSubjectConfig'
 const Marks = require('../../../../src-old/models/MarksModel');  // TEMP: moves to modules/examination
 const ReportCard = require('../models/ReportCard');
 const ReportCardMark = require('../models/ReportCardMark');
-const StudentProfile = require('../../../../src-old/models/StudentProfile');  // TEMP: moves to modules/academics
+const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
 const SchoolSettings = require('../../tenancy').SchoolSettings;
 const {
   SLOT_MAX,

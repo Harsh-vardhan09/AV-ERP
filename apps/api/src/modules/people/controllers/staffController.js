@@ -4,12 +4,12 @@
  * Fully scoped to req.schoolId — zero cross-tenant data leakage.
  */
 
-const { User } = require('../../src/modules/identity');
-const School    = require('../../src/modules/tenancy').School;
+const { User } = require('../../../modules/identity');
+const School    = require('../../../modules/tenancy').School;
 const bcryptjs  = require('bcryptjs');
-const logger    = require('../../src/core/logging/logger.js');
-const { generateTempPassword } = require('../../src/modules/identity').generatePassword;
-const { sendStaffCredentials } = require('../../src/modules/notifications').emailService;
+const logger    = require('../../../core/logging/logger.js');
+const { generateTempPassword } = require('../../../modules/identity').generatePassword;
+const { sendStaffCredentials } = require('../../../modules/notifications').emailService;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPER — strip sensitive fields before returning a user object

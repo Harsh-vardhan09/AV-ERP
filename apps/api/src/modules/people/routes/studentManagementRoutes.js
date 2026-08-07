@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { varifyToken } = require('../../src/core/security/authenticate.js');
-const { schoolIsolation } = require('../../src/core/security/tenantScope.js');
-const { authorize } = require('../../src/core/security/roleMiddleware.js');
-const ctrl = require('../controller/studentManagementController');
-const admissionCtrl = require('../../src/modules/admissions').admissionController;
-const { uploadPhoto } = require('../../src/core/http/upload.disk.js');
+const { varifyToken } = require('../../../core/security/authenticate.js');
+const { schoolIsolation } = require('../../../core/security/tenantScope.js');
+const { authorize } = require('../../../core/security/roleMiddleware.js');
+const ctrl = require('../controllers/studentManagementController');
+const admissionCtrl = require('../../../modules/admissions').admissionController;
+const { uploadPhoto } = require('../../../core/http/upload.disk.js');
 
 // All routes: admin only
 router.use(varifyToken);

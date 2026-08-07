@@ -7,7 +7,7 @@
 
 const ReportCardMark = require('../../src/modules/reportcards').ReportCardMark;
 const ReportCard = require('../../src/modules/reportcards').ReportCard;
-const StudentProfile = require('../models/StudentProfile');
+const StudentProfile = require('../../src/modules/people/models/StudentProfile');
 const Exam = require('../models/Exam');
 
 class CalculationService {

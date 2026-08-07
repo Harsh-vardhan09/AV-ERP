@@ -12,7 +12,7 @@ const seedAdmissions = async () => {
     const AcademicSession = require('../src-old/models/AcademicSession');
     const ClassModel = require('../src-old/models/ClassModel');
     const SectionModel = require('../src-old/models/SectionModel');
-    const StudentProfile = require('../src-old/models/StudentProfile');
+    const StudentProfile = require('../src/modules/people/models/StudentProfile');
     const { User } = require('../src/modules/identity');
 
     // 1. Academic Session

@@ -10,7 +10,7 @@ const fix = async () => {
   const School          = require('../src/modules/tenancy').School;
   const { User }        = require('../src/modules/identity');
   const AcademicSession = require('../src-old/models/AcademicSession');
-  const StudentProfile  = require('../src-old/models/StudentProfile');
+  const StudentProfile  = require('../src/modules/people/models/StudentProfile');
 
   console.log('');
   console.log('=== DIAGNOSTIC REPORT ===');

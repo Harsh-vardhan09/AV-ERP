@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { varifyToken } = require('../../src/core/security/authenticate.js');
-const { authorize } = require('../../src/core/security/roleMiddleware.js');
-const teacher = require('../controller/teacherController');
-const upload = require('../../src/core/http/upload.disk.js');
-const uploadMemory = require('../../src/core/http/upload.memory.js');
+const { varifyToken } = require('../../../core/security/authenticate.js');
+const { authorize } = require('../../../core/security/roleMiddleware.js');
+const teacher = require('../../../../src-old/controller/teacherController');
+const upload = require('../../../core/http/upload.disk.js');
+const uploadMemory = require('../../../core/http/upload.memory.js');
 
 
 // All teacher routes are protected

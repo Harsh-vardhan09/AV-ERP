@@ -2,8 +2,8 @@ const { punchQueue } = require('../services/punchQueue');
 const FacultyDeviceMapping = require('../models/FacultyDeviceMapping');
 const DeviceRegistration = require('../models/fingerprint');
 const logger = require('../../../core/logging/logger');
-// TEMP: moves to modules/people
-const FacultyAttendance = require('../../../../src-old/models/FacultyAttendance');
+
+const FacultyAttendance = require('../../../../src/modules/attendance/models/FacultyAttendance');
 
 punchQueue.process('process-punch', async (job) => {
   const { schoolId, deviceId, deviceUserId, punchTime, rawPayload } = job.data;

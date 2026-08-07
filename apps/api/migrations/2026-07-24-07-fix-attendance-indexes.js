@@ -2,7 +2,7 @@
 // Must run before the de-duplication migration, which needs duplicates to be insertable
 
 const mongoose = require('mongoose');
-const Attendance = require('../src-old/models/attendance');
+const Attendance = require('../src/modules/attendance/models/attendance');
 require('dotenv').config();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/erp';

@@ -1,7 +1,7 @@
 // Backfills Attendance.schoolId from the linked session
 
 const mongoose = require('mongoose');
-const Attendance = require('../src-old/models/attendance');
+const Attendance = require('../src/modules/attendance/models/attendance');
 const AcademicSession = require('../src-old/models/AcademicSession');
 require('dotenv').config();
 

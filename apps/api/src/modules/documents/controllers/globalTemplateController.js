@@ -176,7 +176,7 @@ exports.deleteGlobalTemplate = async (req, res) => {
     template.isActive  = false;
     await template.save();
 
-    // TEMP: moves to modules/schools
+
     const SchoolSettings = require('../../tenancy').SchoolSettings;
     const affected = await SchoolSettings.countDocuments({ selectedReportTemplateId: template._id });
 

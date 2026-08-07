@@ -2,8 +2,8 @@ const DeviceRegistration = require('../models/fingerprint');
 const FacultyDeviceMapping = require('../models/FacultyDeviceMapping');
 const { addPunch, getQueueStats } = require('../services/punchQueue');
 const logger = require('../../../core/logging/logger');
-// TEMP: moves to modules/people
-const FacultyAttendance = require('../../../../src-old/models/FacultyAttendance');
+
+const FacultyAttendance = require('../../../../src/modules/attendance/models/FacultyAttendance');
 
 const fail = (res, err, status = 500) =>
   res.status(status).json({ success: false, message: err.message });

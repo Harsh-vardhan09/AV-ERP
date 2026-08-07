@@ -1,9 +1,9 @@
 const express = require('express');
 const router  = express.Router();
-const { varifyToken }     = require('../../src/core/security/authenticate.js');
-const { schoolIsolation } = require('../../src/core/security/tenantScope.js');
-const { authorize }       = require('../../src/core/security/roleMiddleware.js');
-const ctrl = require('../controller/teacherManagementController');
+const { varifyToken }     = require('../../../core/security/authenticate.js');
+const { schoolIsolation } = require('../../../core/security/tenantScope.js');
+const { authorize }       = require('../../../core/security/roleMiddleware.js');
+const ctrl = require('../controllers/teacherManagementController');
 
 // All routes: authenticated admin only
 router.use(varifyToken);

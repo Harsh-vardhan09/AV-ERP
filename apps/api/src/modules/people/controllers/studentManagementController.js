@@ -1,10 +1,10 @@
-const StudentProfile = require('../models/StudentProfile');
-const { User } = require('../../src/modules/identity');
-const ClassModel = require('../models/ClassModel');
-const SectionModel = require('../models/SectionModel');
-const AcademicSession = require('../models/AcademicSession');
+const StudentProfile = require('../../../modules/people/models/StudentProfile');
+const { User } = require('../../../modules/identity');
+const ClassModel = require('../../../../src-old/models/ClassModel');
+const SectionModel = require('../../../../src-old/models/SectionModel');
+const AcademicSession = require('../../../../src-old/models/AcademicSession');
 const mongoose = require('mongoose');
-const logger = require('../../src/core/logging/logger.js');
+const logger = require('../../../core/logging/logger.js');
 
 // ─── 1. getAllStudentsEnhanced ────────────────────────────────────────────────
 exports.getAllStudentsEnhanced = async (req, res, next) => {

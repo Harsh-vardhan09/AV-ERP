@@ -8,7 +8,7 @@ const seedTeachers = async () => {
   try {
     await connect();
 
-    const TeacherProfile = require('../src-old/models/TeacherProfile');
+    const TeacherProfile = require('../src/modules/people/models/TeacherProfile');
     const { User } = require('../src/modules/identity');
 
     const demoTeachers = [

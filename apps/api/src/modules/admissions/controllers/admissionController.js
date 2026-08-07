@@ -1,6 +1,6 @@
 const { User } = require('../../identity');
-const StudentProfile = require('../../../../src-old/models/StudentProfile');  // TEMP: moves to modules/people
-const TeacherProfile = require('../../../../src-old/models/TeacherProfile');  // TEMP: moves to modules/people
+const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
+const TeacherProfile = require('../../../../src/modules/people/models/TeacherProfile');
 const AcademicSession = require('../../../../src-old/models/AcademicSession');  // TEMP: moves to modules/academics
 const ClassModel = require('../../../../src-old/models/ClassModel');  // TEMP: moves to modules/academics
 const SectionModel = require('../../../../src-old/models/SectionModel');  // TEMP: moves to modules/academics

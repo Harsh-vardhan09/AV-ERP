@@ -7,10 +7,10 @@
 const express = require('express');
 const router  = express.Router();
 
-const { varifyToken }     = require('../../src/core/security/authenticate.js');
-const { authorize }       = require('../../src/core/security/roleMiddleware.js');
-const { schoolIsolation } = require('../../src/core/security/tenantScope.js');
-const staff               = require('../controller/staffController');
+const { varifyToken }     = require('../../../core/security/authenticate.js');
+const { authorize }       = require('../../../core/security/roleMiddleware.js');
+const { schoolIsolation } = require('../../../core/security/tenantScope.js');
+const staff               = require('../controllers/staffController');
 
 // Every staff route requires: valid JWT → school context → admin role
 router.use(varifyToken);

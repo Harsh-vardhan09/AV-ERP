@@ -27,8 +27,8 @@ exports.guardSelfAccess = async (req, res, next) => {
     }
 
     // SECURITY: scoped to the current school to prevent cross-tenant lookup
-    // TEMP: moves to modules/students
-    const StudentProfile = require('../../../src-old/models/StudentProfile');
+
+    const StudentProfile = require('../../../src/modules/people/models/StudentProfile');
     const profile = await StudentProfile.findOne({
       _id: paramId,
       schoolId: req.schoolId

@@ -60,7 +60,7 @@
  *    bplStudent (boolean)       (NOT isBplStudent)
  */
 
-const StudentProfile = require('../../../../src-old/models/StudentProfile');  // TEMP: moves to modules/people
+const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
 const AdmissionFieldRegistry = require('./admissionFieldRegistry');
 const School = require('../../tenancy').School;
 const SchoolSettings = require('../../tenancy').SchoolSettings;

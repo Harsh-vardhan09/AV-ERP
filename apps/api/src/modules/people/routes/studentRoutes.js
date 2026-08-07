@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { varifyToken } = require('../../src/core/security/authenticate.js');
-const { authorize } = require('../../src/core/security/roleMiddleware.js');
-const student = require('../controller/studentController');
-const upload = require('../../src/core/http/upload.disk.js');
+const { varifyToken } = require('../../../core/security/authenticate.js');
+const { authorize } = require('../../../core/security/roleMiddleware.js');
+const student = require('../../../../src-old/controller/studentController');
+const upload = require('../../../core/http/upload.disk.js');
 
 // All student routes are protected
 router.use(varifyToken, authorize('student'));

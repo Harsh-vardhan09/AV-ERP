@@ -17,7 +17,7 @@ const Exam             = require('../src-old/models/Exam');
 const Marks            = require('../src-old/models/MarksModel');
 const ReportCard       = require('../src/modules/reportcards').ReportCard;
 const ReportCardMark   = require('../src/modules/reportcards').ReportCardMark;
-const StudentProfile   = require('../src-old/models/StudentProfile');
+const StudentProfile   = require('../src/modules/people/models/StudentProfile');
 const AcademicSession  = require('../src-old/models/AcademicSession');
 const ExamSubjectConfig = require('../src-old/models/ExamSubjectConfig');
 
