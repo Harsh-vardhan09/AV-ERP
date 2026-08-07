@@ -8,6 +8,7 @@ module.exports = {
   canDisable:     false,
   dependsOn:      ['core'],
   basePath:       '/api/v1/user',
+  order:          10,
 
   // Login cannot require a token, so no router-wide authenticate — the few
   // protected routes apply varifyToken individually

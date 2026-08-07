@@ -10,6 +10,10 @@ module.exports = {
   // reaches into src-old for, marked TEMP in the controller and the worker
   dependsOn:      ['core', 'people'],
   basePath:       '/api/v1/fingerprint',
+  order:          310,
+  // No limiter on either mount: apiLimiter would throttle punch ingestion and
+  // /device carries no JWT to bucket per user
+  limiter:        null,
   // The MORX hardware posts to /api/v1/device/punch. Same router as basePath, so
   // the admin routes are reachable here too — /punch is the reason it exists.
   // Unlimited on purpose: apiLimiter would throttle punch ingestion.
@@ -19,6 +23,7 @@ module.exports = {
       routes:  require('./routes'),
       auth:    'deviceToken',
       limiter: null,
+      order:   320,
     },
   ],
   routes:         require('./routes'),

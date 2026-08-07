@@ -1,11 +1,6 @@
-// Paths follow the workers: each moves to modules/<domain>/jobs as that module migrates
-module.exports = {
-  bootWorkers: () => {
-    require('../../modules/biometric/jobs/attendanceWorker');
-    require('../../modules/notifications/jobs/notificationWorker');
-    require('../../modules/notifications/jobs/digestWorker');
-    require('../../modules/notifications/jobs/emailWorker');
-    require('../../modules/payroll/jobs/payrollWorker');
-    require('../../modules/payroll/jobs/pdfWorker');
-  },
-};
+const { bootJobs } = require('../moduleLoader');
+
+// The worker list comes from each module's manifest `jobs` array, collected when
+// registerModules ran. Requiring them here rather than at registration keeps Bull
+// processors from starting before the DB connection is up.
+module.exports = { bootWorkers: bootJobs };

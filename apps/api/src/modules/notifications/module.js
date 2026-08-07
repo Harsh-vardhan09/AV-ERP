@@ -8,14 +8,16 @@ module.exports = {
   canDisable:     false,
   dependsOn:      ['core'],
   basePath:       '/api/v1/notifications',
+  order:          240,
 
   // Preferences is a separate router on its own path, not nested under /notifications
   extraMounts: [
     {
       path:    '/api/v1/notification-preferences',
       routes:  require('./routes/notificationPreferenceRoutes'),
-      auth:    'jwt',
+      auth:    'router',
       limiter: 'api',
+      order:   250,
     },
   ],
 

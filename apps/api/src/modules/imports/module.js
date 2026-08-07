@@ -6,6 +6,7 @@ module.exports = {
   canDisable:     true,
   dependsOn:      ['core', 'people', 'academics'],
   basePath:       '/api/v1/import',
+  order:          300,
 
   routes:      require('./routes'),
   permissions: require('./permissions'),

@@ -10,6 +10,7 @@ module.exports = {
   // the certificate snapshots read; both are still reached via src-old (TEMP-marked)
   dependsOn:      ['core', 'people', 'academics'],
   basePath:       '/api/v1/documents',
+  order:          80,
   routes:         require('./routes'),
   permissions:    require('./permissions'),
   jobs:           [],

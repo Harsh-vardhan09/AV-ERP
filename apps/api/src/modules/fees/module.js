@@ -8,6 +8,10 @@ module.exports = {
   canDisable:     true,
   dependsOn:      ['core', 'people', 'academics'],
   basePath:       '/api/v1/fee',
+  order:          190,
+  // No limiter: this mount never had one, and razorpay/webhook is called by
+  // Razorpay's infrastructure, not per user
+  limiter:        null,
 
   routes:      require('./routes'),
   permissions: require('./permissions'),

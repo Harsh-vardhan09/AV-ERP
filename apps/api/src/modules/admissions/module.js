@@ -9,6 +9,7 @@ module.exports = {
   // controller now lives in modules/communication
   dependsOn:      ['core', 'people', 'academics', 'fee', 'communication'],
   basePath:       '/api/v1/admission',
+  order:          50,
 
   extraMounts: [
     // Leave applications, not admissions — the router only serves /leaves and is
@@ -17,8 +18,9 @@ module.exports = {
     {
       path:    '/application',
       routes:  require('./routes/applicationRoutes'),
-      auth:    'jwt',
+      auth:    'router',
       limiter: 'api',
+      order:   160,
     },
     // Mounted after complainBoxRoute (bare /api/v1) both before and after this
     // move, which is what keeps the public POST /:token/submit returning 401.
@@ -26,14 +28,16 @@ module.exports = {
     {
       path:    '/api/v1/custom-forms',
       routes:  require('./routes/customFormRoutes'),
-      auth:    'jwt',
+      auth:    'router',
       limiter: 'api',
+      order:   170,
     },
     {
       path:    '/api/v1/admission-templates',
       routes:  require('./routes/admissionTemplateRoutes'),
-      auth:    'jwt',
+      auth:    'router',
       limiter: 'api',
+      order:   180,
     },
   ],
 

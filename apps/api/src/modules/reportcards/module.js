@@ -8,6 +8,7 @@ module.exports = {
   // and templateFieldExtractor read fieldMappingService / admissionFieldRegistry
   dependsOn:      ['core', 'examination', 'academics', 'admissions'],
   basePath:       '/api/v1/report-card',
+  order:          70,
 
   // Two sibling surfaces on their own top-level paths: the template engine that
   // supersedes the legacy generator, and the read-only template gallery
@@ -15,14 +16,16 @@ module.exports = {
     {
       path:    '/api/v1/dynamic-reports',
       routes:  require('./routes/dynamicReportRoutes'),
-      auth:    'jwt',
+      auth:    'router',
       limiter: 'api',
+      order:   330,
     },
     {
       path:    '/api/v1/report-templates',
       routes:  require('./routes/reportTemplateRoutes'),
-      auth:    'jwt',
+      auth:    'router',
       limiter: 'api',
+      order:   340,
     },
   ],
 

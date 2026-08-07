@@ -10,6 +10,7 @@ module.exports = {
   // still reaches into src-old for, marked TEMP in the controller and service
   dependsOn:      ['core', 'people'],
   basePath:       '/api/v1/library',
+  order:          350,
   routes:         require('./routes'),
   permissions:    require('./permissions'),
   jobs:           [],

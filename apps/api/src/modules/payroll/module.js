@@ -6,12 +6,13 @@ module.exports = {
   canDisable:     true,
   dependsOn:      ['core', 'people'],
   basePath:       '/api/v1/payroll',
+  order:          290,
 
   // Unlike every other module, auth sits OUTSIDE the router: app.js applies
   // varifyToken before mounting these routes, and payrollRoutes deliberately adds
   // none. Moving it inside would double-verify; removing it from app.js would
   // expose the whole module.
-  auth:           'jwt-at-mount',
+  auth:           'jwt',
 
   routes:      require('./routes'),
   permissions: require('./permissions'),
