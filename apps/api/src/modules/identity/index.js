@@ -15,6 +15,6 @@ module.exports = {
   // generateSuperAdminToken. Consumer: modules/tenancy/controllers/superAdminController
    get generateSuperAdminToken() { return require('./lib/generateSuperAdminToken'); },
 
-  // otpController — OTP send/verify handlers mounted by src-old/routes/admissionRoutes
+  // otpController — OTP send/verify handlers mounted by modules/admissions/routes/admissionRoutes
    get otpController() { return require('./controllers/otpController'); },
 };

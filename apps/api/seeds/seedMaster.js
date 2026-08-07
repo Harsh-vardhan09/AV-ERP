@@ -37,20 +37,20 @@ const seedMaster = async () => {
   const ClassSubjectMap         = require('../src-old/models/ClassSubjectMap');
   const ClassTeacherAssignment  = require('../src-old/models/ClassTeacherAssignment');
   const TeacherSubjectAssignment= require('../src-old/models/TeacherSubjectAssignment');
-  const FeeHead                 = require('../src-old/models/fee/FeeHead');
-  const FeeStructure            = require('../src-old/models/fee/FeeStructure');
-  const StudentFee              = require('../src-old/models/fee/StudentFee');
-  const Installment             = require('../src-old/models/fee/Installment');
-  const LedgerEntry             = require('../src-old/models/fee/LedgerEntry');
-  const Payment                 = require('../src-old/models/fee/Payment');
-  const FeeSession              = require('../src-old/models/fee/Session');
-  const BillingPeriod           = require('../src-old/models/fee/BillingPeriod');
-  const AccountFee              = require('../src-old/models/fee/AccountFee');
+  const FeeHead                 = require('../src/modules/fees/models/FeeHead');
+  const FeeStructure            = require('../src/modules/fees/models/FeeStructure');
+  const StudentFee              = require('../src/modules/fees/models/StudentFee');
+  const Installment             = require('../src/modules/fees/models/Installment');
+  const LedgerEntry             = require('../src/modules/fees/models/LedgerEntry');
+  const Payment                 = require('../src/modules/fees/models/Payment');
+  const FeeSession              = require('../src/modules/fees/models/Session');
+  const BillingPeriod           = require('../src/modules/fees/models/BillingPeriod');
+  const AccountFee              = require('../src/modules/fees/models/AccountFee');
   const Exam                    = require('../src-old/models/Exam');
   const Marks                   = require('../src-old/models/MarksModel');
   const Attendance              = require('../src-old/models/attendance');
-  const Leave                   = require('../src-old/models/leave');
-  const Notice                  = require('../src-old/models/notice');
+  const Leave                   = require('../src/modules/communication').Leave;
+  const Notice                  = require('../src/modules/communication').Notice;
 
   console.log('\n🌱 Starting Master Seed...\n');
 
@@ -537,7 +537,7 @@ const seedMaster = async () => {
   // Maps studentProfileId → studentFee doc
   const studentFeeMap = {};
   try {
-    const { assignFeeToStudent } = require('../src-old/services/fee/studentFeeService');
+    const { assignFeeToStudent } = require('../src/modules/fees/services/studentFeeService');
     const assignments = [sp1, sp2, sp3, sp4, sp5, sp6];
     for (const sp of assignments) {
       // Idempotent check: skip if already assigned

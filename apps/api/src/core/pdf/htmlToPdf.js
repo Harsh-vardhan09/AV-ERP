@@ -16,8 +16,10 @@ class PDFService {
   // The only caller of TemplateParserService, and the only place _wrapInDocument
   // runs — wrapping twice nests a second <html> and breaks @page
   static async generateFromTemplate({ template, data, css = '', fileName, outputDir, options = {} }) {
-    // TEMP: moves to modules/reporting
-    const TemplateParserService = require('../../../src-old/services/templateParserService');
+    // The one sanctioned core -> module import. Rendering a template is the
+    // reportcards module's logic; core owns only the Puppeteer wrapper around it.
+    // Invert later by having reportcards pass the rendered HTML in.
+    const { TemplateParserService } = require('../../modules/reportcards');
     const startTime = Date.now();
 
     const renderResult = TemplateParserService.renderFinalHTML(template, data, css);

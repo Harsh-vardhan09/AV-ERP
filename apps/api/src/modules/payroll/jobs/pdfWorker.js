@@ -1,8 +1,8 @@
 const queue = require('./payrollQueue');
 const logger = require('../../../core/logging/logger');
 // TEMP: move with the rest of payroll
-const pdfService = require('../../../../src-old/services/payroll/pdfService');
-const Payslip = require('../../../../src-old/models/Payslip');
+const pdfService = require('../services/pdfService');
+const Payslip = require('../models/Payslip');
 
 queue.process('GENERATE_PDFS', async (job) => {
   const { schoolId, payrollId } = job.data;

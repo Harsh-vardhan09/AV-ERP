@@ -1,10 +1,10 @@
 const TeacherSubjectAssignment = require('../models/TeacherSubjectAssignment');
 const ClassTeacherAssignment = require('../models/ClassTeacherAssignment');
 const Attendance = require('../models/attendance');
-const Leave = require('../models/leave');
+const Leave = require('../../src/modules/communication').Leave;
 const Assignment = require('../models/assignment');
 const Assignmentupload = require('../models/uploadassignment');
-const Knowledgecenter = require('../models/knowledgecenter');
+const Knowledgecenter = require('../../src/modules/communication').Knowledgecenter;
 const Marks = require('../models/MarksModel');
 const MarksAuditLog = require('../models/MarksAuditLog');
 const StudentProfile = require('../models/StudentProfile');
@@ -13,8 +13,8 @@ const ExamSubjectConfig = require('../models/ExamSubjectConfig');
 const Exam = require('../models/Exam');
 const ClassModel = require('../models/ClassModel');
 const ClassSubjectMap = require('../models/ClassSubjectMap');
-const ReportTemplate = require('../models/ReportTemplate');
-const TemplateFieldExtractor = require('../services/templateFieldExtractor');
+const ReportTemplate = require('../../src/modules/reportcards').ReportTemplate;
+const TemplateFieldExtractor = require('../../src/modules/reportcards').TemplateFieldExtractor;
 const { refreshExamEvaluationStatus } = require('../services/marksReadinessService');
 const { User } = require('../../src/modules/identity');
 const mongoose = require('mongoose');
@@ -90,7 +90,7 @@ exports.getMyClassTeacherAssignment = async (req, res) => {
 // ATTENDANCE
 // ========================
 const SchoolSettings = require('../../src/modules/tenancy').SchoolSettings;
-// const Leave = require('../models/leave');
+// const Leave = require('../../src/modules/communication').Leave;
 
 // GET students for a class+section for taking attendance (any teacher)
 exports.getStudentsForAttendance = async (req, res) => {
@@ -2101,7 +2101,7 @@ exports.getTemplateForExam = async (req, res) => {
 
 // ─── Co-Scholastic Marks (Discipline / Activity) ──────────────────────────────
 const CoScholasticMark = require('../models/CoScholasticMark');
-const ReportCard       = require('../models/ReportCard');
+const ReportCard       = require('../../src/modules/reportcards').ReportCard;
 
 // const TEMPLATE_EXAM_TYPES = new Set(['annual', 'half_yearly', 'term1', 'term2', 'custom']);
 // const TEMPLATE_SYSTEM_KEYS = new Set([

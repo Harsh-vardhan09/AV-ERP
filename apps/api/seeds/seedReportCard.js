@@ -30,8 +30,8 @@ const main = async () => {
   const ClassSubjectMap          = require('../src-old/models/ClassSubjectMap');
   const ClassTeacherAssignment   = require('../src-old/models/ClassTeacherAssignment');
   const TeacherSubjectAssignment = require('../src-old/models/TeacherSubjectAssignment');
-  const ReportCard               = require('../src-old/models/ReportCard');
-  const ReportCardMark           = require('../src-old/models/ReportCardMark');
+  const ReportCard               = require('../src/modules/reportcards').ReportCard;
+  const ReportCardMark           = require('../src/modules/reportcards').ReportCardMark;
 
   console.log('\n🌱 Report Card Seed Starting...\n');
 

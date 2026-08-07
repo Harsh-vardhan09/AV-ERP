@@ -23,7 +23,7 @@ const PROMOTE = process.argv.includes('--promote');
   await mongoose.connect(uri);
   console.log(`\n🔀  ReportTemplate migration${DRY ? '  (DRY RUN — no writes)' : ''}\n`);
 
-  const ReportTemplate = require('../src-old/models/ReportTemplate');
+  const ReportTemplate = require('../src/modules/reportcards').ReportTemplate;
 
   // 1. Fold cssContent into htmlContent
   const needFold = await ReportTemplate.find({

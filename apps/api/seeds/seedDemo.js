@@ -18,7 +18,7 @@ const StudentProfile          = require('../src-old/models/StudentProfile');
 const Exam                    = require('../src-old/models/Exam');
 const ExamSubjectConfig       = require('../src-old/models/ExamSubjectConfig');
 const Marks                   = require('../src-old/models/MarksModel');
-const ReportTemplate          = require('../src-old/models/ReportTemplate');
+const ReportTemplate          = require('../src/modules/reportcards').ReportTemplate;
 
 const HASH = async (pw) => bcrypt.hash(pw, 10);
 const oid  = () => new mongoose.Types.ObjectId();

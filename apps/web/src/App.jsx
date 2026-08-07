@@ -48,13 +48,13 @@ const FacultyAttendance = lazy(() => import('./pages/FacultyAttendance'));
 // Teacher pages (new)
 const TeacherDashboardNew = lazy(() => import('./pages/teacher/TeacherDashboard'));
 const TakeAttendanceNew = lazy(() => import('./pages/teacher/TakeAttendance'));
-const TeacherLeave = lazy(() => import('./pages/teacher/TeacherLeave'));
-const StudentLeaveApproval = lazy(() => import('./pages/teacher/StudentLeaveApproval'));
+const TeacherLeave = lazy(() => import('./modules/communication/pages/TeacherLeave'));
+const StudentLeaveApproval = lazy(() => import('./modules/communication/pages/StudentLeaveApproval'));
 const UploadMarks = lazy(() => import('./pages/teacher/UploadMarks'));
 const TeacherTestCreate = lazy(() => import('./pages/teacher/TeacherTestCreate'));
 const TeacherAssignments = lazy(() => import('./pages/teacher/TeacherAssignments'));
-const TeacherKnowledgeCenter = lazy(() => import('./pages/teacher/TeacherKnowledgeCenter'));
-const AdminKnowledgeCenter = lazy(() => import('./pages/admin/AdminKnowledgeCenter'));
+const TeacherKnowledgeCenter = lazy(() => import('./modules/communication/pages/TeacherKnowledgeCenter'));
+const AdminKnowledgeCenter = lazy(() => import('./modules/communication/pages/AdminKnowledgeCenter'));
 const AdminStudentDirectory = lazy(() => import('./pages/admin/AdminStudentDirectory'));
 const AdminStudentDetail = lazy(() => import('./pages/admin/AdminStudentDetail'));
 const AdminTeacherDirectory = lazy(() => import('./pages/admin/AdminTeacherDirectory'));
@@ -70,7 +70,7 @@ const DroppedStudents = lazy(() => import('./pages/admin/students/DroppedStudent
 const SuspendedStudents = lazy(() => import('./pages/admin/students/SuspendedStudents'));
 const MigrationPromotion = lazy(() => import('./pages/admin/students/MigrationPromotion'));
 const EditStudentPage = lazy(() => import('./pages/admin/students/EditStudentPage'));
-const BulkImport = lazy(() => import('./pages/admin/BulkImport')); // 📥 Bulk Import
+const BulkImport = lazy(() => import('./modules/imports/pages/BulkImport'));
 // ── Teacher Management ──
 const AllTeachers = lazy(() => import('./pages/admin/teachers/AllTeachers'));
 const DeletedTeachers = lazy(() => import('./pages/admin/teachers/DeletedTeachers'));
@@ -79,13 +79,14 @@ const EditTeacherPage = lazy(() => import('./pages/admin/teachers/EditTeacherPag
 const StudentIdCard = lazy(() => import('./pages/admin/idCards/StudentIdCard'));
 const TeacherIdCard = lazy(() => import('./pages/admin/idCards/TeacherIdCard'));
 // ── Custom Forms module ──
-const AllForms = lazy(() => import('./pages/admin/customForms/AllForms'));
-const CreateForm = lazy(() => import('./pages/admin/customForms/CreateForm'));
-const EditForm = lazy(() => import('./pages/admin/customForms/EditForm'));
-const DeletedForms = lazy(() => import('./pages/admin/customForms/DeletedForms'));
-const FormLeads = lazy(() => import('./pages/admin/customForms/FormLeads'));
-const FeeModuleHub = lazy(() => import('./pages/fee/FeeModuleHub'));
-const PayrollModuleHub = lazy(() => import('./pages/PayrollModuleHub')); // 💰 Payroll Module
+const AllForms = lazy(() => import('./modules/admissions/pages/AllForms'));
+const CreateForm = lazy(() => import('./modules/admissions/pages/CreateForm'));
+const EditForm = lazy(() => import('./modules/admissions/pages/EditForm'));
+const DeletedForms = lazy(() => import('./modules/admissions/pages/DeletedForms'));
+const FormLeads = lazy(() => import('./modules/admissions/pages/FormLeads'));
+const FeeModuleHub = lazy(() => import('./modules/fees/pages/FeeModuleHub'));
+const PayrollModuleHub = lazy(() => import('./modules/payroll/PayrollModuleHub'));
+const MyPayslips = lazy(() => import('./modules/payroll/pages/MyPayslips'));
 const ReportCardManager = lazy(() => import('./pages/reportcard/ReportCardManager'));
 const ReportCardEditor = lazy(() => import('./pages/reportcard/ReportCardEditor'));
 // —— Dynamic Report Card System ——
@@ -101,11 +102,11 @@ const TemplateConfigPage = lazy(() => import('./modules/documents/pages/Template
 const NewDocumentForm = lazy(() => import('./modules/documents/pages/NewDocumentForm'));
 const CertificatePreview = lazy(() => import('./modules/documents/pages/CertificatePreview'));
 // ── Admission Forms module ──
-const PrintAdmissionForm = lazy(() => import('./pages/admin/admissionForms/PrintAdmissionForm'));
-const AdmissionFormSettings = lazy(() => import('./pages/admin/admissionForms/AdmissionFormSettings'));
-const PrintPreview = lazy(() => import('./pages/admin/admissionForms/PrintPreview'));
-const AdmissionTemplateManager = lazy(() => import('./pages/admin/admissionForms/AdmissionTemplateManager'));
-const AdmissionTemplatePreview = lazy(() => import('./pages/admin/admissionForms/AdmissionTemplatePreview'));
+const PrintAdmissionForm = lazy(() => import('./modules/admissions/pages/PrintAdmissionForm'));
+const AdmissionFormSettings = lazy(() => import('./modules/admissions/pages/AdmissionFormSettings'));
+const PrintPreview = lazy(() => import('./modules/admissions/pages/PrintPreview'));
+const AdmissionTemplateManager = lazy(() => import('./modules/admissions/pages/AdmissionTemplateManager'));
+const AdmissionTemplatePreview = lazy(() => import('./modules/admissions/pages/AdmissionTemplatePreview'));
 
 // ── Library Management System ──
 const LibraryDashboard  = lazy(() => import('./pages/library/LibraryDashboard'));
@@ -126,18 +127,18 @@ const ECAllExams        = lazy(() => import('./pages/examController/ECAllExams')
 // Student pages (new)
 const StudentDashboardNew = lazy(() => import('./pages/student/StudentDashboard'));
 const StudentAttendanceNew = lazy(() => import('./pages/student/StudentAttendance'));
-const StudentLeave = lazy(() => import('./pages/student/StudentLeave'));
+const StudentLeave = lazy(() => import('./modules/communication/pages/StudentLeave'));
 const StudentMarks = lazy(() => import('./pages/student/StudentMarks'));
-const StudentFees = lazy(() => import('./pages/student/StudentFees'));
+const StudentFees = lazy(() => import('./modules/fees/pages/StudentFees'));
 
 // Admission pages
-const AdmissionDashboard = lazy(() => import('./pages/admission/AdmissionDashboard'));
-const RegisterStudent = lazy(() => import('./pages/admission/RegisterStudent'));
-const RegisterTeacher = lazy(() => import('./pages/admission/RegisterTeacher'));
-const StudentListPage = lazy(() => import('./pages/admission/StudentList'));
-const TeacherListPage = lazy(() => import('./pages/admission/TeacherList'));
-const AdmissionStudentDetail = lazy(() => import('./pages/admission/AdmissionStudentDetail'));
-const AdmissionTeacherDetail = lazy(() => import('./pages/admission/AdmissionTeacherDetail'));
+const AdmissionDashboard = lazy(() => import('./modules/admissions/pages/AdmissionDashboard'));
+const RegisterStudent = lazy(() => import('./modules/admissions/pages/RegisterStudent'));
+const RegisterTeacher = lazy(() => import('./modules/admissions/pages/RegisterTeacher'));
+const StudentListPage = lazy(() => import('./modules/admissions/pages/StudentList'));
+const TeacherListPage = lazy(() => import('./modules/admissions/pages/TeacherList'));
+const AdmissionStudentDetail = lazy(() => import('./modules/admissions/pages/AdmissionStudentDetail'));
+const AdmissionTeacherDetail = lazy(() => import('./modules/admissions/pages/AdmissionTeacherDetail'));
 
 // ===== EXISTING: Lazy loaded components =====
 const HomePage = lazy(() => import('./pages/Homepage'));
@@ -150,9 +151,9 @@ const ForcePasswordChange = lazy(() => import('./pages/ForcePasswordChange'));
 const TimeTable = lazy(() => import('./pages/timetable'));
 const TeacherAssign = lazy(() => import('./pages/TeacherAssign'));
 const UploadedFiles = lazy(() => import('./pages/UploadedFiles'));
-const Eventpage = lazy(() => import('./pages/Eventpage'));
+const Eventpage = lazy(() => import('./modules/communication/pages/Eventpage'));
 const Teachersassignment = lazy(() => import('./pages/teachersassignment'));
-const KnowlegedgeCenter = lazy(() => import('./pages/Knowledgecenter'));
+const KnowlegedgeCenter = lazy(() => import('./modules/communication/pages/Knowledgecenter'));
 const AttendanceApp = lazy(() => import('./pages/Signal'));
 const Roadmap = lazy(() => import('./pages/Roadmap'));
 const Roadmapshow = lazy(() => import('./pages/Roadmapshow'));
@@ -592,8 +593,9 @@ function App() {
               <Route path="report-cards" element={<TemplateReportCard />} />
               <Route path="report-cards/:studentId" element={<ReportCardEditor />} />
               <Route path="template-report-cards" element={<Navigate to="/teacher/report-cards" replace />} />
-              {/* 💰 Payroll — teacher self-service: view own payslips */}
-              <Route path="payroll/my-payslips" element={<PayrollModuleHub />} />
+              {/* 💰 Payroll — teacher self-service, this one page only. Deliberately
+                  NOT the hub: payroll/* would expose every admin payroll screen here */}
+              <Route path="payroll/my-payslips" element={<MyPayslips />} />
               <Route path="oases/*" element={
                 <OasesEnabledRoute redirectTo="/teacher/dashboard">
                   <OasesModuleHub />

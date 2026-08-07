@@ -5,12 +5,12 @@ const mongoose = require('mongoose');
 
 const connect = require('../src/core/config/database.js');
 const Exam = require('../src-old/models/Exam');
-const ExamConfig = require('../src-old/models/oases/ExamConfig');
-const AnswerSheet = require('../src-old/models/oases/AnswerSheet');
-const EvaluatorAssignment = require('../src-old/models/oases/EvaluatorAssignment');
-const EvaluationMark = require('../src-old/models/oases/EvaluationMark');
-const QuestionScheme = require('../src-old/models/oases/QuestionScheme');
-const ResultSheet = require('../src-old/models/oases/ResultSheet');
+const ExamConfig = require('../src/modules/oases/models/ExamConfig');
+const AnswerSheet = require('../src/modules/oases/models/AnswerSheet');
+const EvaluatorAssignment = require('../src/modules/oases/models/EvaluatorAssignment');
+const EvaluationMark = require('../src/modules/oases/models/EvaluationMark');
+const QuestionScheme = require('../src/modules/oases/models/QuestionScheme');
+const ResultSheet = require('../src/modules/oases/models/ResultSheet');
 const AcademicSession = require('../src-old/models/AcademicSession');
 const ClassModel = require('../src-old/models/ClassModel');
 

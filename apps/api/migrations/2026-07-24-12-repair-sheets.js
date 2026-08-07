@@ -7,8 +7,8 @@ async function main() {
   await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI);
   console.log('Connected to MongoDB.');
 
-  const { processAnswerSheet } = require('../src-old/services/oases/pdfService');
-  const AnswerSheet = require('../src-old/models/oases/AnswerSheet');
+  const { processAnswerSheet } = require('../src/modules/oases/services/pdfService');
+  const AnswerSheet = require('../src/modules/oases/models/AnswerSheet');
 
   const sheets = await AnswerSheet.find({
     $or: [

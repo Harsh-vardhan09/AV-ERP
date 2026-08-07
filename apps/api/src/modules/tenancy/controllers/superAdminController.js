@@ -892,8 +892,8 @@ exports.createStaffForSchool = async (req, res, next) => {
  */
 exports.uploadTemplateForSchool = async (req, res, next) => {
   try {
-    const ReportTemplate = require('../../../../src-old/models/ReportTemplate');
-    const TemplateFieldExtractor = require('../../../../src-old/services/templateFieldExtractor');
+    const ReportTemplate = require('../../reportcards').ReportTemplate;
+    const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
 
     const { id: schoolId } = req.params;
 
@@ -1021,7 +1021,7 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
  */
 exports.getSchoolTemplates = async (req, res, next) => {
   try {
-    const ReportTemplate = require('../../../../src-old/models/ReportTemplate');
+    const ReportTemplate = require('../../reportcards').ReportTemplate;
 
     const { id: schoolId } = req.params;
     const { templateType, isActive, page = 1, limit = 20 } = req.query;
@@ -1076,7 +1076,7 @@ exports.getSchoolTemplates = async (req, res, next) => {
  */
 exports.deleteSchoolTemplate = async (req, res, next) => {
   try {
-    const ReportTemplate = require('../../../../src-old/models/ReportTemplate');
+    const ReportTemplate = require('../../reportcards').ReportTemplate;
 
     const { id: schoolId, templateId } = req.params;
 
@@ -1113,7 +1113,7 @@ exports.deleteSchoolTemplate = async (req, res, next) => {
  */
 exports.updateSchoolTemplate = async (req, res, next) => {
   try {
-    const ReportTemplate = require('../../../../src-old/models/ReportTemplate');
+    const ReportTemplate = require('../../reportcards').ReportTemplate;
 
     const { id: schoolId, templateId } = req.params;
 
@@ -1193,8 +1193,8 @@ exports.updateSchoolTemplate = async (req, res, next) => {
  */
 exports.uploadAdmissionTemplateForSchool = async (req, res, next) => {
   try {
-    const AdmissionTemplate      = require('../../../../src-old/models/AdmissionTemplate');
-    const TemplateFieldExtractor = require('../../../../src-old/services/templateFieldExtractor');
+    const AdmissionTemplate      = require('../../admissions').AdmissionTemplate;
+    const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
 
     const { id: schoolId } = req.params;
 
@@ -1250,7 +1250,7 @@ exports.uploadAdmissionTemplateForSchool = async (req, res, next) => {
 
     // Sync activeTemplateId when template is uploaded as default
     if (isDefault) {
-      const AdmissionFormSettings = require('../../../../src-old/models/AdmissionFormSettings');
+      const AdmissionFormSettings = require('../../admissions').AdmissionFormSettings;
       await AdmissionFormSettings.findOneAndUpdate(
         { schoolId },
         { $set: { activeTemplateId: template._id } },
@@ -1283,7 +1283,7 @@ exports.uploadAdmissionTemplateForSchool = async (req, res, next) => {
  */
 exports.getSchoolAdmissionTemplates = async (req, res, next) => {
   try {
-    const AdmissionTemplate = require('../../../../src-old/models/AdmissionTemplate');
+    const AdmissionTemplate = require('../../admissions').AdmissionTemplate;
 
     const { id: schoolId } = req.params;
     const { isActive, page = 1, limit = 20 } = req.query;
@@ -1328,7 +1328,7 @@ exports.getSchoolAdmissionTemplates = async (req, res, next) => {
  */
 exports.deleteSchoolAdmissionTemplate = async (req, res, next) => {
   try {
-    const AdmissionTemplate = require('../../../../src-old/models/AdmissionTemplate');
+    const AdmissionTemplate = require('../../admissions').AdmissionTemplate;
 
     const { id: schoolId, templateId } = req.params;
 
@@ -1362,7 +1362,7 @@ exports.deleteSchoolAdmissionTemplate = async (req, res, next) => {
  */
 exports.updateSchoolAdmissionTemplate = async (req, res, next) => {
   try {
-    const AdmissionTemplate = require('../../../../src-old/models/AdmissionTemplate');
+    const AdmissionTemplate = require('../../admissions').AdmissionTemplate;
 
     const { id: schoolId, templateId } = req.params;
 
@@ -1389,7 +1389,7 @@ exports.updateSchoolAdmissionTemplate = async (req, res, next) => {
     // When a template is marked default by Super Admin, persist to the
     // AdmissionFormSettings so the PDF generation pipeline resolves it automatically.
     if (req.body.isDefault === true) {
-      const AdmissionFormSettings = require('../../../../src-old/models/AdmissionFormSettings');
+      const AdmissionFormSettings = require('../../admissions').AdmissionFormSettings;
       await AdmissionFormSettings.findOneAndUpdate(
         { schoolId },
         { $set: { activeTemplateId: templateId } },
@@ -1415,10 +1415,10 @@ exports.updateSchoolAdmissionTemplate = async (req, res, next) => {
 
 exports.getTemplateFields = async (req, res, next) => {
   try {
-    const ReportTemplate      = require('../../../../src-old/models/ReportTemplate');
+    const ReportTemplate      = require('../../reportcards').ReportTemplate;
     const ExamSubjectConfig   = require('../../../../src-old/models/ExamSubjectConfig');
     const Exam                = require('../../../../src-old/models/Exam');
-    const TemplateFieldExtractor = require('../../../../src-old/services/templateFieldExtractor');
+    const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
 
     const { templateId } = req.params;
     const { examId, classId } = req.query;

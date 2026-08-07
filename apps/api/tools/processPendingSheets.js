@@ -1,8 +1,8 @@
 // Processes pending/failed answer sheets directly, bypassing the Bull queue
 require('dotenv').config();
 const mongoose       = require('mongoose');
-const AnswerSheet    = require('../src-old/models/oases/AnswerSheet');
-const { processAnswerSheet } = require('../src-old/services/oases/pdfService');
+const AnswerSheet    = require('../src/modules/oases/models/AnswerSheet');
+const { processAnswerSheet } = require('../src/modules/oases/services/pdfService');
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || process.env.DB_URL;
 

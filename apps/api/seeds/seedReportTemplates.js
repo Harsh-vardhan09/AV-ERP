@@ -7,8 +7,8 @@ const path     = require('path');
 const mongoose = require('mongoose');
 const connect  = require('../src/core/config/database');
 
-const TEMPLATE_DIR = path.join(__dirname, '..', 'src', 'templates');
-const SCHEMAS      = require('../src-old/templates/schemas');
+const TEMPLATE_DIR = path.join(__dirname, '..', 'src', 'modules', 'reportcards', 'templates');
+const SCHEMAS      = require('../src/modules/reportcards').templateSchemas;
 
 const TEMPLATES = [
   {
@@ -40,7 +40,7 @@ const TEMPLATES = [
 const seed = async () => {
   await connect();
 
-  const ReportTemplate = require('../src-old/models/ReportTemplate');
+  const ReportTemplate = require('../src/modules/reportcards').ReportTemplate;
 
   console.log('\n🌱  Seeding bundled report card templates\n');
 

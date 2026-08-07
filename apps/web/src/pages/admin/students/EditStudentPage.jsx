@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import EditStudent from '../../admission/EditStudent';
+import EditStudent from '../../../modules/admissions/pages/EditStudent';
 
 const EditStudentPage = () => {
   const { id } = useParams();

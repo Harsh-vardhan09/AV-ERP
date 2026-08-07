@@ -2,16 +2,16 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const ExamConfig          = require('../src-old/models/oases/ExamConfig');
-const AnswerSheet         = require('../src-old/models/oases/AnswerSheet');
-const EvaluatorAssignment = require('../src-old/models/oases/EvaluatorAssignment');
+const ExamConfig          = require('../src/modules/oases/models/ExamConfig');
+const AnswerSheet         = require('../src/modules/oases/models/AnswerSheet');
+const EvaluatorAssignment = require('../src/modules/oases/models/EvaluatorAssignment');
 const { User }            = require('../src/modules/identity');
 
 const {
   SHEET_STATUS,
   PROCESSING_STATUS,
   EVAL_ROUNDS,
-} = require('../src-old/utils/oasesConstants');
+} = require('../src/modules/oases/lib/constants');
 
 // Helper: random int
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;

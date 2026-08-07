@@ -1,6 +1,6 @@
 // const express=require("express");
 const EVENTRepo=require("../repository/event-repo");
-const STUDENT=require("../repository/student-repo");
+const STUDENT=require("../../src/modules/communication").studentRepo;
 const FACULTY=require("../repository/faculty-repo");
 const IMAGE=require("../repository/image-repo");
 // const cors = require('cors');

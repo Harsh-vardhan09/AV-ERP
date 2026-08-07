@@ -5,8 +5,8 @@
  * Supports both traditional FA/SA slots and dynamic exam marks.
  */
 
-const ReportCardMark = require('../models/ReportCardMark');
-const ReportCard = require('../models/ReportCard');
+const ReportCardMark = require('../../src/modules/reportcards').ReportCardMark;
+const ReportCard = require('../../src/modules/reportcards').ReportCard;
 const StudentProfile = require('../models/StudentProfile');
 const Exam = require('../models/Exam');
 

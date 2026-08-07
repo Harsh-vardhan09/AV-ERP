@@ -54,8 +54,8 @@ const seed = async () => {
   const Exam                     = require('../src-old/models/Exam');
   const ExamSubjectConfig        = require('../src-old/models/ExamSubjectConfig');
   const Marks                    = require('../src-old/models/MarksModel');
-  const ReportCard               = require('../src-old/models/ReportCard');
-  const ReportCardMark           = require('../src-old/models/ReportCardMark');
+  const ReportCard               = require('../src/modules/reportcards').ReportCard;
+  const ReportCardMark           = require('../src/modules/reportcards').ReportCardMark;
   const CoScholasticMark         = require('../src-old/models/CoScholasticMark');
 
   console.log('\n🌱  Report Card Full Seed (v2) — starting...\n');

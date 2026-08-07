@@ -15,7 +15,7 @@ import ComplainsReducer from "./features/complainSlice";
 import formReducer from '../redux/reducers/FormSlice';
 import eventsReducer from "../redux/reducers/EventSlice";
 import { chatapi } from './api/chat';
-import { feeApi } from './api/feeApi';
+import { feeApi } from '../modules/fees/api/feeApi';
 import { reportCardApi } from './api/reportCardApi';
 import { documentApi } from '../modules/documents/api/documentApi';
 import { documentTemplateApi } from '../modules/documents/api/documentTemplateApi';
@@ -45,7 +45,7 @@ import { libraryApi } from './api/libraryApi';
 // —— Admission Template System ——
 import { admissionTemplateApi } from './api/admissionTemplateApi';
 import { admissionRefApi } from './api/admissionApi';
-import { payrollApi }           from './api/payrollApi'; // 💰 Payroll Module
+import { payrollApi }           from '../modules/payroll/api/payrollApi'; // 💰 Payroll Module
 // —— Exam Controller Module ——
 import { examControllerApi }    from './api/examControllerApi'; // 🎓 Exam Controller RBAC
 

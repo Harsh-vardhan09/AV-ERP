@@ -1,7 +1,7 @@
 import React from 'react';
 import { Drawer, Table, Tag, Button, Typography, Skeleton, Empty } from 'antd';
 import { DownloadOutlined, MailOutlined } from '@ant-design/icons';
-import { useGetPayslipsQuery, useResendPayslipMutation } from '../../redux/api/payrollApi';
+import { useGetPayslipsQuery, useResendPayslipMutation } from '../../modules/payroll/api/payrollApi';
 import { formatINR, getStatusColor, getStatusLabel } from '../../utils/payrollFormatters';
 import toast from 'react-hot-toast';
 

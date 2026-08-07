@@ -12,7 +12,7 @@ const MarksAuditLog = require('../models/MarksAuditLog');
 const StudentProfile = require('../models/StudentProfile');
 const TeacherProfile = require('../models/TeacherProfile');
 const { User } = require('../../src/modules/identity');
-const Leave = require('../models/leave');
+const Leave = require('../../src/modules/communication').Leave;
 const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
@@ -1503,7 +1503,7 @@ exports.getDashboardAnalytics = async (req, res) => {
   try {
     const sid         = req.schoolId;
     const Attendance  = require('../models/attendance');
-    const { FeeReceipt } = require('../models/fee/FeeReceipt');
+    const { FeeReceipt } = require('../../src/modules/fees');
     const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const DAY_NAMES    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const now          = new Date();
@@ -1593,7 +1593,7 @@ exports.getDashboardAnalytics = async (req, res) => {
     };
 
     // ─── 5. Fees Snapshot ────────────────────────────────────────────────
-    const StudentFee = require('../models/fee/StudentFee');
+    const StudentFee = require('../../src/modules/fees').StudentFee;
     const [recentPayments, defaultersCount, classWisePending] = await Promise.all([
       FeeReceipt.find({ schoolId: sid }).sort({ createdAt: -1 }).limit(5)
         .populate({ path: 'studentId', select: 'firstName lastName classId', populate: { path: 'classId', select: 'name' } })
@@ -1638,7 +1638,7 @@ exports.getDashboardAnalytics = async (req, res) => {
 // ========================
 // KNOWLEDGE CENTER (ADMIN)
 // ========================
-const Knowledgecenter = require('../models/knowledgecenter');
+const Knowledgecenter = require('../../src/modules/communication').Knowledgecenter;
 
 exports.getKnowledgeCenterMaterials = async (req, res, next) => {
   try {
@@ -1985,7 +1985,7 @@ exports.getAllSubjectsAdmin = async (req, res) => {
  * Links (or clears) a report template for a specific exam.
  * After this change, the teacher upload form will use this template's fields.
  */
-const ReportTemplate = require('../models/ReportTemplate');
+const ReportTemplate = require('../../src/modules/reportcards').ReportTemplate;
 const mongoose = require('mongoose');
 
 exports.linkTemplateToExam = async (req, res) => {

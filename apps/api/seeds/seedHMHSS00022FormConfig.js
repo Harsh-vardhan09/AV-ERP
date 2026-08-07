@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 // Models
 const School = require('../src/modules/tenancy').School;
-const AdmissionFormSettings = require('../src-old/models/AdmissionFormSettings');
+const AdmissionFormSettings = require('../src/modules/admissions').AdmissionFormSettings;
 
 // Field config — exact order from screenshot
 // type values: 'text' | 'date' | 'radio' | 'checkbox' | 'select' | 'class'

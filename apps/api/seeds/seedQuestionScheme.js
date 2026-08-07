@@ -1,8 +1,8 @@
 // A test question scheme for the existing exam config
 require('dotenv').config();
 const mongoose       = require('mongoose');
-const ExamConfig     = require('../src-old/models/oases/ExamConfig');
-const QuestionScheme = require('../src-old/models/oases/QuestionScheme');
+const ExamConfig     = require('../src/modules/oases/models/ExamConfig');
+const QuestionScheme = require('../src/modules/oases/models/QuestionScheme');
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || process.env.DB_URL;
 

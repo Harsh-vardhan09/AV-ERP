@@ -4,7 +4,7 @@ const { varifyToken } = require('../../src/core/security/authenticate.js');
 const { schoolIsolation } = require('../../src/core/security/tenantScope.js');
 const { authorize } = require('../../src/core/security/roleMiddleware.js');
 const ctrl = require('../controller/studentManagementController');
-const admissionCtrl = require('../controller/admissionController');
+const admissionCtrl = require('../../src/modules/admissions').admissionController;
 const { uploadPhoto } = require('../../src/core/http/upload.disk.js');
 
 // All routes: admin only

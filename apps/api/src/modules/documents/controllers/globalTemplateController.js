@@ -2,9 +2,9 @@
 // absent. Writes { isGlobal:true, schoolId:null } — one HTML doc, inline CSS, no cssContent
 
 // TEMP: ReportTemplate + template services move to modules/reporting
-const ReportTemplate         = require('../../../../src-old/models/ReportTemplate');
-const TemplateFieldExtractor = require('../../../../src-old/services/templateFieldExtractor');
-const TemplateParserService  = require('../../../../src-old/services/templateParserService');
+const ReportTemplate         = require('../../reportcards').ReportTemplate;
+const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
+const TemplateParserService  = require('../../reportcards').TemplateParserService;
 const logger                 = require('../../../core/logging/logger');
 
 // Anything else in the body is ignored

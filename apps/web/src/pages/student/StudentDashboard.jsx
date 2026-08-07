@@ -51,7 +51,7 @@ import {
   FaBookmark,
   FaExclamationCircle
 } from 'react-icons/fa';
-import { useGetStudentFeeSummaryQuery } from '../../redux/api/feeApi';
+import { useGetStudentFeeSummaryQuery } from '../../modules/fees/api/feeApi';
 import { useGetReportCardExamsQuery } from '../../redux/api/reportCardApi';
 import LibraryReminder from '../../components/library/LibraryReminder';
 

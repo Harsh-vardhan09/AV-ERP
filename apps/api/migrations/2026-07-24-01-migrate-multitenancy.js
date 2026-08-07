@@ -25,12 +25,12 @@ async function main() {
   require('../src-old/models/StudentProfile');
   require('../src-old/models/TeacherProfile');
   require('../src/modules/tenancy').SchoolSettings;
-  require('../src-old/models/leave');
-  require('../src-old/models/fee/FeeHead');
-  require('../src-old/models/fee/FeeStructure');
-  require('../src-old/models/fee/StudentFee');
-  require('../src-old/models/fee/Installment');
-  require('../src-old/models/fee/LedgerEntry');
+  require('../src/modules/communication').Leave;
+  require('../src/modules/fees/models/FeeHead');
+  require('../src/modules/fees/models/FeeStructure');
+  require('../src/modules/fees/models/StudentFee');
+  require('../src/modules/fees/models/Installment');
+  require('../src/modules/fees/models/LedgerEntry');
 
   const School = mongoose.model('School');
   const User = mongoose.model('User');

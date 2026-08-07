@@ -15,6 +15,6 @@ module.exports = {
   // SuperAdmin — consumer: core/security/superAdminAuth
   get SuperAdmin() { return require('./models/SuperAdmin'); },
 
-  // superAdminController — consumer: src-old/routes/reportTemplateRoutes
+  // superAdminController — consumer: modules/reportcards/routes/reportTemplateRoutes
   get superAdminController() { return require('./controllers/superAdminController'); },
 };

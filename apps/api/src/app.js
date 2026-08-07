@@ -65,21 +65,35 @@ app.use('/api/v1/user', authLimiter, require('./modules/identity/module').routes
 app.use('/api/v1/admin', apiLimiter, require('../src-old/routes/adminRoutes'));
 app.use('/api/v1/teacher', apiLimiter, require('../src-old/routes/teacherRoutes'));
 app.use('/api/v1/student', apiLimiter, require('../src-old/routes/studentRoutes'));
-app.use('/api/v1/admission', apiLimiter, require('../src-old/routes/admissionRoutes'));
+const admissions = require('./modules/admissions/module');
+app.use(admissions.basePath, apiLimiter, admissions.routes);
 app.use('/api/v1/exam-controller', apiLimiter, require('../src-old/routes/examControllerRoutes'));
-app.use('/api/v1/report-card', apiLimiter, require('../src-old/routes/reportCardRoutes'));
+const reportcards = require('./modules/reportcards/module');
+app.use(reportcards.basePath, apiLimiter, reportcards.routes);
 app.use('/api/v1/documents', apiLimiter, require('./modules/documents/module').routes);
 
 app.use('/api/v1/assignment', apiLimiter, require('../src-old/routes/assignment'));
-app.use('/api/v1/knowledgecenter', apiLimiter, require('../src-old/routes/knowledgecenter'));
-app.use('/api/v1/chat', apiLimiter, require('../src-old/routes/chatroutes'));
-app.use('/api/v1', apiLimiter, require('../src-old/routes/complainBoxRoute'));
-app.use('/notice', apiLimiter, require('../src-old/routes/noticeRoutes'));
+// /api/v1/knowledgecenter, /api/v1/chat, the bare /api/v1 (complaint box) and /notice,
+// in that order. The bare /api/v1 mount carries a router-level varifyToken and so
+// answers 401 for every unauthenticated /api/v1/* request that reaches it — the two
+// mounts above it stay above it, and everything below stays below.
+// Nothing is mounted at communication.basePath; see modules/communication/routes/index.js
+const communication = require('./modules/communication/module');
+mountExtras(communication);
 app.use('/events', apiLimiter, require('../src-old/routes/eventRoutes'));
-app.use('/application', apiLimiter, require('../src-old/routes/applicationRoutes'));
+// /application, /api/v1/custom-forms and /api/v1/admission-templates. Must stay
+// BELOW complainBoxRoute: it mounts on the bare /api/v1 with a router-level
+// varifyToken, and moving these above it would silently un-shadow the public
+// POST /api/v1/custom-forms/:token/submit, which answers 401 today
+mountExtras(admissions);
 
-app.use('/api/v1/fee', require('../src-old/routes/feeRoutes'));
-app.use('/api/v1/oases', require('../src-old/routes/oases'));
+// No apiLimiter: this mount never had one, and razorpay/webhook is called by
+// Razorpay's infrastructure, not per-user
+const fees = require('./modules/fees/module');
+app.use(fees.basePath, fees.routes);
+// No apiLimiter: the module applies its own generalOasesLimiter inside routes/index.js
+const oases = require('./modules/oases/module');
+app.use(oases.basePath, oases.routes);
 
 // Tenancy — three mounts, three auth models. /api/platform stays unlimited and
 // /api/super-admin keeps apiLimiter, exactly as before the move
@@ -92,14 +106,15 @@ app.use(notifications.basePath, apiLimiter, notifications.routes);
 mountExtras(notifications);
 app.use('/api/v1/student-management', apiLimiter, require('../src-old/routes/studentManagementRoutes'));
 app.use('/api/v1/teacher-management', apiLimiter, require('../src-old/routes/teacherManagementRoutes'));
-app.use('/api/v1/custom-forms', apiLimiter, require('../src-old/routes/customFormRoutes'));
 app.use(tenancy.basePath, apiLimiter, tenancy.routes);
 
 // Payroll — varifyToken applied here, not inside the router
-app.use('/api/v1/payroll', apiLimiter, varifyToken, require('../src-old/routes/payroll/payrollRoutes'));
+const payroll = require('./modules/payroll/module');
+app.use(payroll.basePath, apiLimiter, varifyToken, payroll.routes);
 
 // Bulk import — auth is embedded inside importRoutes
-app.use('/api/v1/import', apiLimiter, require('../src-old/import-system/routes/importRoutes'));
+const imports = require('./modules/imports/module');
+app.use(imports.basePath, apiLimiter, imports.routes);
 
 // Biometric — /fingerprint is JWT-protected, /device is token-based (MORX hardware).
 // Neither mount was rate-limited before the move: apiLimiter here would throttle
@@ -108,9 +123,9 @@ const biometric = require('./modules/biometric/module');
 app.use(biometric.basePath, biometric.routes);
 mountExtras(biometric);
 
-app.use('/api/v1/dynamic-reports', apiLimiter, require('../src-old/routes/dynamicReportRoutes'));
-app.use('/api/v1/report-templates', apiLimiter, require('../src-old/routes/reportTemplateRoutes'));
-app.use('/api/v1/admission-templates', apiLimiter, require('../src-old/routes/admissionTemplateRoutes'));
+// /api/v1/dynamic-reports and /api/v1/report-templates — kept at this position,
+// after the basePath mount at the top of the block
+mountExtras(reportcards);
 app.use('/api/v1/library', apiLimiter, require('./modules/library/module').routes);
 
 app.use(errorMiddleware);

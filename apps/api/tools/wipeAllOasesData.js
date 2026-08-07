@@ -12,14 +12,14 @@ const fs       = require('fs');
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || process.env.DB_URL;
 
 // Load all OASES models
-const AnswerSheet        = require('../src-old/models/oases/AnswerSheet');
-const AuditLog           = require('../src-old/models/oases/AuditLog');
-const EvaluationMark     = require('../src-old/models/oases/EvaluationMark');
-const EvaluatorAssignment= require('../src-old/models/oases/EvaluatorAssignment');
-const ExamConfig         = require('../src-old/models/oases/ExamConfig');
-const OasesNotification  = require('../src-old/models/oases/OasesNotification');
-const QuestionScheme     = require('../src-old/models/oases/QuestionScheme');
-const ResultSheet        = require('../src-old/models/oases/ResultSheet');
+const AnswerSheet        = require('../src/modules/oases/models/AnswerSheet');
+const AuditLog           = require('../src/modules/oases/models/AuditLog');
+const EvaluationMark     = require('../src/modules/oases/models/EvaluationMark');
+const EvaluatorAssignment= require('../src/modules/oases/models/EvaluatorAssignment');
+const ExamConfig         = require('../src/modules/oases/models/ExamConfig');
+const OasesNotification  = require('../src/modules/oases/models/Notification');
+const QuestionScheme     = require('../src/modules/oases/models/QuestionScheme');
+const ResultSheet        = require('../src/modules/oases/models/ResultSheet');
 const { User }           = require('../src/modules/identity');
 
 (async () => {

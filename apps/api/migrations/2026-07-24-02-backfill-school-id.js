@@ -26,10 +26,10 @@ if (!mongoose.Types.ObjectId.isValid(schoolId)) {
 // Collection → Model mapping
 // Add models here as needed
 const MODEL_MAP = {
-  sessions:         () => require('../src-old/models/fee/Session'),
-  billingperiods:   () => require('../src-old/models/fee/BillingPeriod'),
+  sessions:         () => require('../src/modules/fees/models/Session'),
+  billingperiods:   () => require('../src/modules/fees/models/BillingPeriod'),
   assignments:      () => require('../src-old/models/assignment'),
-  knowledgecenters: () => require('../src-old/models/knowledgecenter'),
+  knowledgecenters: () => require('../src/modules/communication').Knowledgecenter,
 };
 
 const loaderFn = MODEL_MAP[collectionName.toLowerCase()];
