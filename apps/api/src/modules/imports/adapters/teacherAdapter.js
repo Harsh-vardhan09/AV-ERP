@@ -16,7 +16,7 @@ const logger = require('../../../core/logging/logger.js');
 
 const getModels = () => ({
   User:           require('../../identity').User,
-  TeacherProfile: require('../../../../src/modules/people/models/TeacherProfile'),
+  TeacherProfile: require('../../people').TeacherProfile,
   SchoolSettings: require('../../tenancy').SchoolSettings,
 });
 

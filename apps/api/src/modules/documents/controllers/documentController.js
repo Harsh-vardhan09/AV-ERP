@@ -6,7 +6,7 @@ const https = require('https');
 const PDFDocument = require('pdfkit');
 const SchoolCertificate = require('../models/SchoolCertificate');
 // TEMP: StudentProfile/School move to modules/people, templateEngine to modules/academics
-const StudentProfile    = require('../../../../src/modules/people/models/StudentProfile');
+const StudentProfile    = require('../../people').StudentProfile;
 const School            = require('../../tenancy').School;
 const DocumentTemplate  = require('../models/DocumentTemplate');
 const { buildStudentData } = require('../../reportcards').templateEngine;

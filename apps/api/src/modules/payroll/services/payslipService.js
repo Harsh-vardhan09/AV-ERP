@@ -105,7 +105,7 @@ const getById = async (schoolId, payslipId, user) => {
 
   // Teacher can only view their own payslips
   if (user.role === 'teacher') {
-    const TeacherProfile = require('../../../../src/modules/people/models/TeacherProfile');
+    const TeacherProfile = require('../../people').TeacherProfile;
     const teacherProfile = await TeacherProfile.findOne({ userId: user._id, schoolId }).lean();
     
     const payslipUserId = payslip.userId?._id || payslip.userId;

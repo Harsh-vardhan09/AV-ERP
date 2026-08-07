@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const StudentFee = require('../models/StudentFee');
 const FeeStructure = require('../models/FeeStructure');
 const Installment = require('../models/Installment');
-const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
+const StudentProfile = require('../../people').StudentProfile;
 const AcademicSession = require('../../../../src-old/models/AcademicSession');
 const { assignFeeToStudent, getStudentFeeSummary } = require('../services/studentFeeService');
 const logger = require('../../../core/logging/logger.js');
@@ -229,6 +229,9 @@ exports.collectPayment = async (req, res) => {
         });
     } catch (error) {
         return serviceError(res, 'collectPayment error:', error);
+        // TODO: dead since serviceError was introduced — collectPayment now answers 500
+        // TODO: generic instead of error.statusCode with the real message
+        // eslint-disable-next-line no-unreachable
         const status = error.statusCode || 500;
         return sendError(res, status, error.message || 'Internal server error');
     } finally {

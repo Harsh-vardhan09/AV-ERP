@@ -39,6 +39,9 @@ exports.createFeeHead = async (req, res) => {
         if (error.name === 'ValidationError') {
             const message = Object.values(error.errors).map(e => e.message).join(', ');
             return serviceError(res, 'createFeeHead validation error', { message, schoolId: req.schoolId });
+            // TODO: dead since serviceError was introduced — a ValidationError now answers
+            // TODO: 500 generic instead of 400 with the field message. Response shape changed
+            // eslint-disable-next-line no-unreachable
             return sendError(res, 400, message);
         }
         logger.error('createFeeHead error', { error: error.message, stack: error.stack, schoolId: req.schoolId });

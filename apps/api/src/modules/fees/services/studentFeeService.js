@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
+const StudentProfile = require('../../people').StudentProfile;
 const FeeStructure = require('../models/FeeStructure');
 const StudentFee = require('../models/StudentFee');
 const Installment = require('../models/Installment');

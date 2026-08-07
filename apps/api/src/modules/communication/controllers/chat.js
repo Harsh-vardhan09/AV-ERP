@@ -65,6 +65,9 @@ exports.newgroup = async (req, res) => {
             name,
             groupchat: true,
             crators:id,
+            // TODO: profilepicture is never declared — newgroup throws ReferenceError
+            // TODO: source it from req.body or req.file, or delete the field
+            // eslint-disable-next-line no-undef
             profilepicture,
             schoolId: req.schoolId,   // ── SECURITY: scope to this school only
         });

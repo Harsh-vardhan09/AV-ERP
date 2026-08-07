@@ -3,7 +3,7 @@ const FacultyDeviceMapping = require('../models/FacultyDeviceMapping');
 const DeviceRegistration = require('../models/fingerprint');
 const logger = require('../../../core/logging/logger');
 
-const FacultyAttendance = require('../../../../src/modules/attendance/models/FacultyAttendance');
+const FacultyAttendance = require('../../attendance').FacultyAttendance;
 
 punchQueue.process('process-punch', async (job) => {
   const { schoolId, deviceId, deviceUserId, punchTime, rawPayload } = job.data;

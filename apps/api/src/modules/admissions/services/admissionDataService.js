@@ -60,7 +60,7 @@
  *    bplStudent (boolean)       (NOT isBplStudent)
  */
 
-const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
+const StudentProfile = require('../../people').StudentProfile;
 const AdmissionFieldRegistry = require('./admissionFieldRegistry');
 const School = require('../../tenancy').School;
 const SchoolSettings = require('../../tenancy').SchoolSettings;
@@ -214,7 +214,6 @@ class AdmissionDataService {
       lastName,
       admissionNo:      s(student.admissionNumber),
       admissionNumber:  s(student.admissionNumber),
-      admissionNo:      s(student.admissionNumber),
       rollNo:           s(student.rollNo),
       roll_no:          s(student.rollNo),
       scholarNo:        s(student.scholarNo),
@@ -273,7 +272,6 @@ class AdmissionDataService {
       rte_application_no: s(student.rteApplicationNo),
 
       // Samagra / SSM
-      ssmId:            s(student.ssmId),
       samagraId:        s(student.ssmId),
       samgra_id:        s(student.ssmId),      // legacy typo alias kept
       samagra_id:       s(student.ssmId),
@@ -284,7 +282,6 @@ class AdmissionDataService {
       board_enroll_no:  s(student.boardEnrollNo),
 
       // Family ID
-      familyId:         s(student.familyId),
       family_id:        s(student.familyId),
       govt_family_id:   s(student.familyId),
 
@@ -435,7 +432,6 @@ class AdmissionDataService {
       // These are direct copies so the template parser resolves them with 0 lookups.
 
       // Template uses: {{scholar_no}}
-      scholar_no:       s(student.scholarNo),
 
       // Template uses: {{student_name}}
       student_name:     fullName,
@@ -450,8 +446,6 @@ class AdmissionDataService {
       admission_class:  className,
 
       // Template uses: {{mobile_1}} / {{mobile_2}}
-      mobile_1:         s(father.phone),
-      mobile_2:         s(mother.phone),
 
       // Template uses: {{caste}}
       // (already set above as flat.caste)
@@ -474,15 +468,14 @@ class AdmissionDataService {
       prev_school:      s(student.previousSchool),
 
       // Template uses: {{ladli_laxmi}}
+      // TODO: this wins over the earlier ladli_laxmi mapping and drops the
+      // ladliLaxmiNo fallback — decide which one the report card wants
+      // eslint-disable-next-line no-dupe-keys
       ladli_laxmi:      s(student.ssmId),
 
       // Template uses: {{caste_cert_no}} / {{caste_cert_date}}
-      caste_cert_no:    s(student.casteApplicationNo),
-      caste_cert_date:  dateStr(student.casteApplicationDate),
 
       // Samagra / Family IDs (for templates using these names)
-      samagra_id:       s(student.ssmId),
-      family_id:        s(student.familyId),
     };
 
     // Dot-notation namespace objects

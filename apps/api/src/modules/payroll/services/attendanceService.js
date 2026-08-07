@@ -1,4 +1,4 @@
-const TeacherAttendance = require('../../../../src/modules/attendance/models/TeacherAttendance');
+const TeacherAttendance = require('../../attendance').TeacherAttendance;
 const logger = require('../../../core/logging/logger.js');
 
 /**
@@ -198,7 +198,7 @@ const autoMarkMonthly = async (schoolId, data, markedByUserId) => {
     error.statusCode = 400; throw error;
   }
 
-  const TeacherProfile = require('../../../../src/modules/people/models/TeacherProfile');
+  const TeacherProfile = require('../../people').TeacherProfile;
   const activeTeachers = await TeacherProfile.find({ schoolId, status: 'active' }).lean();
   
   if (activeTeachers.length === 0) return { inserted: 0, message: 'No active teachers found' };

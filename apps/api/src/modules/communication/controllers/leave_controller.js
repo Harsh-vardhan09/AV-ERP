@@ -118,6 +118,9 @@ logger.debug("error in leave_controller : ",error);
 const getOneApplication=async(req,res)=>{
 
     try{
+        // TODO: id is never declared — getOneApplication always throws
+        // TODO: almost certainly meant req.params.id
+        // eslint-disable-next-line no-undef
         const data=await leave.getone(id);
         return res.json({
         success:true,

@@ -3,7 +3,7 @@ const razorpayService = require("../../../../src-old/services/razorpayService");
 const { processPayment } = require("../services/paymentService");
 const Payment = require("../models/Payment");
 const StudentFee = require("../models/StudentFee");
-const StudentProfile = require("../../../../src/modules/people/models/StudentProfile");
+const StudentProfile = require("../../people").StudentProfile;
 const notificationService = require("../../notifications").notificationService;
 const logger = require("../../../core/logging/logger.js"); // BUG-16 FIX: use structured logger, not console.log
 

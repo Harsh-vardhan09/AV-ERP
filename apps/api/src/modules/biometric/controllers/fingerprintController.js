@@ -3,7 +3,7 @@ const FacultyDeviceMapping = require('../models/FacultyDeviceMapping');
 const { addPunch, getQueueStats } = require('../services/punchQueue');
 const logger = require('../../../core/logging/logger');
 
-const FacultyAttendance = require('../../../../src/modules/attendance/models/FacultyAttendance');
+const FacultyAttendance = require('../../attendance').FacultyAttendance;
 
 const fail = (res, err, status = 500) =>
   res.status(status).json({ success: false, message: err.message });

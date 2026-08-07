@@ -83,7 +83,7 @@ module.exports = (auth = {}) => {
             try {
                 const Payment = require("../models/Payment");
                 const StudentFee = require("../models/StudentFee");
-                const StudentProfile = require("../../../../src/modules/people/models/StudentProfile");
+                const StudentProfile = require("../../people").StudentProfile;
                 const { studentId } = req.query;
 
                 if (!studentId || !mongoose.Types.ObjectId.isValid(studentId))

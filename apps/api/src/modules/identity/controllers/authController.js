@@ -1,5 +1,5 @@
 const { User } = require("../models/user.js");
-const StudentProfile = require("../../../../src/modules/people/models/StudentProfile");
+const StudentProfile = require("../../people").StudentProfile;
 const School = require("../../tenancy").School;
 const bcryptjs = require('bcryptjs');
 const { genereteVarificationCode } = require("../lib/generateVerificationCode");

@@ -1,4 +1,4 @@
-const studentinfo=require("../../../../src/modules/people/models/Student");
+const studentinfo=require("../../people").Student;
 const logger = require('../../../core/logging/logger.js');
 class STUDENT{
     async create(name,number){

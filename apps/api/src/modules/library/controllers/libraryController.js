@@ -6,7 +6,7 @@ const bcryptjs = require('bcryptjs');
 // utils follow when their modules exist
 const { User } = require('../../identity');
 const School = require('../../tenancy').School;
-const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
+const StudentProfile = require('../../people').StudentProfile;
 const { generateTempPassword } = require('../../identity').generatePassword;
 const { sendStaffCredentials } = require('../../notifications').emailService;
 

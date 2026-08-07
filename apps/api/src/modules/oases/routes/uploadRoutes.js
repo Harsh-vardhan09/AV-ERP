@@ -13,7 +13,6 @@ const { OASES_ROLES } = require('../lib/constants');
 // No local directory is created; this is safe in serverless environments.
 const upload = multer({
   storage: multer.memoryStorage(),
-  storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/pdf') return cb(null, true);

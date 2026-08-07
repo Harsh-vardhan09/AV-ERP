@@ -22,7 +22,7 @@ const logger = require('../../../core/logging/logger.js');
 // Lazy requires to avoid circular deps
 const getModels = () => ({
   User:            require('../../identity').User,
-  StudentProfile:  require('../../../../src/modules/people/models/StudentProfile'),
+  StudentProfile:  require('../../people').StudentProfile,
   ClassModel:      require('../../../../src-old/models/ClassModel'),  // TEMP: moves to modules/academics
   SectionModel:    require('../../../../src-old/models/SectionModel'),  // TEMP: moves to modules/academics
   AcademicSession: require('../../../../src-old/models/AcademicSession'),  // TEMP: moves to modules/academics

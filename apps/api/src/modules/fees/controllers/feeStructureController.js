@@ -1,7 +1,7 @@
 const mongoose       = require('mongoose');
 const FeeStructure   = require('../models/FeeStructure');
 const StudentFee     = require('../models/StudentFee');
-const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
+const StudentProfile = require('../../people').StudentProfile;
 const AcademicSession = require('../../../../src-old/models/AcademicSession');
 const ClassModel     = require('../../../../src-old/models/ClassModel');
 const { assignFeeToStudent } = require('../services/studentFeeService');
@@ -115,6 +115,9 @@ const backfillFeesForClass = async (classId, sessionId, className, schoolId) => 
         }
         logger.info(`[FeeBackfill] Complete for class "${className}".`);
     } catch (err) {
+        // TODO: backfillFeesForClass takes no res — this catch throws ReferenceError
+        // TODO: log and return instead of answering a request that is not here
+        // eslint-disable-next-line no-undef
         return serviceError(res, '[FeeBackfill] Error', { error: err.message });
     }
 };

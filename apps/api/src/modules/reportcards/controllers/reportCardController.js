@@ -8,7 +8,7 @@ const ExamSubjectConfig = require('../../../../src-old/models/ExamSubjectConfig'
 const Marks = require('../../../../src-old/models/MarksModel');  // TEMP: moves to modules/examination
 const ReportCard = require('../models/ReportCard');
 const ReportCardMark = require('../models/ReportCardMark');
-const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
+const StudentProfile = require('../../people').StudentProfile;
 const SchoolSettings = require('../../tenancy').SchoolSettings;
 const {
   SLOT_MAX,
@@ -1239,6 +1239,9 @@ exports.finalizeReportCard = async (req, res) => {
     });
 
     // NOTIFICATION BLOCK — non-blocking
+    // TODO: unreachable — the 200 above returns first, so finalize never notifies
+    // TODO: move this block above the response
+    // eslint-disable-next-line no-unreachable
     ;(async () => {
       try {
         const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';

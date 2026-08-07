@@ -150,7 +150,7 @@ exports.publishResults = oasesAsync(async (req, res) => {
 
   // Try to find Student model (may not exist)
   let Student;
-  try { Student = require('../../../../src/modules/people/models/Student'); } catch { Student = null; }
+  try { Student = require('../../people').Student; } catch { Student = null; }
 
   const ops          = [];
   const publishedAt  = new Date();

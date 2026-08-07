@@ -5,7 +5,7 @@ const LibraryBook = require('../models/LibraryBook');
 const BookIssue   = require('../models/BookIssue');
 const logger = require('../../../core/logging/logger');
 
-const StudentProfile = require('../../../../src/modules/people/models/StudentProfile');
+const StudentProfile = require('../../people').StudentProfile;
 
 // Overdue is derived on read, never stored, so it cannot go stale
 const effectiveStatus = (issue) => {
