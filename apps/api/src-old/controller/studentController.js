@@ -356,9 +356,7 @@ exports.submitComplaint = async (req, res) => {
 
 exports.getMyComplaints = async (req, res) => {
   try {
-    // SECURITY: scope to current school
-    const complaints = await ComplainBox.find({ complainBy: req.user._id, schoolId: req.schoolId })
-      .sort({ createdAt: -1 });
+    const complaints = await studentSelfService.listComplaintsForUser(req.user._id, req.schoolId);
     res.status(200).json({ success: true, data: complaints });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
