@@ -19,21 +19,14 @@ const { createInAppNotification } = require('../../src/modules/notifications').n
 const ClassTeacherAssignment = require('../models/ClassTeacherAssignment');
 const { User } = require('../../src/modules/identity');
 
-// Helper: get student profile
-const getStudentProfile = async (userId) => {
-  return StudentProfile.findOne({ userId })
-    .populate('classId', 'name numericOrder')
-    .populate('sectionId', 'name')
-    .populate('session', 'name isActive');
-};
+const studentProfileService = require('../../src/modules/people/services/studentProfileService');
 
-// ========================
-// MY PROFILE
-// ========================
+// Helper: get student profile
+const getStudentProfile = (userId) => studentProfileService.findByUserId(userId);
 
 exports.getMyProfile = async (req, res) => {
   try {
-    const profile = await getStudentProfile(req.user._id);
+    const profile = await studentProfileService.findByUserId(req.user._id);
     if (!profile) {
       return res.status(404).json({ success: false, message: 'Student profile not found' });
     }
