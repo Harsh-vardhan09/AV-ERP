@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const admin = require('../../../../src-old/controller/adminController');
-const { sessionController } = require('../../academics');
+const { sessionController, classController } = require('../../academics');
 const { varifyToken } = require('../../../core/security/authenticate.js');
 const { authorize } = require('../../../core/security/roleMiddleware.js');
 const validateObjectId = require('../../../core/http/validateObjectId.js');
@@ -57,10 +57,15 @@ router.post(
 );
 
 // ── Class management ──────────────────────────────────────────────────────────
-router.post('/class', writeGuard, admin.createClass);
-router.get('/classes', readGuard, admin.getAllClasses);
-router.put('/class/:id', writeGuard, validateObjectId('id'), admin.updateClass);
-router.delete('/class/:id', authorize('admin'), validateObjectId('id'), admin.deleteClass);
+router.post('/class', writeGuard, classController.createClass);
+router.get('/classes', readGuard, classController.getAllClasses);
+router.put('/class/:id', writeGuard, validateObjectId('id'), classController.updateClass);
+router.delete(
+  '/class/:id',
+  authorize('admin'),
+  validateObjectId('id'),
+  classController.deleteClass
+);
 
 // ── Section management ────────────────────────────────────────────────────────
 router.post('/section', writeGuard, admin.createSection);
@@ -147,7 +152,11 @@ router.get('/teachers/:id', readGuard, validateObjectId('id'), admin.getAdminTea
 // Dashboard detail views (card click-through) — SECURED: require auth + admin role
 router.get('/all-students', authorize('admin'), admin.getAllStudentsAdmin);
 router.get('/all-teachers', authorize('admin'), admin.getAllTeachersAdmin);
-router.get('/all-classes', authorize('admin', 'admission', 'teacher'), admin.getAllClassesAdmin);
+router.get(
+  '/all-classes',
+  authorize('admin', 'admission', 'teacher'),
+  classController.getAllClassesAdmin
+);
 router.get('/all-subjects', authorize('admin', 'admission', 'teacher'), admin.getAllSubjectsAdmin);
 
 module.exports = router;

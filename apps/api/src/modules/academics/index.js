@@ -53,4 +53,10 @@ module.exports = {
   get sessionController() {
     return require('./controllers/sessionController');
   },
+
+  // classController — consumers: modules/people/routes/adminRoutes,
+  // modules/examination/routes/examControllerRoutes
+  get classController() {
+    return require('./controllers/classController');
+  },
 };

@@ -17,7 +17,7 @@ const validateObjectId = require('../../../core/http/validateObjectId.js');
 // TEMP: moves to modules/people — the two god-controllers are still in src-old
 const teacher = require('../../../../src-old/controller/teacherController');
 const admin = require('../../../../src-old/controller/adminController');
-const { sessionController } = require('../../academics');
+const { sessionController, classController } = require('../../academics');
 const uploadMemory = require('../../../core/http/upload.memory.js');
 
 // ── Security guard ────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ router.get('/session/active', sessionController.getActiveSession);
 router.get('/sessions', sessionController.getAllSessions);
 
 // Classes / Sections (admin endpoints support ?session= / ?classId=)
-router.get('/classes', admin.getAllClasses);
+router.get('/classes', classController.getAllClasses);
 router.get('/sections', admin.getAllSections);
 
 // Exam-scoped subjects: returns only subjects configured for that exam+class

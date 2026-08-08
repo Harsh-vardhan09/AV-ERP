@@ -34,77 +34,6 @@ const { scheduleMarksDeadlineReminder } = require('../../src/modules/notificatio
 // CLASS MANAGEMENT
 // ========================
 
-exports.createClass = async (req, res) => {
-  try {
-    const { name, numericOrder, session } = req.body;
-    const cls = await ClassModel.create({ name, numericOrder, session, schoolId: req.schoolId });
-    res.status(201).json({ success: true, message: 'Class created', data: cls });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ success: false, message: 'This class already exists in this session' });
-    }
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-exports.getAllClasses = async (req, res) => {
-  try {
-    const filter = { schoolId: req.schoolId };
-    if (req.query.session) filter.session = req.query.session;
-    const classes = await ClassModel.find(filter).populate('session', 'name isActive').sort({ numericOrder: 1 });
-    res.status(200).json({ success: true, data: classes });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-exports.updateClass = async (req, res) => {
-  try {
-    const cls = await ClassModel.findOneAndUpdate(
-      { _id: req.params.id, schoolId: req.schoolId },
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!cls) return res.status(404).json({ success: false, message: 'Class not found' });
-    res.status(200).json({ success: true, message: 'Class updated', data: cls });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-exports.deleteClass = async (req, res, next) => {
-  try {
-    const classId = req.params.id;
-    // SECURITY: scope by schoolId
-    const cls = await ClassModel.findOne({ _id: classId, schoolId: req.schoolId });
-    if (!cls) return res.status(404).json({ success: false, message: 'Class not found' });
-
-    // Dependency checks — also scoped to this school
-    const [sectionCount, mappingCount, teacherAssignCount] = await Promise.all([
-      SectionModel.countDocuments({ classId, schoolId: req.schoolId }),
-      ClassSubjectMap.countDocuments({ classId, schoolId: req.schoolId }),
-      TeacherSubjectAssignment.countDocuments({ classId, schoolId: req.schoolId })
-    ]);
-
-    const deps = [];
-    if (sectionCount > 0) deps.push(`${sectionCount} section(s)`);
-    if (mappingCount > 0) deps.push(`${mappingCount} subject mapping(s)`);
-    if (teacherAssignCount > 0) deps.push(`${teacherAssignCount} teacher assignment(s)`);
-
-    if (deps.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Cannot delete class. Dependencies: ${deps.join(', ')}. Remove them first.`
-      });
-    }
-
-    await ClassModel.findOneAndDelete({ _id: classId, schoolId: req.schoolId });
-    res.status(200).json({ success: true, message: 'Class deleted' });
-  } catch (error) {
-    return next(error);
-  }
-};
-
 // ========================
 // SECTION MANAGEMENT
 // ========================
@@ -1411,17 +1340,6 @@ exports.getAllTeachersAdmin = async (req, res) => {
       .populate('userId', 'email')
       .sort({ firstName: 1 });
     res.status(200).json({ success: true, data: teachers, total: teachers.length });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-exports.getAllClassesAdmin = async (req, res) => {
-  try {
-    const classes = await ClassModel.find({ schoolId: req.schoolId })
-      .populate('session', 'name isActive')
-      .sort({ numericOrder: 1 });
-    res.status(200).json({ success: true, data: classes, total: classes.length });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
