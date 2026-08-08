@@ -6,7 +6,7 @@ import {
   useLazyGetPromotionPreviewQuery,
   usePromoteStudentsMutation,
 } from '@modules/people/api/studentManagementApi';
-import { useGetClassesQuery, useGetSectionsQuery, useGetSessionsQuery, adminApi } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSectionsQuery, useGetSessionsQuery, adminApi } from '@shared/lib/api/adminApi';
 
 // ─── Stepper ─────────────────────────────────────────────────────────────────
 const steps = ['Select Students', 'Configure Destination', 'Done'];

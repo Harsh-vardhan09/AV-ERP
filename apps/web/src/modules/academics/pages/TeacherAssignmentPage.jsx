@@ -5,7 +5,7 @@ import {
   useGetClassTeachersQuery, useAssignClassTeacherMutation,
   useRemoveClassTeacherMutation, useUpdateClassTeacherMutation,
   useGetClassesQuery, useGetSectionsQuery, useGetSubjectsQuery, useGetActiveSessionQuery
-} from '../../../redux/api/adminApi';
+} from '@shared/lib/api/adminApi';
 import { useGetAllTeachersQuery } from '@modules/admissions/api/admissionApi';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import toast from 'react-hot-toast';

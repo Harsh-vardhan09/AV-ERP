@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useRegisterStudentMutation, useGetSchoolSettingsQuery, useCheckDuplicateFieldQuery, useUploadStudentPhotoMutation, useGetAdmissionFormSettingsQuery } from '../api/admissionApi';
-import { useGetClassesQuery, useGetSectionsQuery, useGetActiveSessionQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSectionsQuery, useGetActiveSessionQuery } from '@shared/lib/api/adminApi';
 import EmailOtpVerifier from '@shared/ui/EmailOtpVerifier';
 import toast from 'react-hot-toast';
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGetSessionsQuery, useCreateSessionMutation, useUpdateSessionMutation, useDeleteSessionMutation, useCopyClassesToSessionMutation, useSyncStudentSessionsMutation, useCopySubjectMapsToSessionMutation, useCopyTeacherAssignmentsToSessionMutation } from '../../../redux/api/adminApi';
+import { useGetSessionsQuery, useCreateSessionMutation, useUpdateSessionMutation, useDeleteSessionMutation, useCopyClassesToSessionMutation, useSyncStudentSessionsMutation, useCopySubjectMapsToSessionMutation, useCopyTeacherAssignmentsToSessionMutation } from '@shared/lib/api/adminApi';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import toast from 'react-hot-toast';
 

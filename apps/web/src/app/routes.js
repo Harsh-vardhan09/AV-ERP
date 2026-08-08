@@ -5,7 +5,7 @@ import { ROLES } from '@shared/constants/roles';
 
 import { academicsRoutes, academicsLegacyRoutes } from '@modules/academics/routes';
 import { admissionsRoutes } from '@modules/admissions/routes';
-import { attendanceRoutes } from '@modules/attendance/routes';
+import { attendanceRoutes, attendanceLegacyRoutes } from '@modules/attendance/routes';
 import { biometricRoutes } from '@modules/biometric/routes';
 import { communicationRoutes, communicationLegacyRoutes } from '@modules/communication/routes';
 import { dashboardRoutes } from '@modules/dashboard/routes';
@@ -26,7 +26,7 @@ import { peopleRoutes } from '@modules/people/routes';
 import { reportcardsRoutes } from '@modules/reportcards/routes';
 import { superAdminLoginRoute, superAdminRoutes, tenancyRoutes } from '@modules/tenancy/routes';
 
-import { pendingAppRoutes, pendingLegacyRoutes } from './routes.pending';
+import { appLegacyRoutes } from '@app/routes.legacy';
 
 const ADMIN_BRANCH = [ROLES.ADMIN, ROLES.ADMISSION];
 
@@ -67,7 +67,6 @@ export const appRoutes = [
   ...peopleRoutes,
   ...reportcardsRoutes,
   ...tenancyRoutes,
-  ...pendingAppRoutes,
 ];
 
 // Signed-in routes that render bare, with no dashboard chrome.
@@ -75,8 +74,9 @@ export const bareRoutes = [
   ...identityProtectedRoutes,
   ...notificationsRoutes,
   ...academicsLegacyRoutes,
+  ...attendanceLegacyRoutes,
   ...communicationLegacyRoutes,
-  ...pendingLegacyRoutes,
+  ...appLegacyRoutes,
 ];
 
 export const openRoutes = [
@@ -89,7 +89,7 @@ export const openRoutes = [
 ];
 
 // Sends each role to its own dashboard; unauthenticated visitors to /login.
-export const rootRoute = { path: '/', lazy: page(() => import('./HomeRedirect')) };
+export const rootRoute = { path: '/', lazy: page(() => import('@app/HomeRedirect')) };
 
 export const publicOnlyRoutes = [...identityPublicOnlyRoutes];
 

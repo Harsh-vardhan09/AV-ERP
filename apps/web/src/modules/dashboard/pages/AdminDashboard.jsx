@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGetDashboardStatsQuery, useGetDashboardAnalyticsQuery, useLazyGetAllStudentsAdminQuery, useLazyGetAllTeachersAdminQuery, useLazyGetAllClassesAdminQuery, useLazyGetAllSubjectsAdminQuery } from '../../../redux/api/adminApi';
+import { useGetDashboardStatsQuery, useGetDashboardAnalyticsQuery, useLazyGetAllStudentsAdminQuery, useLazyGetAllTeachersAdminQuery, useLazyGetAllClassesAdminQuery, useLazyGetAllSubjectsAdminQuery } from '@shared/lib/api/adminApi';
 import { MdPeople, MdClass, MdSubject, MdPendingActions, MdSchool, MdClose, MdSearch } from 'react-icons/md';
 import { FaChalkboardTeacher } from 'react-icons/fa';
 import { AdmissionTrendChart, AttendanceTrendChart, FeesCollectionChart } from '../components/AdminDashboardCharts';

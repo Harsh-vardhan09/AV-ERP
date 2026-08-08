@@ -1,9 +1,9 @@
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
-import StoreProvider from './StoreProvider';
-import ServerHealthGate from './ServerHealthGate';
-import SchoolSettingsProvider from './SchoolSettingsProvider';
-import SocketProvider from './SocketProvider';
+import StoreProvider from '@app/providers/StoreProvider';
+import ServerHealthGate from '@app/providers/ServerHealthGate';
+import SchoolSettingsProvider from '@app/providers/SchoolSettingsProvider';
+import SocketProvider from '@app/providers/SocketProvider';
 
 // Order matters: everything below StoreProvider reads redux, and the health
 // gate replaces the whole app when the API is confirmed down.

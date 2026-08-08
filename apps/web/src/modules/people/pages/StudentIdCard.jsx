@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useGetAllStudentsEnhancedQuery } from '@modules/people/api/studentManagementApi';
-import { useGetClassesQuery, useGetSectionsQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSectionsQuery } from '@shared/lib/api/adminApi';
 import { useGetSchoolSettingsQuery } from '@modules/admissions/api/admissionApi';
 
 const th = 'px-3 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap bg-gray-50 border-r border-gray-200 last:border-r-0';

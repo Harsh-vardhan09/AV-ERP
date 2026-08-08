@@ -1,7 +1,7 @@
 import React from 'react';
 import { RouterProvider } from 'react-router-dom';
-import AppProviders from './providers';
-import { router } from './router';
+import AppProviders from '@app/providers';
+import { router } from '@app/router';
 import Loader from '@shared/ui/Loader';
 
 const App = () => (

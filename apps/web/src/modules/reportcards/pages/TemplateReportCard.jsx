@@ -6,7 +6,7 @@ import {
   useGetSessionsQuery,
   useGetClassesQuery,
   useGetSectionsQuery,
-} from '../../../redux/api/adminApi';
+} from '@shared/lib/api/adminApi';
 import { useGetMyClassTeacherQuery } from '@modules/people/api/teacherApi';
 import { useGetClassReportCardsQuery } from '../api/reportCardApi';
 import {

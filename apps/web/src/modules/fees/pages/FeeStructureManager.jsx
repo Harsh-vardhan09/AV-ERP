@@ -7,7 +7,7 @@ import {
   useDeleteFeeStructureMutation,
   useGetFeeHeadsQuery,
 } from '@modules/fees/api/feeApi';
-import { useGetSessionsQuery, useGetClassesQuery } from '../../../redux/api/adminApi';
+import { useGetSessionsQuery, useGetClassesQuery } from '@shared/lib/api/adminApi';
 import toast from 'react-hot-toast';
 
 const CYCLE_OPTIONS = [

@@ -7,7 +7,7 @@ import {
   useGetClassFeeStatusQuery,
   useCollectStudentPaymentMutation,
 } from '@modules/fees/api/feeApi';
-import { useGetClassesQuery, useGetSessionsQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSessionsQuery } from '@shared/lib/api/adminApi';
 import { useGetAllStudentsEnhancedQuery } from '@modules/people/api/studentManagementApi';
 
 // NOTE: getLedger requires studentFeeId (the StudentFee _id), NOT the student profile ID.

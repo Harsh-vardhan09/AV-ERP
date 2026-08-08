@@ -3,7 +3,7 @@ import { FiUsers, FiBell } from 'react-icons/fi';
 import { MdWarning } from 'react-icons/md';
 import toast from 'react-hot-toast';
 import { useGetDefaultersReportQuery } from '@modules/fees/api/feeApi';
-import { useGetClassesQuery, useGetSessionsQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSessionsQuery } from '@shared/lib/api/adminApi';
 
 // Backend GET /reports/pending?cohortKey=&billingPeriodId=&minDue=
 // Response: { success, data: [{accountHolderId, totalAssigned, totalPaid, totalDue, status, ...}],

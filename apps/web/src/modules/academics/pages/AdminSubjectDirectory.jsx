@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGetAllSubjectsAdminQuery } from '../../../redux/api/adminApi';
+import { useGetAllSubjectsAdminQuery } from '@shared/lib/api/adminApi';
 
 const AdminSubjectDirectory = () => {
   const navigate = useNavigate();

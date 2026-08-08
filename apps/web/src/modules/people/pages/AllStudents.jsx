@@ -10,7 +10,7 @@ import {
   useLazyExportStudentsQuery,
   useUploadStudentPhotoMutation,
 } from '@modules/people/api/studentManagementApi';
-import { useGetClassesQuery, useGetSectionsQuery, useGetSessionsQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSectionsQuery, useGetSessionsQuery } from '@shared/lib/api/adminApi';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt = (d) => d ? new Date(d).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useGetFormStudentsQuery } from '../api/admissionApi';
-import { useGetClassesQuery, useGetSectionsQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSectionsQuery } from '@shared/lib/api/adminApi';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const th = 'px-3 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap bg-gray-50 border-r border-gray-200 last:border-r-0';

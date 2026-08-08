@@ -33,7 +33,7 @@ import {
   useGetSectionsQuery,
   useGetSubjectsQuery,
   useGetClassSubjectsQuery,
-} from '../../../redux/api/adminApi';
+} from '@shared/lib/api/adminApi';
 
 // ── Wizard steps config ───────────────────────────────────────────
 const STEPS = [

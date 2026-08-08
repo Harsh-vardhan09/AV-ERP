@@ -4,7 +4,7 @@ import {
   useGetExamSubjectsQuery, useRemoveExamSubjectMutation, useUpdateExamSubjectMutation,
   useGetClassesQuery, useGetClassSubjectsQuery, useGetActiveSessionQuery,
   useLinkTemplateToExamMutation, useGetAdminTemplatesQuery,
-} from '../../../redux/api/adminApi';
+} from '@shared/lib/api/adminApi';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import toast from 'react-hot-toast';
 

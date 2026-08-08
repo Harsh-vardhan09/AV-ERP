@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetAllStudentsQuery, useActivateStudentMutation, useDeactivateStudentMutation, useLazyExportStudentsExcelQuery } from '../api/admissionApi';
-import { useGetClassesQuery, useGetSectionsQuery, useGetActiveSessionQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSectionsQuery, useGetActiveSessionQuery } from '@shared/lib/api/adminApi';
 import EditStudent from '@modules/admissions/pages/EditStudent';
 import toast from 'react-hot-toast';
 

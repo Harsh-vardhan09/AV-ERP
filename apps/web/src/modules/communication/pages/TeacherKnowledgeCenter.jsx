@@ -6,7 +6,7 @@ import {
   useDeleteMaterialMutation,
   useGetMyAssignmentsQuery,
 } from '@modules/people/api/teacherApi';
-import { useGetActiveSessionQuery } from '../../../redux/api/adminApi';
+import { useGetActiveSessionQuery } from '@shared/lib/api/adminApi';
 import toast from 'react-hot-toast';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';

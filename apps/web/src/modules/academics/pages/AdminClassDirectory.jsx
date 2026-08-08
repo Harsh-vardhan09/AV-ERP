@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGetAllClassesAdminQuery, useGetActiveSessionQuery, useGetSessionsQuery } from '../../../redux/api/adminApi';
+import { useGetAllClassesAdminQuery, useGetActiveSessionQuery, useGetSessionsQuery } from '@shared/lib/api/adminApi';
 
 const AdminClassDirectory = () => {
   const navigate = useNavigate();

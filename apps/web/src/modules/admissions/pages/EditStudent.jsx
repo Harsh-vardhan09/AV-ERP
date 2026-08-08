@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGetStudentDetailsQuery, useUpdateStudentDetailsMutation } from '../api/admissionApi';
-import { useGetClassesQuery, useGetSectionsQuery, useGetActiveSessionQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSectionsQuery, useGetActiveSessionQuery } from '@shared/lib/api/adminApi';
 import toast from 'react-hot-toast';
 
 const Input = ({ label, required, ...props }) => (

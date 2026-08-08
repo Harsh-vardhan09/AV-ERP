@@ -3,7 +3,7 @@ import {
   useGetClassesQuery, useCreateClassMutation, useDeleteClassMutation, useUpdateClassMutation,
   useGetSectionsQuery, useCreateBulkSectionsMutation, useDeleteSectionMutation,
   useUpdateSectionMutation, useGetActiveSessionQuery, useGetAdminStudentsQuery
-} from '../../../redux/api/adminApi';
+} from '@shared/lib/api/adminApi';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import toast from 'react-hot-toast';
 

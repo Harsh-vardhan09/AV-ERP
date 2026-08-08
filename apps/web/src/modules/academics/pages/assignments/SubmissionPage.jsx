@@ -1,5 +1,5 @@
 // import { useNavigate, useParams } from 'react-router-dom';
-// import { useAssignmetuploaadMutation, useAssignmnetsbyidQuery } from '../../../redux/api/assignmentapi';
+// import { useAssignmetuploaadMutation, useAssignmnetsbyidQuery } from '../../api/assignmentApi';
 // import { useState } from 'react';
 // import { useSelector } from 'react-redux';
 // import toast from 'react-hot-toast';
@@ -101,7 +101,7 @@
 // export default SubmissionPage;
 
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAssignmetuploaadMutation, useAssignmnetsbyidQuery } from '../../../redux/api/assignmentapi';
+import { useAssignmetuploaadMutation, useAssignmnetsbyidQuery } from '../../api/assignmentApi';
 import { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast';

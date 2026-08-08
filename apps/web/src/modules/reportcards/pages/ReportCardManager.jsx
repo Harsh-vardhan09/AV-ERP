@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { useGetActiveSessionQuery, useGetClassesQuery, useGetSectionsQuery, useGetSessionsQuery, useGetExamsQuery } from '../../../redux/api/adminApi';
+import { useGetActiveSessionQuery, useGetClassesQuery, useGetSectionsQuery, useGetSessionsQuery, useGetExamsQuery } from '@shared/lib/api/adminApi';
 import { useGetMyClassTeacherQuery } from '@modules/people/api/teacherApi';
 import { useGenerateReportCardsMutation, useGetClassReportCardsQuery } from '../api/reportCardApi';
 import { canGenerateReport, getBlockReasonMessage } from '@shared/utils/reportCardValidation';

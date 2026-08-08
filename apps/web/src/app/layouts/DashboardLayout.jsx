@@ -6,8 +6,8 @@ import { userlogout } from '@shared/lib/store/userSlice';
 import { useGetMyClassTeacherQuery } from '@modules/people/api/teacherApi';
 import LibraryDueAlert from '@modules/library/components/LibraryDueAlert';
 import MobileBottomNav from '@shared/ui/MobileBottomNav';
-import Sidebar from './Sidebar';
-import Topbar from './Topbar';
+import Sidebar from '@app/layouts/Sidebar';
+import Topbar from '@app/layouts/Topbar';
 
 const COLLAPSE_KEY = 'erp.sidebar.collapsed';
 const SIDEBAR_WIDTH = 256;

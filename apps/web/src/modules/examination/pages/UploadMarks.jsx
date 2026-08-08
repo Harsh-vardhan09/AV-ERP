@@ -7,7 +7,7 @@ import {
   useGetStudentsForMarksQuery,
   useGetExamTemplateQuery,
 } from '@modules/people/api/teacherApi';
-import { useGetActiveSessionQuery } from '../../../redux/api/adminApi';
+import { useGetActiveSessionQuery } from '@shared/lib/api/adminApi';
 import { useGetMarksReadinessQuery } from '@modules/reportcards/api/reportCardApi';
 import toast from 'react-hot-toast';
 

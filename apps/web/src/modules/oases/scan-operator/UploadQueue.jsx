@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import OasesRoleGuard from '../shared/OasesRoleGuard';
 import { OASES_ROLES } from '../utils/oasesConstants';
-import { useGetExamsQuery, useGetActiveSessionQuery, useGetClassesQuery, useGetSectionsQuery, useGetSubjectsQuery } from '@/redux/api/adminApi';
+import { useGetExamsQuery, useGetActiveSessionQuery, useGetClassesQuery, useGetSectionsQuery, useGetSubjectsQuery } from '@shared/lib/api/adminApi';
 import { useGetSchoolSettingsQuery } from '@modules/admissions/api/admissionApi';
 import { useUploadSheets } from '../hooks/mutations/useUploadSheets';
 

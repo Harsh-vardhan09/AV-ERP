@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGetTeacherLeavesQuery, useApproveTeacherLeaveMutation } from '../../../redux/api/adminApi';
+import { useGetTeacherLeavesQuery, useApproveTeacherLeaveMutation } from '@shared/lib/api/adminApi';
 import toast from 'react-hot-toast';
 
 const UserManager = () => {

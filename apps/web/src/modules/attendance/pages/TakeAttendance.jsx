@@ -5,7 +5,7 @@ import {
   useGetStudentsForAttendanceQuery,
   useGetAttendanceRecordsQuery,
 } from '@modules/people/api/teacherApi';
-import { useGetActiveSessionQuery } from '../../../redux/api/adminApi';
+import { useGetActiveSessionQuery } from '@shared/lib/api/adminApi';
 import toast from 'react-hot-toast';
 import {
   FileText, History, Calendar, Clock, CheckCircle2, XCircle, AlertCircle,

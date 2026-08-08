@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { FiSearch, FiCreditCard, FiPrinter, FiX, FiCheckCircle } from 'react-icons/fi';
-import { useGetClassesQuery, useGetSessionsQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSessionsQuery } from '@shared/lib/api/adminApi';
 import {
   useGetClassFeeStatusQuery,
   useCollectStudentPaymentMutation,

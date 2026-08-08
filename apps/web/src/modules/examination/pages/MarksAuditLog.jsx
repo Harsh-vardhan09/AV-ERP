@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGetMarksAuditLogQuery, useGetActiveSessionQuery, useGetClassesQuery } from '../../../redux/api/adminApi';
+import { useGetMarksAuditLogQuery, useGetActiveSessionQuery, useGetClassesQuery } from '@shared/lib/api/adminApi';
 
 const MarksAuditLog = () => {
   const { data: sessionData } = useGetActiveSessionQuery();

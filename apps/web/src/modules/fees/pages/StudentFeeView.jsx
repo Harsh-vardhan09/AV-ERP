@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FiSearch, FiX, FiUsers, FiRefreshCw } from 'react-icons/fi';
-import { useGetClassesQuery, useGetSessionsQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSessionsQuery } from '@shared/lib/api/adminApi';
 import {
   useGetClassFeeStatusQuery,
   useGetStudentFeeSummaryQuery,

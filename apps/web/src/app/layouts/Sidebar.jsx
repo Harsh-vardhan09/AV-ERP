@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { MdLogout } from 'react-icons/md';
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
-import { navConfig } from './navConfig';
+import { navConfig } from '@app/layouts/navConfig';
 
 const SUB_ITEM_STYLE = { fontSize: 13, paddingTop: 7, paddingBottom: 7, gap: 8 };
 

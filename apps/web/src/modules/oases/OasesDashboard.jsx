@@ -11,7 +11,7 @@ import {
   useGetActiveSessionQuery,
   useStartExamEvaluationMutation,
   useCompleteExamEvaluationMutation,
-} from '@/redux/api/adminApi';
+} from '@shared/lib/api/adminApi';
 import { setSelectedExamId } from './store/examSlice';
 import useOasesAuth from './hooks/useOasesAuth';
 import OasesRoleGuard from './shared/OasesRoleGuard';

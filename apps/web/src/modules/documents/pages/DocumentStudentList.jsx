@@ -6,7 +6,7 @@ import {
   useGetSectionsQuery,
   useGetSessionsQuery,
   useGetAdminStudentsQuery,
-} from '../../../redux/api/adminApi';
+} from '@shared/lib/api/adminApi';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import '@modules/documents/pages/documents.css';
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGetAdminTeacherDetailQuery } from '../../../redux/api/adminApi';
+import { useGetAdminTeacherDetailQuery } from '@shared/lib/api/adminApi';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : null;
 

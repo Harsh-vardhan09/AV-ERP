@@ -6,7 +6,7 @@ import {
   useGetCoScholasticMarksQuery,
   useSaveCoScholasticMarksMutation,
 } from '@modules/people/api/teacherApi';
-import { useGetSessionsQuery } from '../../../redux/api/adminApi';
+import { useGetSessionsQuery } from '@shared/lib/api/adminApi';
 import { Save, Check, AlertCircle, Sparkles, BookOpen } from 'lucide-react';
 
 const DEFAULT_SKILLS = ['Discipline', 'Activity', 'Games', 'Drawing', 'Music'];

@@ -8,8 +8,8 @@ import sidebarReducer from '@shared/lib/store/sidebarSlice';
 // adminApi and assignmentapi have no owning module yet — adminApi mirrors the
 // backend god-controller, assignments belong to a web `academics` module that
 // does not exist.
-import { adminApi } from '@/redux/api/adminApi';
-import { assignmentApi } from '@/redux/api/assignmentapi';
+import { adminApi } from '@shared/lib/api/adminApi';
+import { assignmentApi } from '@modules/academics';
 
 import { authApi, schoolApi } from '@modules/identity';
 import { chatapi, knowlegecenterapi, complainReducer } from '@modules/communication';

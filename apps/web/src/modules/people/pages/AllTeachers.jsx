@@ -6,7 +6,7 @@ import {
   useSoftDeleteTeacherMutation,
   useToggleTeacherStatusMutation,
 } from '@modules/people/api/teacherManagementApi';
-import { useGetSessionsQuery } from '../../../redux/api/adminApi';
+import { useGetSessionsQuery } from '@shared/lib/api/adminApi';
 
 // ─── helpers ───────────────────────────────────────────────────────────────────
 const fmt = (d) =>

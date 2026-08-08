@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useGetAdminKnowledgeMaterialsQuery } from '../../../redux/api/adminApi';
+import { useGetAdminKnowledgeMaterialsQuery } from '@shared/lib/api/adminApi';
 import {
   useGetClassesQuery,
   useGetSectionsQuery,
   useGetSubjectsQuery,
   useGetActiveSessionQuery,
-} from '../../../redux/api/adminApi';
+} from '@shared/lib/api/adminApi';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 

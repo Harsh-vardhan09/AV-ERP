@@ -4,7 +4,7 @@ import {
 } from 'react-icons/md';
 import { ChevronDown } from 'lucide-react';
 import NotificationBell from '@shared/ui/NotificationBell';
-import { roleLabels } from './navConfig';
+import { roleLabels } from '@app/layouts/navConfig';
 
 const DetailRow = ({ icon, label, value }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

@@ -6,7 +6,7 @@ import {
   useGetMyLeavesQuery,
   useGetStudentsForAttendanceQuery,
 } from '@modules/people/api/teacherApi';
-import { useGetActiveSessionQuery } from '../../../redux/api/adminApi';
+import { useGetActiveSessionQuery } from '@shared/lib/api/adminApi';
 import {
   MdSubject,
   MdClass,

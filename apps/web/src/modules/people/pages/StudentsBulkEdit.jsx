@@ -5,7 +5,7 @@ import {
   useGetAllStudentsEnhancedQuery,
   useBulkEditStudentsMutation,
 } from '@modules/people/api/studentManagementApi';
-import { useGetClassesQuery, useGetSectionsQuery } from '../../../redux/api/adminApi';
+import { useGetClassesQuery, useGetSectionsQuery } from '@shared/lib/api/adminApi';
 
 const BULK_FIELDS = [
   { value: 'classId', label: 'Class' },

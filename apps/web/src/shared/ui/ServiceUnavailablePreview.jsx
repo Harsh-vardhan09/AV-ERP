@@ -1,5 +1,5 @@
 import React from 'react';
-import ServiceUnavailable from './ServiceUnavailable';
+import ServiceUnavailable from '@shared/ui/ServiceUnavailable';
 
 // /service-unavailable — lets the down-screen be opened directly for testing.
 const ServiceUnavailablePreview = () => (

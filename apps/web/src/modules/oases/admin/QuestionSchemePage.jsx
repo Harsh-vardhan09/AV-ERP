@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useSchemeQuery } from '../hooks/queries/useSchemeQuery';
 import { useSaveScheme, useUploadAnswerKey } from '../hooks/queries/useSchemeQuery';
-import { useGetExamQuery } from '@/redux/api/adminApi';
+import { useGetExamQuery } from '@shared/lib/api/adminApi';
 import OasesRoleGuard from '../shared/OasesRoleGuard';
 import { OASES_ROLES } from '../utils/oasesConstants';
 import toast from 'react-hot-toast';
