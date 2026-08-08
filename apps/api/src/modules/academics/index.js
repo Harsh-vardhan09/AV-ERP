@@ -47,4 +47,10 @@ module.exports = {
   get Assignmentupload() {
     return require('./models/uploadassignment');
   },
+
+  // sessionController — consumer: modules/people/routes/adminRoutes, which keeps
+  // serving /api/v1/admin/session while the handlers move here
+  get sessionController() {
+    return require('./controllers/sessionController');
+  },
 };
