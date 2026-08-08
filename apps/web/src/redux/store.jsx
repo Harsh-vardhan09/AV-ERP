@@ -12,8 +12,6 @@ import storage from 'redux-persist/lib/storage';
 import userReducer from './reducers/userreducer';
 import sidebarReducer from './reducers/sidebarslice';
 import ComplainsReducer from "./features/complainSlice";
-import formReducer from '../redux/reducers/FormSlice';
-import eventsReducer from "../redux/reducers/EventSlice";
 import { chatapi } from './api/chat';
 import { feeApi } from '../modules/fees/api/feeApi';
 import { reportCardApi } from './api/reportCardApi';
@@ -77,8 +75,6 @@ export const store = configureStore({
     moduleSettings: moduleSettingsReducer,
     user: persistedUserReducer,
     sidebar: sidebarReducer,
-    form: formReducer,
-    events: eventsReducer,
     complains: ComplainsReducer,
     exam: examReducer,
     // ── Super Admin (Phase 1) ──

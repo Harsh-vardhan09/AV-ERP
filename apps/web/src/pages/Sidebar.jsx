@@ -52,7 +52,6 @@
 //           { to: '/Dashboard', icon: <TbLayoutDashboard />, label: 'Dashboard' },
 //           { to: '/attendance', icon: <BsCalendar2CheckFill />, label: 'Attendance' },
 //           { to: '/assignment', icon: <MdAssignment />, label: 'Assignments' },
-//           { to: '/addevent', icon: <TiPlus />, label: 'Create Events' },
 //           { to: '/timetable', icon: <TiPlus />, label: 'Time table' },
 //           { to: '/application', icon: <TiPlus />, label: 'Leave' },
 //           { to: '/online-exam', icon: <PiExamFill />, label: 'Online Exam' },
@@ -89,7 +88,7 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { TbLayoutDashboard } from "react-icons/tb";
 import { BsCalendar2CheckFill } from "react-icons/bs";
-import { MdAssignment, MdOutlineEventNote } from "react-icons/md";
+import { MdAssignment } from "react-icons/md";
 import { PiExamFill } from "react-icons/pi";
 import { TfiWrite } from "react-icons/tfi";
 import { IoMdMenu } from "react-icons/io";
@@ -123,7 +122,6 @@ const Sidebar = () => {
     { to: '/dashboard', icon: <TbLayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/attendance', icon: <BsCalendar2CheckFill size={20} />, label: 'Attendance' },
     { to: '/assignment', icon: <MdAssignment size={20} />, label: 'Assignments' },
-    { to: '/addevent', icon: <MdOutlineEventNote size={20} />, label: 'Create Events' },
     { to: '/timetable', icon: <IoCalendarOutline size={20} />, label: 'Time Table' },
     { to: '/application', icon: <TbFileDescription size={20} />, label: 'Leave Application' },
     { to: '/online-exam', icon: <PiExamFill size={20} />, label: 'Online Exam' },

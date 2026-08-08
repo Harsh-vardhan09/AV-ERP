@@ -151,7 +151,6 @@ const ForcePasswordChange = lazy(() => import('./pages/ForcePasswordChange'));
 const TimeTable = lazy(() => import('./pages/timetable'));
 const TeacherAssign = lazy(() => import('./pages/TeacherAssign'));
 const UploadedFiles = lazy(() => import('./pages/UploadedFiles'));
-const Eventpage = lazy(() => import('./modules/communication/pages/Eventpage'));
 const Teachersassignment = lazy(() => import('./pages/teachersassignment'));
 const KnowlegedgeCenter = lazy(() => import('./modules/communication/pages/Knowledgecenter'));
 const AttendanceApp = lazy(() => import('./pages/Signal'));
@@ -173,17 +172,12 @@ const AssignmentPage = lazy(() => import('./components/students/assignments/Assi
 const AssignmentsDetails = lazy(() => import('./components/students/assignments/AssignmentsDetails'));
 const SubmissionPage = lazy(() => import('./components/students/assignments/SubmissionPage'));
 const AttendancePage = lazy(() => import('./components/students/attendance/index'));
-const ShowSingle = lazy(() => import("./components/students/events/ShowSingle"));
-const AddEventForm = lazy(() => import('./components/students/events/AddEventForm'));
 const Application = lazy(() => import('./components/students/Leave/Application'));
 const Noticebox = lazy(() => import("./components/students/news/Noticebox"));
 const Notice = lazy(() => import("./components/students/news/Notice"));
 const Noticeapprove = lazy(() => import("./components/students/news/Noticeapprove"));
 const Noticeopen = lazy(() => import("./components/students/news/Noticeopen"));
 const Allnoticepage = lazy(() => import('./components/students/news/Allnoticepage'));
-const Eventform = lazy(() => import('./components/students/events/eventform'));
-const GroupEventForm = lazy(() => import('./components/students/events/groupEventform'));
-const EventMember = lazy(() => import('./components/students/events/eventmember'));
 const ComplaintBox = lazy(() => import('./components/students/Complain-Box/complainBox'));
 const ComplaintForm = lazy(() => import('./components/students/Complain-Box/complainForm'));
 const ComplaintNext = lazy(() => import('./components/students/Complain-Box/complainNext'));
@@ -452,9 +446,6 @@ function App() {
             <Route path="/passkey" element={<AttendanceApp />} />
             <Route path="/roadmap" element={<Roadmap />} />
             <Route path="/roadmapshow" element={<Roadmapshow />} />
-            <Route path="/events" element={<Eventpage />} />
-            <Route path="/description/:id" element={<ShowSingle />} />
-            <Route path="/eventmember" element={<EventMember />} />
 
             {/* ====================================== */}
             {/* ==== NEW: ROLE-BASED DASHBOARD ROUTES ==== */}
@@ -664,7 +655,6 @@ function App() {
             <Route path="/home" element={<ProtectedRoute allowedRoles={bothRoles}><Sidebar /><HomePage /></ProtectedRoute>} />
             <Route path="/chatapp" element={<ProtectedRoute allowedRoles={bothRoles}><ChatApp /></ProtectedRoute>} />
             <Route path="/timetable" element={<ProtectedRoute allowedRoles={bothRoles}><TimeTable /></ProtectedRoute>} />
-            <Route path="/addevent" element={<ProtectedRoute allowedRoles={bothRoles}><AddEventForm /></ProtectedRoute>} />
             <Route path="/application" element={<ProtectedRoute allowedRoles={bothRoles}><Application /></ProtectedRoute>} />
             <Route path="/showleaves/:filename" element={<ProtectedRoute allowedRoles={bothRoles}><PDFViewer /></ProtectedRoute>} />
             <Route path="/notifications" element={
@@ -682,8 +672,6 @@ function App() {
             <Route path="/fullnotice/:id" element={<ProtectedRoute allowedRoles={bothRoles}><Noticeopen /></ProtectedRoute>} />
             <Route path="/addnotice" element={<ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.TEACHER, ROLES.ADMIN]}><Notice /></ProtectedRoute>} />
             <Route path="/box" element={<ProtectedRoute allowedRoles={bothRoles}><Noticebox /></ProtectedRoute>} />
-            <Route path="/eventform" element={<ProtectedRoute allowedRoles={bothRoles}><Eventform /></ProtectedRoute>} />
-            <Route path="/groupeventform" element={<ProtectedRoute allowedRoles={bothRoles}><GroupEventForm /></ProtectedRoute>} />
             <Route path="/complaintbox" element={<ProtectedRoute allowedRoles={bothRoles}><ComplaintBox /></ProtectedRoute>} />
             <Route path="/complaintform" element={<ProtectedRoute allowedRoles={bothRoles}><ComplaintForm /></ProtectedRoute>} />
             <Route path="/next/:id" element={<ProtectedRoute allowedRoles={bothRoles}><ComplaintNext /></ProtectedRoute>} />

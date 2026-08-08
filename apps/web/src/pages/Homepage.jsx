@@ -51,8 +51,6 @@
 //     { name: 'Dashboard', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG1tLvcgTJUMCBYzCZwkAYy9LJPJgayn8ZJA&s', },
 //     { name: 'Take Attendance', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcThs2EY9Uwqruia3zXjbkFldfDcvix0Qg3ZVg&s', path: '/takeattendance' },
 //     { name: 'Online quiz', image: 'https://5.imimg.com/data5/SELLER/Default/2023/5/309686767/ZE/YZ/ZV/8675179/online-exam-software-service-provider-500x500.jpg', path:'/quiz' },
-//     { name: 'Events', image: 'https://www.shutterstock.com/image-vector/events-colorful-typography-banner-260nw-1356206768.jpg', path: '/Events' },
-//     { name: 'Create Events', image: 'https://www.shutterstock.com/image-vector/events-colorful-typography-banner-260nw-1356206768.jpg', path: '/addevent' },
 //     { name: 'Chat', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzwN555oeo09zLOsxNzVqes_q_267Jrt4cxA&s',path: '/chatapp' },
 //     { name: 'Give Assignment', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStLuDTJdxJECTeb3fjynpUB6M2jVZ2FJ18-Q&s', path: '/teacherassignment' },
 //     { name: 'Your Assignment', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStLuDTJdxJECTeb3fjynpUB6M2jVZ2FJ18-Q&s', path: '/teacherassignmentupload' },
@@ -75,8 +73,6 @@
 //     // { name: 'authentication kr le bhai', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG1tLvcgTJUMCBYzCZwkAYy9LJPJgayn8ZJA&s', path: '/passkey' },
 //     { name: 'Attendance', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcThs2EY9Uwqruia3zXjbkFldfDcvix0Qg3ZVg&s', path: '/attendance' },
 //     { name: 'Online Exams', image: 'https://5.imimg.com/data5/SELLER/Default/2023/5/309686767/ZE/YZ/ZV/8675179/online-exam-software-service-provider-500x500.jpg', path:'/quiz'},
-//     { name: 'Events', image: 'https://www.shutterstock.com/image-vector/events-colorful-typography-banner-260nw-1356206768.jpg', path: '/Events' },
-//     { name: 'Create Events', image: 'https://www.shutterstock.com/image-vector/events-colorful-typography-banner-260nw-1356206768.jpg', path: '/addevent' },
 //     { name: 'Chat', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzwN555oeo09zLOsxNzVqes_q_267Jrt4cxA&s', path: '/chatapp' },
 //     { name: 'Assignment Submissions', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStLuDTJdxJECTeb3fjynpUB6M2jVZ2FJ18-Q&s', path: '/assignment' },
 //     { name: 'Coding Practice', image: 'https://media.licdn.com/dms/image/D4D12AQGkhVu2gh8X6g/article-cover_image-shrink_600_2000/0/1716287814954?e=2147483647&v=beta&t=ED8s7ACPwHL_6r9e_9SsHwqzrqpG_1Gkng8sPu7umPo',  },
@@ -120,7 +116,6 @@
 //                 <span className="absolute -top-4 right-1 bg-red-500 text-white text-xs rounded-full px-1">3</span>
 //               </i>
 //             </NavLink>
-//             <NavLink to="/events" className="text-gray-600 hover:text-blue-500">
 //               <i className="fas fa-calendar-alt"></i>
 //               <span className="hidden sm:inline-block ml-2">Events</span>
 //             </NavLink>
@@ -273,7 +268,6 @@ const HomePage = () => {
     { name: 'Student registration', icon: <IoMdAddCircle className="text-teal-600" size={24} />, path: '/register' },
     { name: 'ALL Student', icon: <IoMdDesktop className="text-teal-600" size={24} />, path: '/studentdesh' },
     { name: 'Online Quiz', icon: <MdQuiz className="text-purple-600" size={24} />, path: '/quiz' },
-    { name: 'Events Calendar', icon: <MdEvent className="text-orange-500" size={24} />, path: '/events' },
     { name: 'Chat', icon: <MdChat className="text-indigo-600" size={24} />, path: '/chatapp' },
     { name: 'Assignments', icon: <MdAssignment className="text-red-600" size={24} />, path: '/teacherassignment' },
     { name: 'Knowledge Center', icon: <FaBook className="text-amber-600" size={24} />, path: '/knowlegecentercreate' },
@@ -290,7 +284,6 @@ const HomePage = () => {
     { name: 'Dashboard', icon: <FaChartLine className="text-blue-600" size={24} />, path: '/student/dashboard' },
     { name: 'Attendance', icon: <FaUserGraduate className="text-green-600" size={24} />, path: '/attendance' },
     { name: 'Online Exams', icon: <MdQuiz className="text-purple-600" size={24} />, path: '/quiz' },
-    { name: 'Events Calendar', icon: <MdEvent className="text-orange-500" size={24} />, path: '/events' },
     { name: 'Chat', icon: <MdChat className="text-indigo-600" size={24} />, path: '/chatapp' },
     { name: 'Assignments', icon: <MdAssignment className="text-red-600" size={24} />, path: '/assignment' },
     { name: 'Knowledge Center', icon: <FaBook className="text-amber-600" size={24} />, path: '/knowlegecenter' },
@@ -359,11 +352,6 @@ const HomePage = () => {
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
           </NavLink>
         </div>
-        
-        <NavLink to="/events" className="text-gray-600 hover:text-blue-500 transition-colors duration-300 hidden xs:flex items-center">
-          <FaCalendarAlt size={20} />
-          <span className="hidden sm:inline-block ml-1">Calendar</span>
-        </NavLink>
 
         <div className="relative" ref={dropdownRef}>
           {/* Profile Picture with status indicator - fixed for small screens */}
@@ -604,10 +592,6 @@ const HomePage = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  <NavLink to="/events" className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium inline-block mt-2 transition-colors duration-300 text-center w-full">
-                    View All Campus Events
-                  </NavLink>
                 </div>
               </div>
             </div>
