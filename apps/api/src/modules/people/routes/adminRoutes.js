@@ -25,7 +25,12 @@ router.put(
   validateObjectId('id'),
   sessionController.updateSession
 );
-router.delete('/session/:id', authorize('admin'), validateObjectId('id'), admin.deleteSession);
+router.delete(
+  '/session/:id',
+  authorize('admin'),
+  validateObjectId('id'),
+  sessionController.deleteSession
+);
 router.post(
   '/session/:id/copy-classes',
   authorize('admin'),
@@ -36,19 +41,19 @@ router.post(
   '/session/:id/sync-students',
   authorize('admin'),
   validateObjectId('id'),
-  admin.syncStudentSessions
+  sessionController.syncStudentSessions
 );
 router.post(
   '/session/:id/copy-subject-maps',
   authorize('admin'),
   validateObjectId('id'),
-  admin.copySubjectMapsToSession
+  sessionController.copySubjectMapsToSession
 );
 router.post(
   '/session/:id/copy-teacher-assignments',
   authorize('admin'),
   validateObjectId('id'),
-  admin.copyTeacherAssignmentsToSession
+  sessionController.copyTeacherAssignmentsToSession
 );
 
 // ── Class management ──────────────────────────────────────────────────────────

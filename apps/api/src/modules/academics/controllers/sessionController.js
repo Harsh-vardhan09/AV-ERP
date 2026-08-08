@@ -92,3 +92,89 @@ exports.copyClassesToSession = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.deleteSession = async (req, res, next) => {
+  try {
+    await sessionService.deleteSession({ sessionId: req.params.id, schoolId: req.schoolId });
+    res.status(200).json({ success: true, message: 'Session deleted' });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.syncStudentSessions = async (req, res, next) => {
+  try {
+    const { targetSession, fixedCount, nothingToFix } = await sessionService.syncStudentSessions({
+      targetSessionId: req.params.id,
+      schoolId: req.schoolId,
+      syncedBy: req.user._id,
+    });
+
+    if (nothingToFix) {
+      return res.status(200).json({
+        success: true,
+        message: 'All students already have the correct session. Nothing to fix.',
+        data: { fixedCount: 0 },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Fixed ${fixedCount} student(s) — their session has been updated to "${targetSession.name}".`,
+      data: { fixedCount },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.copySubjectMapsToSession = async (req, res, next) => {
+  try {
+    const { copied, skipped, total, empty } = await sessionService.copySubjectMapsToSession({
+      targetSessionId: req.params.id,
+      fromSessionId: req.body.fromSessionId,
+      schoolId: req.schoolId,
+    });
+
+    if (empty) {
+      return res.status(200).json({
+        success: true,
+        message: 'No subject mappings found in previous session.',
+        data: { copied: 0, skipped: 0, total: 0 },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Subject mappings: ${copied} copied, ${skipped} already existed or skipped.`,
+      data: { copied, skipped, total },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.copyTeacherAssignmentsToSession = async (req, res, next) => {
+  try {
+    const { teacherSubjectCopied, teacherSubjectSkipped, classTeacherCopied, classTeacherSkipped } =
+      await sessionService.copyTeacherAssignmentsToSession({
+        targetSessionId: req.params.id,
+        fromSessionId: req.body.fromSessionId,
+        schoolId: req.schoolId,
+      });
+
+    return res.status(200).json({
+      success: true,
+      message: `Teacher assignments copied. Subject assignments: ${teacherSubjectCopied} copied. Class teachers: ${classTeacherCopied} copied.`,
+      data: {
+        teacherSubjectAssignments: {
+          copied: teacherSubjectCopied,
+          skipped: teacherSubjectSkipped,
+        },
+        classTeacherAssignments: { copied: classTeacherCopied, skipped: classTeacherSkipped },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
