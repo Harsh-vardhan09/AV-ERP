@@ -1,7 +1,6 @@
 import { useNavigate,Link } from 'react-router-dom';
 import React, { useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 const Application = () => {
   const [isFileRequired, setIsFileRequired] = useState(false);
@@ -93,8 +92,6 @@ const id =useSelector(state=>state?.user?.user?.user?._id)
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-   <ToastContainer/>
-      
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-[800px]">
         <h2 className="text-2xl font-bold mb-6 text-center">Leave Application Form</h2>
         <form onSubmit={handleSubmit}>
