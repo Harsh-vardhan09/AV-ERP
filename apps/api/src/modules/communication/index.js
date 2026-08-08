@@ -4,24 +4,24 @@
 // can reach back here. Deferring to first access keeps a consumer loading only the
 // file it names.
 module.exports = {
-  // Leave — consumers: src-old admin/student/teacher controllers, seeds/seedMaster,
+  // Leave — consumers: people's legacy admin/student/teacher controllers, seeds/seedMaster,
   // the multitenancy migration
   get Leave() {
     return require('./models/leave');
   },
 
-  // Notice — consumers: src-old/controller/studentController, seeds/seedMaster
+  // Notice — consumers: people/controllers/studentController, seeds/seedMaster
   get Notice() {
     return require('./models/notice');
   },
 
-  // Knowledgecenter — consumers: src-old admin/student/teacher controllers,
+  // Knowledgecenter — consumers: people's legacy admin/student/teacher controllers,
   // the backfill-school-id migration
   get Knowledgecenter() {
     return require('./models/knowledgecenter');
   },
 
-  // ComplainBox — consumer: src-old/controller/studentController
+  // ComplainBox — consumer: people/controllers/studentController
   get ComplainBox() {
     return require('./models/ComplainBox');
   },

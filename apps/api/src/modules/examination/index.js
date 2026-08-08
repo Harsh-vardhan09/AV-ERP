@@ -3,34 +3,34 @@
 
 module.exports = {
   // consumers: oases, reportcards, tenancy/superAdminController, fees/calculationService,
-  // plus the three src-old god-controllers and the seed/tool scripts
+  // plus people's three legacy god-controllers and the seed/tool scripts
   get Exam() {
     return require('./models/Exam');
   },
 
-  // consumers: oases, reportcards, src-old admin/teacher/student controllers
+  // consumers: oases, reportcards, people's legacy admin/teacher/student controllers
   get ExamSubjectConfig() {
     return require('./models/ExamSubjectConfig');
   },
 
-  // consumers: oases, reportcards, src-old admin/teacher/student controllers
+  // consumers: oases, reportcards, people's legacy admin/teacher/student controllers
   get MarksModel() {
     return require('./models/MarksModel');
   },
 
-  // consumers: src-old admin/teacher controllers. Write logic is the only real
+  // consumers: people's legacy admin/teacher controllers. Write logic is the only real
   // audit trail in this system — read it, never rewrite it
   get MarksAuditLog() {
     return require('./models/MarksAuditLog');
   },
 
-  // consumers: reportcards, src-old teacherController
+  // consumers: reportcards, people's teacherController
   get CoScholasticMark() {
     return require('./models/CoScholasticMark');
   },
 
   // consumers: reportcards/{reportCardController,dynamicReportController},
-  // src-old teacherController
+  // people's teacherController
   get marksReadinessService() {
     return require('./services/marksReadinessService');
   },

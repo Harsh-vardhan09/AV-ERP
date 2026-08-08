@@ -15,7 +15,7 @@ const loadManifests = () =>
     .map((e) => require(path.join(MODULES_DIR, e.name, 'module.js')));
 
 // Depth-first topological sort. A dependsOn entry with no manifest behind it
-// ('core', 'academics', 'examination') is external and ignored rather than fatal.
+// ('core') is external and ignored rather than fatal.
 const topoSort = (manifests) => {
   const byKey = new Map(manifests.map((m) => [m.key, m]));
   const state = new Map();
@@ -45,9 +45,9 @@ const topoSort = (manifests) => {
 // Applying authenticate on top of a router that already calls it would re-run the
 // user lookup on every request and 401 the public routes inside it.
 const CHAINS = {
-  jwt:    () => [authenticate],
+  jwt: () => [authenticate],
   scoped: () => [authenticate, schoolIsolation],
-  gated:  (key) => [authenticate, schoolIsolation, checkModuleAccess(key)],
+  gated: (key) => [authenticate, schoolIsolation, checkModuleAccess(key)],
 };
 
 const chainFor = (auth, key) => (CHAINS[auth] ? CHAINS[auth](key) : []);
@@ -68,10 +68,10 @@ const mountsOf = (mod, topoIndex) => {
 
   if (!isEmptyRouter(mod.routes)) {
     mounts.push({
-      module:  mod.key,
-      path:    mod.basePath,
-      routes:  mod.routes,
-      auth:    mod.auth,
+      module: mod.key,
+      path: mod.basePath,
+      routes: mod.routes,
+      auth: mod.auth,
       limiter: 'limiter' in mod ? mod.limiter : 'api',
       order,
     });
@@ -79,12 +79,12 @@ const mountsOf = (mod, topoIndex) => {
 
   for (const extra of mod.extraMounts || []) {
     mounts.push({
-      module:  mod.key,
-      path:    extra.path,
-      routes:  extra.routes,
-      auth:    extra.auth,
+      module: mod.key,
+      path: extra.path,
+      routes: extra.routes,
+      auth: extra.auth,
       limiter: 'limiter' in extra ? extra.limiter : 'api',
-      order:   extra.order ?? order,
+      order: extra.order ?? order,
     });
   }
 
@@ -95,10 +95,7 @@ const permissionRegistry = new Map();
 const jobPaths = [];
 let mountTable = [];
 
-// legacyMounts carries the routers still living in src-old. They take the same
-// descriptor shape so they sort into position with everything else, and the
-// parameter disappears when src-old does.
-const registerModules = (app, { apiLimiter, authLimiter }, legacyMounts = []) => {
+const registerModules = (app, { apiLimiter, authLimiter }) => {
   const LIMITERS = { api: apiLimiter, auth: authLimiter };
   const modules = topoSort(loadManifests());
 
@@ -107,7 +104,8 @@ const registerModules = (app, { apiLimiter, authLimiter }, legacyMounts = []) =>
     for (const job of mod.jobs || []) jobPaths.push(job);
   }
 
-  const mounts = [...modules.flatMap(mountsOf), ...legacyMounts]
+  const mounts = modules
+    .flatMap(mountsOf)
     .map((m, seq) => ({ ...m, seq }))
     .sort((a, b) => a.order - b.order || a.seq - b.seq);
 
@@ -119,9 +117,7 @@ const registerModules = (app, { apiLimiter, authLimiter }, legacyMounts = []) =>
 
   mountTable = mounts;
 
-  logger.info(
-    `📦 Modules registered (${modules.length}): ${modules.map((m) => m.key).join(', ')}`
-  );
+  logger.info(`📦 Modules registered (${modules.length}): ${modules.map((m) => m.key).join(', ')}`);
   logger.info(
     `🔗 Route mounts (${mounts.length}): ${mounts.map((m) => `${m.path}[${m.module}]`).join(' ')}`
   );

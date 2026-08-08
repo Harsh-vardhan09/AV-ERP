@@ -5,7 +5,7 @@
 // only what it names.
 module.exports = {
   // StudentProfile — consumers: modules/admissions, documents, fees, identity,
-  // imports, library, oases, reportcards, and the src-old god-controllers
+  // imports, library, oases, reportcards, and this module's legacy god-controllers
   get StudentProfile() {
     return require('./models/StudentProfile');
   },

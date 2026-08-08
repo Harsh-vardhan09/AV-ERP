@@ -6,15 +6,23 @@
 // Deferring to first access breaks the cycle — a consumer loads only what it names.
 module.exports = {
   // School — consumers: modules/library, modules/documents, modules/identity,
-  // ~28 src-old controllers and the seed/tool scripts
-  get School() { return require('./models/School'); },
+  // ~28 people's legacy controllers and the seed/tool scripts
+  get School() {
+    return require('./models/School');
+  },
 
   // SchoolSettings — consumers: core/security/moduleGate, notifications, report cards
-  get SchoolSettings() { return require('./models/SchoolSettings'); },
+  get SchoolSettings() {
+    return require('./models/SchoolSettings');
+  },
 
   // SuperAdmin — consumer: core/security/superAdminAuth
-  get SuperAdmin() { return require('./models/SuperAdmin'); },
+  get SuperAdmin() {
+    return require('./models/SuperAdmin');
+  },
 
   // superAdminController — consumer: modules/reportcards/routes/reportTemplateRoutes
-  get superAdminController() { return require('./controllers/superAdminController'); },
+  get superAdminController() {
+    return require('./controllers/superAdminController');
+  },
 };

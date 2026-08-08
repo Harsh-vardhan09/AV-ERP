@@ -3,7 +3,7 @@
 
 module.exports = {
   // consumers: admissions, fees, imports, oases, people, reportcards, examination,
-  // plus the three src-old god-controllers and the seed/tool scripts
+  // plus people's three legacy god-controllers and the seed/tool scripts
   get AcademicSession() {
     return require('./models/AcademicSession');
   },
@@ -23,27 +23,27 @@ module.exports = {
     return require('./models/SubjectMaster');
   },
 
-  // consumers: oases, reportcards, examination/marksReadinessService, src-old controllers
+  // consumers: oases, reportcards, examination/marksReadinessService, people's legacy controllers
   get ClassSubjectMap() {
     return require('./models/ClassSubjectMap');
   },
 
-  // consumers: people/teacherManagementController, src-old admin/teacher controllers
+  // consumers: people/teacherManagementController, people's legacy admin/teacher controllers
   get TeacherSubjectAssignment() {
     return require('./models/TeacherSubjectAssignment');
   },
 
-  // consumers: people, reportcards, src-old admin/teacher/student controllers
+  // consumers: people, reportcards, people's legacy admin/teacher/student controllers
   get ClassTeacherAssignment() {
     return require('./models/ClassTeacherAssignment');
   },
 
-  // consumers: src-old admin/teacher/student controllers
+  // consumers: people's legacy admin/teacher/student controllers
   get Assignment() {
     return require('./models/assignment');
   },
 
-  // consumers: src-old teacher/student controllers
+  // consumers: people's teacher/student controllers
   get Assignmentupload() {
     return require('./models/uploadassignment');
   },

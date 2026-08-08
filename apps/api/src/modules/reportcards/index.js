@@ -5,7 +5,7 @@
 // from becoming a cycle — a consumer loads only what it names.
 module.exports = {
   // ReportCard — consumers: modules/fees/services/calculationService,
-  // src-old/controller/teacherController, seeds and tools
+  // people/controllers/teacherController, seeds and tools
   get ReportCard() {
     return require('./models/ReportCard');
   },
@@ -16,20 +16,20 @@ module.exports = {
   },
 
   // ReportTemplate — consumers: modules/documents/globalTemplateController,
-  // modules/tenancy/superAdminController, src-old adminController and
+  // modules/tenancy/superAdminController, people's adminController and
   // teacherController, seeds and the global-template migration
   get ReportTemplate() {
     return require('./models/ReportTemplate');
   },
 
   // TemplateParserService — consumers: core/pdf/htmlToPdf,
-  // modules/documents/globalTemplateController, src-old/admissionTemplateController
+  // modules/documents/globalTemplateController, admissions/controllers/admissionTemplateController
   get TemplateParserService() {
     return require('./services/templateParserService');
   },
 
   // TemplateFieldExtractor — consumers: modules/documents/globalTemplateController,
-  // modules/tenancy/superAdminController, src-old admissionTemplateController and
+  // modules/tenancy/superAdminController, admissions' admissionTemplateController and
   // teacherController
   get TemplateFieldExtractor() {
     return require('./services/templateFieldExtractor');

@@ -5,18 +5,28 @@
 // a consumer loading only the file it names.
 module.exports = {
   // AdmissionTemplate — consumer: modules/tenancy/superAdminController (authoring side)
-  get AdmissionTemplate() { return require('./models/AdmissionTemplate'); },
+  get AdmissionTemplate() {
+    return require('./models/AdmissionTemplate');
+  },
 
   // AdmissionFormSettings — consumers: modules/tenancy/superAdminController,
   // seeds/seedHMHSS00022FormConfig
-  get AdmissionFormSettings() { return require('./models/AdmissionFormSettings'); },
+  get AdmissionFormSettings() {
+    return require('./models/AdmissionFormSettings');
+  },
 
   // admissionFieldRegistry — consumer: modules/reportcards/templateFieldExtractor
-  get admissionFieldRegistry() { return require('./services/admissionFieldRegistry'); },
+  get admissionFieldRegistry() {
+    return require('./services/admissionFieldRegistry');
+  },
 
   // fieldMappingService — consumer: modules/reportcards/templateParserService
-  get fieldMappingService() { return require('./services/fieldMappingService'); },
+  get fieldMappingService() {
+    return require('./services/fieldMappingService');
+  },
 
-  // admissionController — consumer: src-old/routes/studentManagementRoutes
-  get admissionController() { return require('./controllers/admissionController'); },
+  // admissionController — consumer: people/routes/studentManagementRoutes
+  get admissionController() {
+    return require('./controllers/admissionController');
+  },
 };

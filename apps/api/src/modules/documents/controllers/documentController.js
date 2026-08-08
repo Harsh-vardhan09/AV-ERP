@@ -6,29 +6,37 @@ const https = require('https');
 const PDFDocument = require('pdfkit');
 const SchoolCertificate = require('../models/SchoolCertificate');
 // TEMP: StudentProfile/School move to modules/people, templateEngine to modules/academics
-const StudentProfile    = require('../../people').StudentProfile;
-const School            = require('../../tenancy').School;
-const DocumentTemplate  = require('../models/DocumentTemplate');
+const StudentProfile = require('../../people').StudentProfile;
+const School = require('../../tenancy').School;
+const DocumentTemplate = require('../models/DocumentTemplate');
 const { buildStudentData } = require('../../reportcards').templateEngine;
 const { uploadImageToCloud } = require('../../../core/config/storage');
-const { renderCertificateHtml, DEFAULT_TC_LAYOUT, DEFAULT_MIGRATION_LAYOUT } = require('../lib/htmlCertificateRenderer');
+const {
+  renderCertificateHtml,
+  DEFAULT_TC_LAYOUT,
+  DEFAULT_MIGRATION_LAYOUT,
+} = require('../lib/htmlCertificateRenderer');
 const { generatePdfFromHtml } = require('../../../core/pdf/puppeteerPdf');
 const logger = require('../../../core/logging/logger');
 
 const DOC_TYPES = SchoolCertificate.DOC_TYPES;
-// TEMP: still the src-old upload dir. __dirname moved two levels deeper in this
-// migration, so the extra hops keep generated PDFs at their original path
-const CERT_PDF_DIR = path.join(__dirname, '..', '..', '..', '..', 'src-old', 'uploads', 'certificates');
+// src/uploads is the same root core/http/upload.disk writes to and app.js serves
+// at /uploads. Created on demand by ensureDir
+const CERT_PDF_DIR = path.join(__dirname, '..', '..', '..', 'uploads', 'certificates');
 
 // SMALL UTILITIES
 
 const dayOrdinal = (d) => {
   if (d > 3 && d < 21) return `${d}th`;
   switch (d % 10) {
-    case 1: return `${d}st`;
-    case 2: return `${d}nd`;
-    case 3: return `${d}rd`;
-    default: return `${d}th`;
+    case 1:
+      return `${d}st`;
+    case 2:
+      return `${d}nd`;
+    case 3:
+      return `${d}rd`;
+    default:
+      return `${d}th`;
   }
 };
 
@@ -36,7 +44,20 @@ const formatDobLong = (dob) => {
   if (!dob) return '';
   const date = new Date(dob);
   if (Number.isNaN(date.getTime())) return '';
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
   return `${dayOrdinal(date.getDate())} ${months[date.getMonth()]} ${date.getFullYear()}`;
 };
 
@@ -44,8 +65,8 @@ const buildAddressLine = (profile) => {
   const parts = [
     profile.address,
     profile.addressLine2,
-    profile.city    && `P.O.- ${profile.city}`,
-    profile.state   && `P.S.- ${profile.state}`,
+    profile.city && `P.O.- ${profile.city}`,
+    profile.state && `P.S.- ${profile.state}`,
     profile.pincode && `PIN- ${profile.pincode}`,
   ].filter(Boolean);
   return parts.join(', ').replace(/\s+/g, ' ').trim();
@@ -56,10 +77,13 @@ const extractPhotoRawFromDocuments = (documents) => {
   if (!documents) return '';
   if (typeof documents.photo === 'string' && documents.photo.trim()) return documents.photo.trim();
   if (documents.photo && typeof documents.photo === 'object') {
-    if (typeof documents.photo.url === 'string'        && documents.photo.url.trim())        return documents.photo.url.trim();
-    if (typeof documents.photo.secure_url === 'string' && documents.photo.secure_url.trim()) return documents.photo.secure_url.trim();
+    if (typeof documents.photo.url === 'string' && documents.photo.url.trim())
+      return documents.photo.url.trim();
+    if (typeof documents.photo.secure_url === 'string' && documents.photo.secure_url.trim())
+      return documents.photo.secure_url.trim();
   }
-  if (typeof documents.photoUrl === 'string' && documents.photoUrl.trim()) return documents.photoUrl.trim();
+  if (typeof documents.photoUrl === 'string' && documents.photoUrl.trim())
+    return documents.photoUrl.trim();
   return '';
 };
 
@@ -91,16 +115,19 @@ const buildSharedStudentCertificateFields = (profile, req) => {
   const rawPhoto = extractPhotoRawFromDocuments(profile.documents);
   const photoUrl = toAbsoluteAssetUrl(rawPhoto, req);
   return {
-    studentName: [profile.firstName, profile.middleName, profile.lastName].filter(Boolean).join(' ').trim(),
+    studentName: [profile.firstName, profile.middleName, profile.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim(),
     studentCode: profile.studentId || profile.admissionNumber || profile.rollNo || '',
-    pen:         profile.pen || '',
-    fatherName:  profile.parentDetails?.father?.name || '',
-    motherName:  profile.parentDetails?.mother?.name || '',
-    address:     buildAddressLine(profile),
-    district:    profile.city || profile.state || '',
+    pen: profile.pen || '',
+    fatherName: profile.parentDetails?.father?.name || '',
+    motherName: profile.parentDetails?.mother?.name || '',
+    address: buildAddressLine(profile),
+    district: profile.city || profile.state || '',
     dateOfBirthFormatted: formatDobLong(profile.dateOfBirth),
     nationality: profile.nationality || 'Indian',
-    religion:    profile.religion || '',
+    religion: profile.religion || '',
     photoUrl,
     photo: photoUrl,
   };
@@ -111,52 +138,52 @@ const buildSchoolSnapshotFromDb = (school, req) => {
   const s = school.toObject ? school.toObject() : school;
   const locParts = [];
   if (s.certBlockMunicipality) locParts.push(`BLOCK/ MUNC./ CORP. : ${s.certBlockMunicipality}`);
-  if (s.certCircle)            locParts.push(`CIRCLE : ${s.certCircle}`);
-  if (s.certDistrict)          locParts.push(`DIST. : ${s.certDistrict}`);
-  if (s.certPin)               locParts.push(`PIN : ${s.certPin}`);
+  if (s.certCircle) locParts.push(`CIRCLE : ${s.certCircle}`);
+  if (s.certDistrict) locParts.push(`DIST. : ${s.certDistrict}`);
+  if (s.certPin) locParts.push(`PIN : ${s.certPin}`);
   const logoRaw = s.logoUrl || '';
   return {
-    schoolName:        s.name || '',
-    udiseCode:         s.udiseCode || '',
+    schoolName: s.name || '',
+    udiseCode: s.udiseCode || '',
     schoolLocationLine: locParts.join(', '),
-    logoUrl:           req ? toAbsoluteAssetUrl(logoRaw, req) : logoRaw,
+    logoUrl: req ? toAbsoluteAssetUrl(logoRaw, req) : logoRaw,
   };
 };
 
 const buildTcDefaults = (profile, req) => {
   const shared = buildSharedStudentCertificateFields(profile, req);
   const rawClassName = profile.classId?.name || '';
-  const classLabel   = rawClassName.replace(/^class\s+/i, '').trim();
-  const sessionName  = profile.session?.name || '';
+  const classLabel = rawClassName.replace(/^class\s+/i, '').trim();
+  const sessionName = profile.session?.name || '';
   const lastClassAttended = classLabel
     ? `CLASS ${classLabel}${sessionName ? ` (Academic Session: ${sessionName})` : ''}`
     : '';
   return {
     ...shared,
-    lastClassPassed:         profile.previousClass ? profile.previousClass.toUpperCase() : '',
-    lastClassAttended:       lastClassAttended.toUpperCase(),
-    reasonForTransfer:       '',
+    lastClassPassed: profile.previousClass ? profile.previousClass.toUpperCase() : '',
+    lastClassAttended: lastClassAttended.toUpperCase(),
+    reasonForTransfer: '',
     certificationStatementDate: '',
-    issueFooterDate:         '',
-    acknowledgementDate:     '',
+    issueFooterDate: '',
+    acknowledgementDate: '',
   };
 };
 
 const buildMigrationDefaults = (profile, req) => {
   const shared = buildSharedStudentCertificateFields(profile, req);
   const rawClassName = profile.classId?.name || '';
-  const classLabel   = rawClassName.replace(/^class\s+/i, '').trim();
-  const sessionName  = profile.session?.name || '';
+  const classLabel = rawClassName.replace(/^class\s+/i, '').trim();
+  const sessionName = profile.session?.name || '';
   return {
     ...shared,
     lastClassAttended: classLabel
       ? `CLASS ${classLabel}${sessionName ? ` (Session: ${sessionName})` : ''}`.toUpperCase()
       : '',
-    conduct:       'Good',
+    conduct: 'Good',
     whetherPassed: 'Yes',
     dateOfLeaving: '',
-    remarks:       '',
-    issueDate:     '',
+    remarks: '',
+    issueDate: '',
   };
 };
 
@@ -199,17 +226,20 @@ const sanitizeFieldForRender = (f = {}) => ({
   maxLines: Math.min(8, Math.max(1, Number(f.maxLines) || 2)),
 });
 
-const fetchBufferFromUrl = (url) => new Promise((resolve, reject) => {
-  const lib = String(url).startsWith('https') ? https : http;
-  lib.get(url, (resp) => {
-    if (resp.statusCode !== 200) {
-      return reject(new Error(`Failed to fetch template asset: HTTP ${resp.statusCode}`));
-    }
-    const chunks = [];
-    resp.on('data', (chunk) => chunks.push(chunk));
-    resp.on('end', () => resolve(Buffer.concat(chunks)));
-  }).on('error', reject);
-});
+const fetchBufferFromUrl = (url) =>
+  new Promise((resolve, reject) => {
+    const lib = String(url).startsWith('https') ? https : http;
+    lib
+      .get(url, (resp) => {
+        if (resp.statusCode !== 200) {
+          return reject(new Error(`Failed to fetch template asset: HTTP ${resp.statusCode}`));
+        }
+        const chunks = [];
+        resp.on('data', (chunk) => chunks.push(chunk));
+        resp.on('end', () => resolve(Buffer.concat(chunks)));
+      })
+      .on('error', reject);
+  });
 
 /**
  * Render a certificate PDF and write it to disk (overlay / legacy path).
@@ -218,12 +248,12 @@ const fetchBufferFromUrl = (url) => new Promise((resolve, reject) => {
 const renderCertificatePdfToFile = async ({ snapshot, outputPath }) => {
   ensureDir(path.dirname(outputPath));
   const templateSnapshot = snapshot?.templateSnapshot || {};
-  const data             = snapshot?.studentData     || {};
-  const w = Number(templateSnapshot.imageWidth)  || 794;
+  const data = snapshot?.studentData || {};
+  const w = Number(templateSnapshot.imageWidth) || 794;
   const h = Number(templateSnapshot.imageHeight) || 1123;
   const fields = Array.isArray(templateSnapshot.fields) ? templateSnapshot.fields : [];
 
-  const doc    = new PDFDocument({ size: [w, h], margin: 0 });
+  const doc = new PDFDocument({ size: [w, h], margin: 0 });
   const stream = fs.createWriteStream(outputPath);
   doc.pipe(stream);
 
@@ -238,41 +268,45 @@ const renderCertificatePdfToFile = async ({ snapshot, outputPath }) => {
 
   const FONT_MAP = {
     'Times New Roman': 'Times-Roman',
-    'Courier New':     'Courier',
-    'Georgia':         'Times-Roman',
-    'Verdana':         'Helvetica',
+    'Courier New': 'Courier',
+    Georgia: 'Times-Roman',
+    Verdana: 'Helvetica',
   };
 
   for (const rawField of fields) {
     const field = sanitizeFieldForRender(rawField);
-    const text  = (data[field.key] === undefined || data[field.key] === null) ? '' : String(data[field.key]);
-    const x     = (field.xPercent / 100) * w;
-    const y     = (field.yPercent / 100) * h;          // top of text box — no bogus offset
-    const font  = FONT_MAP[field.fontFamily] || 'Helvetica';
-    const bold  = ['bold', '700', '800', '600'].includes(String(field.fontWeight))
-      ? (font === 'Helvetica' ? 'Helvetica-Bold' : `${font}-Bold`)
+    const text =
+      data[field.key] === undefined || data[field.key] === null ? '' : String(data[field.key]);
+    const x = (field.xPercent / 100) * w;
+    const y = (field.yPercent / 100) * h; // top of text box — no bogus offset
+    const font = FONT_MAP[field.fontFamily] || 'Helvetica';
+    const bold = ['bold', '700', '800', '600'].includes(String(field.fontWeight))
+      ? font === 'Helvetica'
+        ? 'Helvetica-Bold'
+        : `${font}-Bold`
       : font;
-    const safeBold = bold.includes('-Bold') && [
-      'Helvetica-Bold','Times-Bold','Courier-Bold',
-    ].includes(bold) ? bold : font;
+    const safeBold =
+      bold.includes('-Bold') && ['Helvetica-Bold', 'Times-Bold', 'Courier-Bold'].includes(bold)
+        ? bold
+        : font;
 
     doc
       .font(safeBold)
       .fontSize(field.fontSize)
       .fillColor(field.color || '#000000')
       .text(text, x, Math.max(0, y), {
-        width:     field.width,
-        align:     field.alignment,
+        width: field.width,
+        align: field.alignment,
         lineBreak: field.maxLines > 1,
-        height:    field.maxLines * (field.fontSize + 3),
-        ellipsis:  false,
+        height: field.maxLines * (field.fontSize + 3),
+        ellipsis: false,
       });
   }
 
   doc.end();
   await new Promise((resolve, reject) => {
     stream.on('finish', resolve);
-    stream.on('error',  reject);
+    stream.on('error', reject);
   });
 };
 
@@ -280,7 +314,14 @@ const renderCertificatePdfToFile = async ({ snapshot, outputPath }) => {
  * Generate a PDF Buffer using Puppeteer (structured layout mode).
  * No disk write — returns raw bytes for streaming.
  */
-const renderStructuredPdfBuffer = async ({ layout, sections, data, schoolSnapshot, certNumber, type }) => {
+const renderStructuredPdfBuffer = async ({
+  layout,
+  sections,
+  data,
+  schoolSnapshot,
+  certNumber,
+  type,
+}) => {
   const html = renderCertificateHtml({ layout, sections, data, schoolSnapshot, certNumber, type });
   return generatePdfFromHtml(html);
 };
@@ -306,11 +347,12 @@ exports.getDocument = async (req, res) => {
     }
 
     const school = await School.findById(req.schoolId);
-    const doc    = await SchoolCertificate.findOne({ schoolId: req.schoolId, studentId, type }).lean();
+    const doc = await SchoolCertificate.findOne({ schoolId: req.schoolId, studentId, type }).lean();
 
-    const defaults       = type === 'TC' ? buildTcDefaults(profile, req) : buildMigrationDefaults(profile, req);
+    const defaults =
+      type === 'TC' ? buildTcDefaults(profile, req) : buildMigrationDefaults(profile, req);
     const schoolSnapshot = mergeSchoolSnapshot(school, doc?.schoolSnapshot, req);
-    const mergedData     = mergeFlat(defaults, doc?.editedData || doc?.data);
+    const mergedData = mergeFlat(defaults, doc?.editedData || doc?.data);
 
     // Photo: unlocked → live photo; locked → frozen snapshot
     if (doc?.isLocked && doc?.data?.photoUrl) {
@@ -322,26 +364,26 @@ exports.getDocument = async (req, res) => {
 
     const dataEnvelope = {
       ...mergedData,
-      photo:      mergedData.photoUrl || '',
-      dob:        mergedData.dateOfBirthFormatted || '',
-      class:      mergedData.lastClassAttended || '',
+      photo: mergedData.photoUrl || '',
+      dob: mergedData.dateOfBirthFormatted || '',
+      class: mergedData.lastClassAttended || '',
       schoolName: schoolSnapshot.schoolName || '',
-      udiseCode:  schoolSnapshot.udiseCode  || '',
+      udiseCode: schoolSnapshot.udiseCode || '',
     };
 
     return res.json({
-      success:        true,
-      document:       doc,        // includes doc.data.generatedSnapshot when present
+      success: true,
+      document: doc, // includes doc.data.generatedSnapshot when present
       defaults,
       mergedData,
       schoolSnapshot,
-      data:           dataEnvelope,
+      data: dataEnvelope,
       student: {
-        _id:       profile._id,
+        _id: profile._id,
         firstName: profile.firstName,
-        lastName:  profile.lastName,
-        classId:   profile.classId,
-        session:   profile.session,
+        lastName: profile.lastName,
+        classId: profile.classId,
+        session: profile.session,
       },
     });
   } catch (err) {
@@ -365,7 +407,9 @@ exports.createDocument = async (req, res) => {
 
     const existing = await SchoolCertificate.findOne({ schoolId: req.schoolId, studentId, type });
     if (existing) {
-      return res.status(409).json({ success: false, message: 'Document already exists for this student and type' });
+      return res
+        .status(409)
+        .json({ success: false, message: 'Document already exists for this student and type' });
     }
 
     const profile = await StudentProfile.findOne({ _id: studentId, schoolId: req.schoolId })
@@ -375,12 +419,14 @@ exports.createDocument = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    const school  = await School.findById(req.schoolId);
-    const defaults     = type === 'TC' ? buildTcDefaults(profile, req) : buildMigrationDefaults(profile, req);
-    const baseSnap     = buildSchoolSnapshotFromDb(school, req);
-    const schoolSnapshot = snapBody && typeof snapBody === 'object' ? { ...baseSnap, ...snapBody } : baseSnap;
-    const mergedData   = mergeFlat(defaults, data);
-    mergedData.photo   = mergedData.photoUrl || mergedData.photo || '';
+    const school = await School.findById(req.schoolId);
+    const defaults =
+      type === 'TC' ? buildTcDefaults(profile, req) : buildMigrationDefaults(profile, req);
+    const baseSnap = buildSchoolSnapshotFromDb(school, req);
+    const schoolSnapshot =
+      snapBody && typeof snapBody === 'object' ? { ...baseSnap, ...snapBody } : baseSnap;
+    const mergedData = mergeFlat(defaults, data);
+    mergedData.photo = mergedData.photoUrl || mergedData.photo || '';
 
     let certNo = certificateNumber;
     if (!certNo) {
@@ -394,25 +440,29 @@ exports.createDocument = async (req, res) => {
       studentId,
       type,
       certificateNumber: certNo,
-      data:              mergedData,
-      originalData:      { ...mergedData },
-      editedData:        { ...mergedData },
+      data: mergedData,
+      originalData: { ...mergedData },
+      editedData: { ...mergedData },
       schoolSnapshot,
-      isLocked:          false,
-      createdBy:         req.user._id,
-      updatedBy:         req.user._id,
-      auditLogs: [{
-        action: 'CREATE',
-        actor: req.user._id,
-        at: new Date(),
-        changes: { certificateNumber: certNo },
-      }],
+      isLocked: false,
+      createdBy: req.user._id,
+      updatedBy: req.user._id,
+      auditLogs: [
+        {
+          action: 'CREATE',
+          actor: req.user._id,
+          at: new Date(),
+          changes: { certificateNumber: certNo },
+        },
+      ],
     });
 
     return res.status(201).json({ success: true, data: doc });
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(409).json({ success: false, message: 'Document already exists for this student and type' });
+      return res
+        .status(409)
+        .json({ success: false, message: 'Document already exists for this student and type' });
     }
     logger.error('createDocument', err);
     return res.status(500).json({ success: false, message: err.message });
@@ -427,7 +477,7 @@ exports.updateDocument = async (req, res) => {
     }
 
     const doc = await SchoolCertificate.findOne({ _id: id, schoolId: req.schoolId });
-    if (!doc)        return res.status(404).json({ success: false, message: 'Document not found' });
+    if (!doc) return res.status(404).json({ success: false, message: 'Document not found' });
     if (doc.isLocked) return res.status(403).json({ message: 'Document is locked' });
 
     const { data, schoolSnapshot, certificateNumber } = req.body || {};
@@ -476,9 +526,9 @@ exports.lockDocument = async (req, res) => {
       }
     }
 
-    doc.isLocked  = true;
-    doc.lockedAt  = new Date();
-    doc.lockedBy  = req.user._id;
+    doc.isLocked = true;
+    doc.lockedAt = new Date();
+    doc.lockedBy = req.user._id;
     doc.updatedBy = req.user._id;
     doc.finalizedSnapshot = {
       data: { ...(doc.editedData || doc.data || {}) },
@@ -509,9 +559,9 @@ exports.unlockDocument = async (req, res) => {
     const doc = await SchoolCertificate.findOne({ _id: id, schoolId: req.schoolId });
     if (!doc) return res.status(404).json({ success: false, message: 'Document not found' });
 
-    doc.isLocked  = false;
-    doc.lockedAt  = undefined;
-    doc.lockedBy  = undefined;
+    doc.isLocked = false;
+    doc.lockedAt = undefined;
+    doc.lockedBy = undefined;
     doc.updatedBy = req.user._id;
     pushAuditLog(doc, 'UNLOCK', req.user._id, { message: 'Unlocked by admin' });
     await doc.save();
@@ -525,39 +575,39 @@ exports.unlockDocument = async (req, res) => {
 
 // FIELD KEY → LABEL MAP
 const FIELD_LABELS = {
-  studentName:                'Student Name',
-  fatherName:                 "Father's Name",
-  motherName:                 "Mother's Name",
-  className:                  'Class',
-  sectionName:                'Section',
-  admissionNo:                'Admission No.',
-  rollNo:                     'Roll No.',
-  dob:                        'Date of Birth',
-  address:                    'Address',
-  district:                   'District',
-  schoolName:                 'School Name',
-  udiseCode:                  'UDISE Code',
-  schoolAddress:              'School Address',
-  leavingDate:                'Date of Leaving',
-  reasonForTransfer:          'Reason for Transfer',
-  lastClassPassed:            'Last Class Passed',
-  lastClassAttended:          'Last Class Attended',
-  certificateNo:              'Certificate No.',
-  issueDate:                  'Issue Date',
-  sessionName:                'Session',
-  pen:                        'PEN Number',
-  studentCode:                'Student Code',
+  studentName: 'Student Name',
+  fatherName: "Father's Name",
+  motherName: "Mother's Name",
+  className: 'Class',
+  sectionName: 'Section',
+  admissionNo: 'Admission No.',
+  rollNo: 'Roll No.',
+  dob: 'Date of Birth',
+  address: 'Address',
+  district: 'District',
+  schoolName: 'School Name',
+  udiseCode: 'UDISE Code',
+  schoolAddress: 'School Address',
+  leavingDate: 'Date of Leaving',
+  reasonForTransfer: 'Reason for Transfer',
+  lastClassPassed: 'Last Class Passed',
+  lastClassAttended: 'Last Class Attended',
+  certificateNo: 'Certificate No.',
+  issueDate: 'Issue Date',
+  sessionName: 'Session',
+  pen: 'PEN Number',
+  studentCode: 'Student Code',
   // Migration-specific
-  nationality:                'Nationality',
-  religion:                   'Religion',
-  conduct:                    'Conduct',
-  whetherPassed:              'Passed Promotion Exam',
-  dateOfLeaving:              'Date of Leaving / Migration',
-  remarks:                    'Remarks',
+  nationality: 'Nationality',
+  religion: 'Religion',
+  conduct: 'Conduct',
+  whetherPassed: 'Passed Promotion Exam',
+  dateOfLeaving: 'Date of Leaving / Migration',
+  remarks: 'Remarks',
   // Extra TC fields
   certificationStatementDate: 'Transfer Statement Date',
-  issueFooterDate:            'Issue Footer Date',
-  acknowledgementDate:        'Acknowledgement Date',
+  issueFooterDate: 'Issue Footer Date',
+  acknowledgementDate: 'Acknowledgement Date',
 };
 
 // IMAGE-BASED TEMPLATE ENDPOINTS
@@ -571,8 +621,8 @@ exports.getTemplate = async (req, res) => {
     }
     const template = await DocumentTemplate.findOne({ schoolId: req.schoolId, type }).lean();
     return res.json({
-      success:      true,
-      data:         template || null,
+      success: true,
+      data: template || null,
       fieldLibrary: Object.entries(FIELD_LABELS).map(([key, label]) => ({ key, label })),
     });
   } catch (err) {
@@ -590,7 +640,9 @@ exports.uploadTemplateImage = async (req, res) => {
     const { type, name, imageWidth, imageHeight } = req.body;
 
     if (!type || !DocumentTemplate.ALLOWED_TYPES.includes(type)) {
-      return res.status(400).json({ success: false, message: 'Valid type (TC|MIGRATION) is required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Valid type (TC|MIGRATION) is required' });
     }
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Template file is required' });
@@ -599,7 +651,7 @@ exports.uploadTemplateImage = async (req, res) => {
 
     // Upload buffer to Cloudinary via project helper (already configured)
     const uploaded = await uploadImageToCloud(req.file.buffer, {
-      folder:    'erp/templates',
+      folder: 'erp/templates',
       overwrite: true,
       resource_type: isPdf ? 'raw' : 'image',
     });
@@ -609,37 +661,37 @@ exports.uploadTemplateImage = async (req, res) => {
     const existing = await DocumentTemplate.findOne({ schoolId: req.schoolId, type });
     if (existing) {
       existing.templateImageUrl = isPdf ? '' : fileUrl;
-      existing.templatePdfUrl   = isPdf ? fileUrl : '';
+      existing.templatePdfUrl = isPdf ? fileUrl : '';
       existing.templateMimeType = req.file.mimetype;
-      existing.name             = name || existing.name || `${type} Template`;
-      if (imageWidth)  existing.imageWidth  = Number(imageWidth);
+      existing.name = name || existing.name || `${type} Template`;
+      if (imageWidth) existing.imageWidth = Number(imageWidth);
       if (imageHeight) existing.imageHeight = Number(imageHeight);
       existing.uploadedAt = new Date();
-      existing.version  += 1;
+      existing.version += 1;
       existing.updatedBy = req.user._id;
-      existing.fields    = []; // positions become invalid when image changes
+      existing.fields = []; // positions become invalid when image changes
       await existing.save();
       return res.json({
         success: true,
-        data:    existing,
+        data: existing,
         message: 'Template image updated. Please reposition fields.',
       });
     }
 
     const template = await DocumentTemplate.create({
-      schoolId:         req.schoolId,
+      schoolId: req.schoolId,
       type,
-      name:             name || `${type} Template`,
+      name: name || `${type} Template`,
       templateImageUrl: isPdf ? '' : fileUrl,
-      templatePdfUrl:   isPdf ? fileUrl : '',
+      templatePdfUrl: isPdf ? fileUrl : '',
       templateMimeType: req.file.mimetype,
-      imageWidth:       imageWidth  ? Number(imageWidth)  : 794,
-      imageHeight:      imageHeight ? Number(imageHeight) : 1123,
-      uploadedAt:       new Date(),
-      fields:           [],
-      version:          1,
-      createdBy:        req.user._id,
-      updatedBy:        req.user._id,
+      imageWidth: imageWidth ? Number(imageWidth) : 794,
+      imageHeight: imageHeight ? Number(imageHeight) : 1123,
+      uploadedAt: new Date(),
+      fields: [],
+      version: 1,
+      createdBy: req.user._id,
+      updatedBy: req.user._id,
     });
     return res.status(201).json({ success: true, data: template });
   } catch (err) {
@@ -667,20 +719,22 @@ exports.saveTemplateFields = async (req, res) => {
       return res.status(400).json({ success: false, message: 'fields must be an array' });
     }
 
-    const invalidKeys = fields.filter(f => !DocumentTemplate.ALLOWED_FIELD_KEYS.includes(f.key));
+    const invalidKeys = fields.filter((f) => !DocumentTemplate.ALLOWED_FIELD_KEYS.includes(f.key));
     if (invalidKeys.length > 0) {
       return res.status(422).json({
         success: false,
-        message: `Invalid field keys: ${invalidKeys.map(f => f.key).join(', ')}`,
+        message: `Invalid field keys: ${invalidKeys.map((f) => f.key).join(', ')}`,
       });
     }
 
-    const sanitized = fields.map((f) => sanitizeFieldForRender({
-      ...f,
-      label: FIELD_LABELS[f.key] || f.key,
-    }));
+    const sanitized = fields.map((f) =>
+      sanitizeFieldForRender({
+        ...f,
+        label: FIELD_LABELS[f.key] || f.key,
+      })
+    );
     const overflowField = sanitized.find((f) => {
-      const widthPct = ((f.width / Math.max(1, Number(template.imageWidth) || 794)) * 100);
+      const widthPct = (f.width / Math.max(1, Number(template.imageWidth) || 794)) * 100;
       return f.xPercent + widthPct > 100.5 || f.yPercent > 99.5;
     });
     if (overflowField) {
@@ -703,13 +757,13 @@ exports.saveTemplateFields = async (req, res) => {
       maxLines: f.maxLines,
     }));
     if (name) template.name = String(name).trim();
-    template.version  += 1;
+    template.version += 1;
     template.updatedBy = req.user._id;
     await template.save();
 
     return res.json({
       success: true,
-      data:    template,
+      data: template,
       message: `Fields saved — template now at version ${template.version}`,
     });
   } catch (err) {
@@ -773,9 +827,9 @@ exports.generateFromTemplate = async (req, res) => {
 
     // 2. Fetch student
     const profile = await StudentProfile.findOne({ _id: studentId, schoolId: req.schoolId })
-      .populate('classId',   'name numericOrder')
+      .populate('classId', 'name numericOrder')
       .populate('sectionId', 'name')
-      .populate('session',   'name');
+      .populate('session', 'name');
     if (!profile) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
@@ -786,12 +840,12 @@ exports.generateFromTemplate = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Document is locked. Unlock it first before regenerating.',
-        code:    'DOCUMENT_LOCKED',
+        code: 'DOCUMENT_LOCKED',
       });
     }
 
     // 4. School snapshot + cert number
-    const school         = await School.findById(req.schoolId);
+    const school = await School.findById(req.schoolId);
     const schoolSnapshot = buildSchoolSnapshotFromDb(school, req);
 
     let certNo = doc?.certificateNumber;
@@ -802,19 +856,21 @@ exports.generateFromTemplate = async (req, res) => {
     }
 
     // 5. Build student data map that covers all FIELD_LABELS keys
-    const savedData   = doc?.data || {};
+    const savedData = doc?.data || {};
     const studentData = buildStudentData(profile, schoolSnapshot, savedData, certNo);
 
     // 6. Freeze template snapshot
     const templateSnapshot = {
       templateImageUrl: template.templateImageUrl || '',
-      templatePdfUrl:   template.templatePdfUrl || '',
+      templatePdfUrl: template.templatePdfUrl || '',
       templateMimeType: template.templateMimeType || 'image/png',
-      imageWidth:       template.imageWidth,
-      imageHeight:      template.imageHeight,
-      fields:           template.fields.map((f) => sanitizeFieldForRender(f.toObject ? f.toObject() : { ...f })),
-      version:          template.version,
-      templateId:       template._id.toString(),
+      imageWidth: template.imageWidth,
+      imageHeight: template.imageHeight,
+      fields: template.fields.map((f) =>
+        sanitizeFieldForRender(f.toObject ? f.toObject() : { ...f })
+      ),
+      version: template.version,
+      templateId: template._id.toString(),
     };
 
     const generatedSnapshot = { studentData, templateSnapshot, generatedAt: new Date() };
@@ -822,25 +878,27 @@ exports.generateFromTemplate = async (req, res) => {
     // 7. Upsert document
     if (!doc) {
       doc = await SchoolCertificate.create({
-        schoolId:          req.schoolId,
+        schoolId: req.schoolId,
         studentId,
         type,
         certificateNumber: certNo,
-        data:              { ...studentData, generatedSnapshot },
-        originalData:      { ...studentData },
-        editedData:        { ...studentData },
+        data: { ...studentData, generatedSnapshot },
+        originalData: { ...studentData },
+        editedData: { ...studentData },
         schoolSnapshot,
-        templateId:        template._id,
-        templateVersion:   template.version,
-        isLocked:          false,
-        createdBy:         req.user._id,
-        updatedBy:         req.user._id,
-        auditLogs: [{
-          action: 'GENERATE',
-          actor: req.user._id,
-          at: new Date(),
-          changes: { templateVersion: template.version },
-        }],
+        templateId: template._id,
+        templateVersion: template.version,
+        isLocked: false,
+        createdBy: req.user._id,
+        updatedBy: req.user._id,
+        auditLogs: [
+          {
+            action: 'GENERATE',
+            actor: req.user._id,
+            at: new Date(),
+            changes: { templateVersion: template.version },
+          },
+        ],
       });
     } else {
       doc.data = { ...(doc.data || {}), ...studentData, generatedSnapshot };
@@ -849,10 +907,10 @@ exports.generateFromTemplate = async (req, res) => {
       doc.markModified('data');
       doc.markModified('originalData');
       doc.markModified('editedData');
-      doc.schoolSnapshot  = schoolSnapshot;
-      doc.templateId      = template._id;
+      doc.schoolSnapshot = schoolSnapshot;
+      doc.templateId = template._id;
       doc.templateVersion = template.version;
-      doc.updatedBy       = req.user._id;
+      doc.updatedBy = req.user._id;
       pushAuditLog(doc, 'GENERATE', req.user._id, { templateVersion: template.version });
       await doc.save();
     }
@@ -865,11 +923,11 @@ exports.generateFromTemplate = async (req, res) => {
       // Structured mode: Puppeteer HTML → PDF
       try {
         const pdfBuffer = await renderStructuredPdfBuffer({
-          layout:         template.layout,
-          sections:       template.sections || {},
-          data:           studentData,
+          layout: template.layout,
+          sections: template.sections || {},
+          data: studentData,
           schoolSnapshot,
-          certNumber:     certNo,
+          certNumber: certNo,
           type,
         });
         ensureDir(path.dirname(pdfPath));
@@ -887,7 +945,7 @@ exports.generateFromTemplate = async (req, res) => {
       }
     }
 
-    doc.generatedPdfPath     = pdfPath;
+    doc.generatedPdfPath = pdfPath;
     doc.generatedPdfMimeType = 'application/pdf';
     // Store layoutMode so download knows which renderer to use
     doc.data = { ...(doc.data || {}), layoutMode: template.layoutMode || 'overlay' };
@@ -895,11 +953,11 @@ exports.generateFromTemplate = async (req, res) => {
     await doc.save();
 
     return res.json({
-      success:           true,
-      message:           'Certificate generated successfully',
-      data:              doc,
+      success: true,
+      message: 'Certificate generated successfully',
+      data: doc,
       generatedSnapshot,
-      layoutMode:        template.layoutMode || 'overlay',
+      layoutMode: template.layoutMode || 'overlay',
     });
   } catch (err) {
     logger.error('generateFromTemplate', err);
@@ -920,7 +978,12 @@ exports.generateBulkFromTemplate = async (req, res) => {
     const validIds = studentIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
     const template = await DocumentTemplate.findOne({ schoolId: req.schoolId, type });
     if (!template || !template.fields?.length) {
-      return res.status(422).json({ success: false, message: `Template for ${type} is missing or has no mapped fields` });
+      return res
+        .status(422)
+        .json({
+          success: false,
+          message: `Template for ${type} is missing or has no mapped fields`,
+        });
     }
     const school = await School.findById(req.schoolId);
     const schoolSnapshot = buildSchoolSnapshotFromDb(school, req);
@@ -952,7 +1015,9 @@ exports.generateBulkFromTemplate = async (req, res) => {
           templateMimeType: template.templateMimeType || 'image/png',
           imageWidth: template.imageWidth,
           imageHeight: template.imageHeight,
-          fields: template.fields.map((f) => sanitizeFieldForRender(f.toObject ? f.toObject() : { ...f })),
+          fields: template.fields.map((f) =>
+            sanitizeFieldForRender(f.toObject ? f.toObject() : { ...f })
+          ),
           version: template.version,
           templateId: template._id.toString(),
         };
@@ -972,7 +1037,13 @@ exports.generateBulkFromTemplate = async (req, res) => {
             isLocked: false,
             createdBy: req.user._id,
             updatedBy: req.user._id,
-            auditLogs: [{ action: 'GENERATE', actor: req.user._id, changes: { bulk: true, templateVersion: template.version } }],
+            auditLogs: [
+              {
+                action: 'GENERATE',
+                actor: req.user._id,
+                changes: { bulk: true, templateVersion: template.version },
+              },
+            ],
           });
         } else {
           doc.data = { ...(doc.data || {}), ...studentData, generatedSnapshot };
@@ -981,7 +1052,10 @@ exports.generateBulkFromTemplate = async (req, res) => {
           doc.schoolSnapshot = schoolSnapshot;
           doc.templateId = template._id;
           doc.templateVersion = template.version;
-          pushAuditLog(doc, 'GENERATE', req.user._id, { bulk: true, templateVersion: template.version });
+          pushAuditLog(doc, 'GENERATE', req.user._id, {
+            bulk: true,
+            templateVersion: template.version,
+          });
           await doc.save();
         }
         const pdfName = `${doc.type}-${doc.studentId}-${doc._id}.pdf`;
@@ -1025,7 +1099,7 @@ exports.downloadCertificatePdf = async (req, res) => {
     logger.warn(`downloadCertificatePdf: file missing for doc ${doc._id} — regenerating on demand`);
 
     const layoutMode = doc.data?.layoutMode || 'overlay';
-    const snapshot   = doc.data?.generatedSnapshot || null;
+    const snapshot = doc.data?.generatedSnapshot || null;
 
     let pdfBuffer;
 
@@ -1042,17 +1116,17 @@ exports.downloadCertificatePdf = async (req, res) => {
         });
       }
 
-      const school        = await School.findById(req.schoolId);
+      const school = await School.findById(req.schoolId);
       const schoolSnapshot = buildSchoolSnapshotFromDb(school, req);
-      const data           = doc.editedData || doc.data || {};
+      const data = doc.editedData || doc.data || {};
 
       pdfBuffer = await renderStructuredPdfBuffer({
-        layout:      template.layout,
-        sections:    template.sections || {},
+        layout: template.layout,
+        sections: template.sections || {},
         data,
         schoolSnapshot,
-        certNumber:  doc.certificateNumber || '',
-        type:        doc.type,
+        certNumber: doc.certificateNumber || '',
+        type: doc.type,
       });
     } else if (snapshot) {
       // Overlay mode — regenerate via PDFKit from frozen snapshot
@@ -1096,14 +1170,19 @@ exports.saveTemplateLayout = async (req, res) => {
     const { layout, sections, name } = req.body;
 
     if (!Array.isArray(layout) || layout.length === 0) {
-      return res.status(400).json({ success: false, message: 'layout[] must be a non-empty array' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'layout[] must be a non-empty array' });
     }
 
     // Validate all row keys are in allowed set
     const allKeys = [];
     layout.forEach((row) => {
       if (row.key) allKeys.push(row.key);
-      if (Array.isArray(row.fields)) row.fields.forEach((f) => { if (f.key) allKeys.push(f.key); });
+      if (Array.isArray(row.fields))
+        row.fields.forEach((f) => {
+          if (f.key) allKeys.push(f.key);
+        });
     });
     const invalidKeys = allKeys.filter((k) => !DocumentTemplate.ALLOWED_FIELD_KEYS.includes(k));
     if (invalidKeys.length > 0) {
@@ -1113,11 +1192,11 @@ exports.saveTemplateLayout = async (req, res) => {
       });
     }
 
-    template.layout     = layout;
-    template.sections   = sections && typeof sections === 'object' ? sections : {};
+    template.layout = layout;
+    template.sections = sections && typeof sections === 'object' ? sections : {};
     template.layoutMode = 'structured';
-    template.version   += 1;
-    template.updatedBy  = req.user._id;
+    template.version += 1;
+    template.updatedBy = req.user._id;
     if (name) template.name = String(name).trim();
     template.markModified('layout');
     template.markModified('sections');
@@ -1125,7 +1204,7 @@ exports.saveTemplateLayout = async (req, res) => {
 
     return res.json({
       success: true,
-      data:    template,
+      data: template,
       message: `Structured layout saved — template v${template.version}`,
     });
   } catch (err) {
