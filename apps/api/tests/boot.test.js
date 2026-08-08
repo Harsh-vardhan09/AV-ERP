@@ -49,5 +49,5 @@ test('every file under src/ requires with no unresolved module', () => {
 
   const app = require('../src/app.js');
   const mounted = app._router.stack.filter((l) => l.handle && l.handle.stack);
-  expect(mounted.length).toBe(34);
+  expect(mounted.length).toBe(33);
 });

@@ -48,23 +48,7 @@ app.get('/api/v1/health', (req, res) =>
   })
 );
 
-// Not yet in a module: this router still lives in src-old. It is passed through the
-// loader so it sorts into its exact former position — 150 sits BELOW the bare /api/v1
-// mount (order 130), and that is what keeps its unauthenticated responses unchanged.
-// exam-controller (60) and assignment (90) now carry their own order in the
-// examination and academics manifests.
-const legacyMounts = [
-  {
-    module: 'src-old',
-    path: '/events',
-    routes: require('../src-old/routes/eventRoutes'),
-    auth: 'router',
-    limiter: 'api',
-    order: 150,
-  },
-];
-
-registerModules(app, { apiLimiter, authLimiter }, legacyMounts);
+registerModules(app, { apiLimiter, authLimiter });
 
 app.use(errorMiddleware);
 
