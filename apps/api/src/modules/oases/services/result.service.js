@@ -6,7 +6,7 @@ const EvaluationMark = require('../models/EvaluationMark');
 const ResultSheet = require('../models/ResultSheet');
 const ExamConfig = require('../models/ExamConfig');
 const { Exam } = require('../../examination');
-const { emitToAll } = require('../../../../src-old/socket');
+const { emitToAll } = require('../../../core/realtime/socket');
 const auditService = require('./auditService');
 const { SHEET_STATUS, EVAL_ROUNDS } = require('../lib/constants');
 

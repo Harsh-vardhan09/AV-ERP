@@ -1,4 +1,3 @@
-
 // OASES — PDF Processing Service
 // Processes uploaded PDF answer sheets:
 //   1. Read from disk
@@ -13,11 +12,8 @@ const crypto = require('crypto');
 const pdfParse = require('pdf-parse');
 const AnswerSheet = require('../models/AnswerSheet');
 const auditService = require('./auditService');
-const { emitToAll } = require('../../../../src-old/socket');
-const {
-  PROCESSING_STATUS,
-  SIGNED_URL_EXPIRY_SECONDS,
-} = require('../lib/constants');
+const { emitToAll } = require('../../../core/realtime/socket');
+const { PROCESSING_STATUS, SIGNED_URL_EXPIRY_SECONDS } = require('../lib/constants');
 const { safeRedisOperation } = require('../lib/redis');
 const logger = require('../../../core/logging/logger.js');
 
@@ -27,10 +23,7 @@ const logger = require('../../../core/logging/logger.js');
  */
 const encryptRollNo = (rollNo) => {
   if (!process.env.JWT_SECRET) {
-    throw new Error(
-      '[pdfService] JWT_SECRET not set. ' +
-      'Cannot perform encryption.'
-    );
+    throw new Error('[pdfService] JWT_SECRET not set. ' + 'Cannot perform encryption.');
   }
   const secret = process.env.JWT_SECRET;
   const key = crypto.createHash('sha256').update(secret).digest(); // 32 bytes
@@ -46,8 +39,7 @@ const encryptRollNo = (rollNo) => {
  * Generate a guaranteed-unique anonymous code.
  * Format: ANON-XXXXXXXX (8 uppercase hex chars)
  */
-const generateAnonymousId = () =>
-  `ANON-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+const generateAnonymousId = () => `ANON-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
 /**
  * Get a signed (served) URL for a local file.
@@ -100,7 +92,11 @@ const processAnswerSheet = async (sheetId, meta) => {
   await sheet.save();
 
   // Emit: processing started
-  emitToAll('oases:upload:processing', { sheetId, status: 'processing', examConfigId: sheet.examConfigId });
+  emitToAll('oases:upload:processing', {
+    sheetId,
+    status: 'processing',
+    examConfigId: sheet.examConfigId,
+  });
 
   try {
     // 2. Read PDF + get page count
@@ -116,12 +112,14 @@ const processAnswerSheet = async (sheetId, meta) => {
         const http = require('http');
         const protocol = filePath.startsWith('https://') ? https : http;
         pdfBuffer = await new Promise((resolve, reject) => {
-          protocol.get(filePath, (res) => {
-            const chunks = [];
-            res.on('data', (chunk) => chunks.push(chunk));
-            res.on('end', () => resolve(Buffer.concat(chunks)));
-            res.on('error', reject);
-          }).on('error', reject);
+          protocol
+            .get(filePath, (res) => {
+              const chunks = [];
+              res.on('data', (chunk) => chunks.push(chunk));
+              res.on('end', () => resolve(Buffer.concat(chunks)));
+              res.on('error', reject);
+            })
+            .on('error', reject);
         });
       } else if (fs.existsSync(filePath)) {
         // Legacy local path
@@ -192,7 +190,6 @@ const processAnswerSheet = async (sheetId, meta) => {
     });
 
     logger.debug(`[pdfService] ✓ Processed sheet ${sheetId} — ${totalPages} page(s)`);
-
   } catch (err) {
     logger.error(`[pdfService] Failed to process ${sheetId}:`, err.message);
 

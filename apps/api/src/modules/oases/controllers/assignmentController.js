@@ -11,7 +11,7 @@ const oasesAsync = require('../../../core/http/asyncHandler');
 const { ok, created } = require('../../../core/http/ApiResponse');
 const { apiError } = require('../lib/respond');
 const auditService = require('../services/auditService');
-const { emitToAll } = require('../../../../src-old/socket');
+const { emitToAll } = require('../../../core/realtime/socket');
 const {
   SHEET_STATUS,
   PROCESSING_STATUS,

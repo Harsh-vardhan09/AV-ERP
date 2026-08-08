@@ -16,12 +16,12 @@
  * A notification failure must NEVER break the main action.
  */
 
-const Notification            = require('../models/Notification');
-const NotificationPreference  = require('../models/NotificationPreference');
-const SchoolSettings          = require('../../tenancy').SchoolSettings;
-const nodemailer              = require('nodemailer');
-const { getIo }               = require('../../../../src-old/socket');
-const logger                  = require('../../../core/logging/logger');
+const Notification = require('../models/Notification');
+const NotificationPreference = require('../models/NotificationPreference');
+const SchoolSettings = require('../../tenancy').SchoolSettings;
+const nodemailer = require('nodemailer');
+const { getIo } = require('../../../core/realtime/socket');
+const logger = require('../../../core/logging/logger');
 
 // Nodemailer transporter (mirrors existing emailService.js pattern)
 const createTransporter = () =>
@@ -50,15 +50,13 @@ const isCriticalNotification = (type, title = '', message = '') => {
 
   if (
     type === 'fee' &&
-    (title.toLowerCase().includes('overdue') ||
-      message.toLowerCase().includes('overdue'))
+    (title.toLowerCase().includes('overdue') || message.toLowerCase().includes('overdue'))
   )
     return true;
 
   if (
     type === 'attendance' &&
-    (title.toLowerCase().includes('low attendance') ||
-      message.includes('75%'))
+    (title.toLowerCase().includes('low attendance') || message.includes('75%'))
   )
     return true;
 
@@ -78,7 +76,8 @@ const getUserPreference = async (userId, schoolId, type) => {
   try {
     // 1. User-level preference
     const userPref = await NotificationPreference.findOne({
-      userId, schoolId,
+      userId,
+      schoolId,
     }).lean();
 
     // 2. School-level setting
@@ -86,10 +85,8 @@ const getUserPreference = async (userId, schoolId, type) => {
       .select('notificationSettings')
       .lean();
 
-    const schoolEmailEnabled =
-      schoolSettings?.notificationSettings?.emailEnabled !== false;
-    const schoolTypeEnabled =
-      schoolSettings?.notificationSettings?.enabledTypes?.[type] !== false;
+    const schoolEmailEnabled = schoolSettings?.notificationSettings?.emailEnabled !== false;
+    const schoolTypeEnabled = schoolSettings?.notificationSettings?.enabledTypes?.[type] !== false;
 
     // School has disabled this type entirely — nothing sends
     if (!schoolTypeEnabled) {
@@ -99,8 +96,8 @@ const getUserPreference = async (userId, schoolId, type) => {
     // User has no preference document — use school defaults
     if (!userPref) {
       return {
-        inApp:     true,
-        email:     schoolEmailEnabled,
+        inApp: true,
+        email: schoolEmailEnabled,
         emailMode: 'instant',
       };
     }
@@ -108,9 +105,9 @@ const getUserPreference = async (userId, schoolId, type) => {
     const typePref = userPref.preferences?.[type];
 
     return {
-      inApp:      typePref?.inApp !== false,
-      email:      typePref?.email !== false && schoolEmailEnabled,
-      emailMode:  userPref.emailMode || 'instant',
+      inApp: typePref?.inApp !== false,
+      email: typePref?.email !== false && schoolEmailEnabled,
+      emailMode: userPref.emailMode || 'instant',
       quietHours: userPref.quietHours,
     };
   } catch (err) {
@@ -131,10 +128,10 @@ const getUserPreference = async (userId, schoolId, type) => {
 const isInQuietHours = (quietHours) => {
   if (!quietHours?.enabled) return false;
 
-  const now         = new Date();
+  const now = new Date();
   const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const start       = quietHours.startTime || '22:00';
-  const end         = quietHours.endTime   || '07:00';
+  const start = quietHours.startTime || '22:00';
+  const end = quietHours.endTime || '07:00';
 
   // Overnight window (start > end, e.g. 22:00 → 07:00)
   if (start > end) {
@@ -153,7 +150,7 @@ const addToDigestQueue = async (data) => {
     const { digestQueue } = require('../jobs/digestWorker');
     await digestQueue.add('collect', data, {
       removeOnComplete: false, // keep until scheduler processes them
-      removeOnFail:     false,
+      removeOnFail: false,
     });
   } catch (err) {
     logger.warn('[notificationService] Failed to add to digest queue', {
@@ -186,7 +183,8 @@ exports.createInAppNotification = async ({
       if (!pref.inApp) {
         // User opted out of in-app for this type — skip silently
         logger.info('[notificationService] In-app skipped — user preference', {
-          userId: userId?.toString(), type,
+          userId: userId?.toString(),
+          type,
         });
         return null;
       }
@@ -199,9 +197,9 @@ exports.createInAppNotification = async ({
       type,
       title,
       message,
-      link:            link || null,
-      metadata:        metadata || {},
-      triggeredBy:     triggeredBy || null,
+      link: link || null,
+      metadata: metadata || {},
+      triggeredBy: triggeredBy || null,
       triggeredByName: triggeredByName || null,
     });
 
@@ -210,22 +208,22 @@ exports.createInAppNotification = async ({
       const io = getIo();
       if (io) {
         io.to(`user:${userId.toString()}`).emit('notification:new', {
-          _id:             notification._id,
-          type:            notification.type,
-          title:           notification.title,
-          message:         notification.message,
-          link:            notification.link,
-          metadata:        notification.metadata,
+          _id: notification._id,
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          link: notification.link,
+          metadata: notification.metadata,
           triggeredByName: notification.triggeredByName,
-          isRead:          false,
-          createdAt:       notification.createdAt,
+          isRead: false,
+          createdAt: notification.createdAt,
         });
       }
     } catch (socketErr) {
       // Socket failure must NEVER break notification creation
       logger.warn('[notificationService] Socket emit failed', {
         userId: userId.toString(),
-        error:  socketErr.message,
+        error: socketErr.message,
       });
     }
 
@@ -258,7 +256,8 @@ exports.sendEmailNotification = async ({
   try {
     if (!to || !subject || !html) {
       logger.warn('[notificationService] sendEmailNotification: missing required fields', {
-        to, subject,
+        to,
+        subject,
       });
       return false;
     }
@@ -277,7 +276,8 @@ exports.sendEmailNotification = async ({
         // User opted out of email for this type
         if (!pref.email) {
           logger.info('[notificationService] Email skipped — user preference', {
-            userId: userId?.toString(), type,
+            userId: userId?.toString(),
+            type,
           });
           return true; // return true so caller doesn't retry
         }
@@ -285,7 +285,8 @@ exports.sendEmailNotification = async ({
         // Quiet hours check
         if (isInQuietHours(pref.quietHours)) {
           logger.info('[notificationService] Email skipped — quiet hours', {
-            userId: userId?.toString(), type,
+            userId: userId?.toString(),
+            type,
           });
           return true; // skipped — not an error
         }
@@ -301,7 +302,8 @@ exports.sendEmailNotification = async ({
             html,
           });
           logger.info('[notificationService] Email queued for digest', {
-            userId: userId?.toString(), type,
+            userId: userId?.toString(),
+            type,
           });
           return true;
         }
@@ -346,14 +348,10 @@ exports.notifyMultipleUsers = async (userIds, notificationData) => {
 
   const failed = results.filter((r) => r.status === 'rejected').length;
   if (failed > 0) {
-    logger.warn(
-      `[notificationService] notifyMultipleUsers: ${failed}/${userIds.length} failed`
-    );
+    logger.warn(`[notificationService] notifyMultipleUsers: ${failed}/${userIds.length} failed`);
   }
 
-  return results
-    .filter((r) => r.status === 'fulfilled')
-    .map((r) => r.value);
+  return results.filter((r) => r.status === 'fulfilled').map((r) => r.value);
 };
 
 // FUNCTION 4: sendBulkEmails
@@ -369,8 +367,6 @@ exports.sendBulkEmails = async (emailList) => {
 
   const failed = results.filter((r) => r.status === 'rejected').length;
   if (failed > 0) {
-    logger.warn(
-      `[notificationService] sendBulkEmails: ${failed}/${emailList.length} failed`
-    );
+    logger.warn(`[notificationService] sendBulkEmails: ${failed}/${emailList.length} failed`);
   }
 };

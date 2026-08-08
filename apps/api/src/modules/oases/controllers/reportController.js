@@ -15,7 +15,7 @@ const oasesAsync = require('../../../core/http/asyncHandler');
 const { ok } = require('../../../core/http/ApiResponse');
 const { apiError } = require('../lib/respond');
 const { SHEET_STATUS } = require('../lib/constants');
-const { emitToAll } = require('../../../../src-old/socket');
+const { emitToAll } = require('../../../core/realtime/socket');
 const auditService = require('../services/auditService');
 
 // CBSE Grade helper

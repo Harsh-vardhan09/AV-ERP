@@ -16,7 +16,7 @@ const { SHEET_STATUS, PROCESSING_STATUS } = require('../lib/constants');
 const { addPdfJob } = require('../services/pdfQueue');
 const { getSignedPageUrl, processAnswerSheet } = require('../services/pdfService');
 const auditService = require('../services/auditService');
-const { emitToAll } = require('../../../../src-old/socket');
+const { emitToAll } = require('../../../core/realtime/socket');
 const { uploadPdfToCloud } = require('../../../core/config/storage.js');
 const logger = require('../../../core/logging/logger.js');
 
