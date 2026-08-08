@@ -18,7 +18,7 @@ const readGuard = authorize('admin', 'admission', 'teacher', 'exam_controller');
 // ── Session management ────────────────────────────────────────────────────────
 router.post('/session', authorize('admin'), sessionController.createSession);
 router.get('/sessions', readGuard, sessionController.getAllSessions);
-router.get('/session/active', readGuard, admin.getActiveSession);
+router.get('/session/active', readGuard, sessionController.getActiveSession);
 router.put('/session/:id', authorize('admin'), validateObjectId('id'), admin.updateSession);
 router.delete('/session/:id', authorize('admin'), validateObjectId('id'), admin.deleteSession);
 router.post(

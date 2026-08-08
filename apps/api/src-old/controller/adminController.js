@@ -30,26 +30,6 @@ const { scheduleMarksDeadlineReminder } = require('../../src/modules/notificatio
 // SESSION MANAGEMENT
 // ========================
 
-exports.getActiveSession = async (req, res) => {
-  try {
-    // Try to find a session explicitly marked active
-    let session = await AcademicSession.findOne({ isActive: true, schoolId: req.schoolId });
-
-    // Graceful fallback: if none is marked active, return the most recently created one
-    if (!session) {
-      session = await AcademicSession.findOne({ schoolId: req.schoolId }).sort({ createdAt: -1 });
-    }
-
-    if (!session) {
-      return res.status(404).json({ success: false, message: 'No session found for this school. Please create one first.' });
-    }
-
-    res.status(200).json({ success: true, data: session, isFallback: !session.isActive });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
 exports.updateSession = async (req, res, next) => {
   try {
     const { name, startDate, endDate, isActive } = req.body;

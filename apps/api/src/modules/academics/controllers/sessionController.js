@@ -24,3 +24,20 @@ exports.getAllSessions = async (req, res, next) => {
     return next(error);
   }
 };
+
+exports.getActiveSession = async (req, res) => {
+  try {
+    const session = await sessionService.findActiveSession({ schoolId: req.schoolId });
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'No session found for this school. Please create one first.',
+      });
+    }
+
+    res.status(200).json({ success: true, data: session, isFallback: !session.isActive });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

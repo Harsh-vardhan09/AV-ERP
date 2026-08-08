@@ -25,7 +25,7 @@ router.use(varifyToken, authorize('exam_controller'));
 
 // ── Reference data (read-only) ────────────────────────────────────────────────
 // Sessions
-router.get('/session/active', admin.getActiveSession);
+router.get('/session/active', sessionController.getActiveSession);
 router.get('/sessions', sessionController.getAllSessions);
 
 // Classes / Sections (admin endpoints support ?session= / ?classId=)
