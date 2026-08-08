@@ -71,3 +71,24 @@ exports.updateSession = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.copyClassesToSession = async (req, res, next) => {
+  try {
+    const { targetSession, classesCreated, classesSkipped, sectionsCreated } =
+      await sessionService.copyClassesToSession({
+        targetSessionId: req.params.id,
+        fromSessionId: req.body.fromSessionId,
+        schoolId: req.schoolId,
+        copiedBy: req.user._id,
+      });
+
+    return res.status(200).json({
+      success: true,
+      message:
+        `Copied ${classesCreated} class(es) and ${sectionsCreated} section(s) to session "${targetSession.name}". ${classesSkipped > 0 ? `${classesSkipped} class(es) already existed and were skipped.` : ''}`.trim(),
+      data: { classesCreated, classesSkipped, sectionsCreated },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

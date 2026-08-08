@@ -30,7 +30,7 @@ router.post(
   '/session/:id/copy-classes',
   authorize('admin'),
   validateObjectId('id'),
-  admin.copyClassesToSession
+  sessionController.copyClassesToSession
 );
 router.post(
   '/session/:id/sync-students',
