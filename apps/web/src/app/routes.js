@@ -3,7 +3,7 @@
 import { page, redirect } from '@shared/lib/lazyRoute';
 import { ROLES } from '@shared/constants/roles';
 
-import { academicsRoutes } from '@modules/academics/routes';
+import { academicsRoutes, academicsLegacyRoutes } from '@modules/academics/routes';
 import { admissionsRoutes } from '@modules/admissions/routes';
 import { attendanceRoutes } from '@modules/attendance/routes';
 import { biometricRoutes } from '@modules/biometric/routes';
@@ -26,12 +26,7 @@ import { peopleRoutes } from '@modules/people/routes';
 import { reportcardsRoutes } from '@modules/reportcards/routes';
 import { superAdminLoginRoute, superAdminRoutes, tenancyRoutes } from '@modules/tenancy/routes';
 
-import {
-  pendingAppRoutes,
-  pendingLegacyRoutes,
-  pendingOpenRoutes,
-  pendingPublicOnlyRoutes,
-} from './routes.pending';
+import { pendingAppRoutes, pendingLegacyRoutes } from './routes.pending';
 
 const ADMIN_BRANCH = [ROLES.ADMIN, ROLES.ADMISSION];
 
@@ -79,13 +74,13 @@ export const appRoutes = [
 export const bareRoutes = [
   ...identityProtectedRoutes,
   ...notificationsRoutes,
+  ...academicsLegacyRoutes,
   ...communicationLegacyRoutes,
   ...pendingLegacyRoutes,
 ];
 
 export const openRoutes = [
   ...identityOpenRoutes,
-  ...pendingOpenRoutes,
   {
     path: '/service-unavailable',
     lazy: page(() => import('@shared/ui/ServiceUnavailablePreview')),
@@ -96,6 +91,6 @@ export const openRoutes = [
 // Sends each role to its own dashboard; unauthenticated visitors to /login.
 export const rootRoute = { path: '/', lazy: page(() => import('./HomeRedirect')) };
 
-export const publicOnlyRoutes = [...identityPublicOnlyRoutes, ...pendingPublicOnlyRoutes];
+export const publicOnlyRoutes = [...identityPublicOnlyRoutes];
 
 export { superAdminLoginRoute, superAdminRoutes };

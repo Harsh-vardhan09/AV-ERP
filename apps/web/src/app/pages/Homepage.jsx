@@ -70,7 +70,6 @@
 
 
 //   ] : [  { name: 'Dashboard', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG1tLvcgTJUMCBYzCZwkAYy9LJPJgayn8ZJA&s', path: '/Dashboard' },
-//     // { name: 'authentication kr le bhai', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG1tLvcgTJUMCBYzCZwkAYy9LJPJgayn8ZJA&s', path: '/passkey' },
 //     { name: 'Attendance', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcThs2EY9Uwqruia3zXjbkFldfDcvix0Qg3ZVg&s', path: '/attendance' },
 //     { name: 'Online Exams', image: 'https://5.imimg.com/data5/SELLER/Default/2023/5/309686767/ZE/YZ/ZV/8675179/online-exam-software-service-provider-500x500.jpg', path:'/quiz'},
 //     { name: 'Chat', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzwN555oeo09zLOsxNzVqes_q_267Jrt4cxA&s', path: '/chatapp' },
@@ -80,7 +79,6 @@
 //     { name: 'Leave application', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSLTMC2UhhIU4mOJpYlnX5U1nOp1PRWXqfh0w&s', path: '/application' },
 //     { name: 'Time table', image: 'https://static3.bigstockphoto.com/5/7/2/large2/275114155.jpg', path: '/timetable' },
 //     { name: 'Knowledge center', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9DcEej_6TuKqsR_ZcVp7ZfSC97tivN6vvBw&s', path: '/knowlegecenter'},
-//     { name: 'Roadmap', image: 'https://media.slidesgo.com/storage/18224862/responsive-images/0-roadmap-infographics___media_library_original_655_368.jpg', path: '/roadmap'},
 //     { name: 'complain form ', image: 'https://www.shutterstock.com/image-vector/complaint-form-online-concept-vector-260nw-2310670309.jpg', path: '/complaintform'},
 //     { name: 'complain request ', image: 'https://www.shutterstock.com/image-vector/complaint-form-online-concept-vector-260nw-2310670309.jpg', path: 'https://chap-frontend3.vercel.app/'},
     
@@ -209,7 +207,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toggleSidebar } from '@shared/lib/store/sidebarSlice';
 import { authApi, useLogoutMutation } from '@modules/identity/api/userApi';
 import { userlogout } from '@shared/lib/store/userSlice';
-import { IoMdNotifications, IoMdHome, IoMdCalendar, IoMdSearch, IoMdSettings ,IoMdDesktop ,IoMdAddCircle ,IoMdCheckmark,IoMdWarning ,IoMdExit } from "react-icons/io";
+import { IoMdNotifications, IoMdHome, IoMdCalendar, IoMdSearch, IoMdSettings ,IoMdCheckmark,IoMdWarning ,IoMdExit } from "react-icons/io";
 import { FaChalkboardTeacher, FaBook, FaUserGraduate, FaChartLine, FaCalendarAlt, FaRegBell } from "react-icons/fa";
 import { MdAssignment, MdQuiz, MdEvent, MdChat, MdCode, MdOutlineLogout, MdHelp, MdPerson } from "react-icons/md";
 
@@ -265,18 +263,14 @@ const HomePage = () => {
   const teacherItems = [
     { name: 'dashboard', icon: <FaChartLine className="text-blue-600" size={24} />, path: '/dashboard' },
     { name: 'Take Attendance', icon: <FaChalkboardTeacher className="text-green-600" size={24} />, path: '/takeattendance' },
-    { name: 'Student registration', icon: <IoMdAddCircle className="text-teal-600" size={24} />, path: '/register' },
-    { name: 'ALL Student', icon: <IoMdDesktop className="text-teal-600" size={24} />, path: '/studentdesh' },
     { name: 'Online Quiz', icon: <MdQuiz className="text-purple-600" size={24} />, path: '/quiz' },
     { name: 'Chat', icon: <MdChat className="text-indigo-600" size={24} />, path: '/chatapp' },
-    { name: 'Assignments', icon: <MdAssignment className="text-red-600" size={24} />, path: '/teacherassignment' },
     { name: 'Knowledge Center', icon: <FaBook className="text-amber-600" size={24} />, path: '/knowlegecentercreate' },
     { name: 'All complain', icon: <IoMdWarning className="text-amber-600" size={24} />, path: '/complaintbox' },
     { name: 'Take Leave', icon: <IoMdExit className="text-amber-600" size={24} />, path: '/application' },
     { name: 'Students Leave', icon: <IoMdCheckmark className="text-amber-600" size={24} />, path: '/leavesection' },
 
     { name: 'Timetable', icon: <IoMdCalendar className="text-teal-600" size={24} />, path: '/timetable' },
-    { name: 'Finance', icon: <FaChartLine className="text-emerald-600" size={24} />, path: '/finance' },
 
   ];
 
@@ -292,7 +286,6 @@ const HomePage = () => {
     { name: 'complain form', icon: <IoMdWarning className="text-teal-600" size={24} />, path: '/complaintform' },
     { name: 'complain request', icon: <MdCode className="text-teal-600" size={24} />, path: '/request' },
     { name: 'Coding Practice', icon: <MdCode className="text-teal-600" size={24} />, path: '/coding' },
-    { name: 'Roadmap', icon: <FaChartLine className="text-emerald-600" size={24} />, path: '/roadmap' },
   ];
 
   const quickAccessItems = role === "teacher" ? teacherItems : studentItems;

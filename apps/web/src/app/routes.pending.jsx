@@ -1,25 +1,12 @@
-// Routes whose pages still live in src/pages or src/components rather than in a
-// module. A module cannot own a route to a page it does not contain, so they
-// stay here until those files are migrated — then each block moves into the
-// module named in its comment.
+// Routes whose pages still live in src/components rather than in a module. A
+// module cannot own a route to a page it does not contain, so they stay here
+// until those files are migrated — then each block moves into the module named
+// in its comment.
 import { page } from '@shared/lib/lazyRoute';
 import { ROLES, STUDENT_TEACHER } from '@shared/constants/roles';
 
 const TEACHER = [ROLES.TEACHER];
 const STUDENT = [ROLES.STUDENT];
-
-// Open to everyone, signed in or not.
-export const pendingOpenRoutes = [
-  { path: '/passkey', lazy: page(() => import('../pages/Signal')) },
-  { path: '/roadmap', lazy: page(() => import('../pages/Roadmap')) },
-  { path: '/roadmapshow', lazy: page(() => import('../pages/Roadmapshow')) },
-  { path: '/finance', lazy: page(() => import('../pages/finance')) },
-];
-
-// Signed-in users get bounced to their dashboard. -> identity
-export const pendingPublicOnlyRoutes = [
-  { path: '/signup2', lazy: page(() => import('../pages/Registration')) },
-];
 
 // Inside DashboardLayout, under the role branches.
 export const pendingAppRoutes = [
@@ -34,7 +21,6 @@ export const pendingAppRoutes = [
 export const pendingLegacyRoutes = [
   { path: '/home', lazy: page(() => import('./layouts/LegacyHome')), handle: { roles: STUDENT_TEACHER } },
   { path: '/chatapp', lazy: page(() => import('../components/Chat/ChatApp')), handle: { roles: STUDENT_TEACHER } },
-  { path: '/timetable', lazy: page(() => import('../pages/timetable')), handle: { roles: STUDENT_TEACHER } },
   { path: '/application', lazy: page(() => import('../components/students/Leave/Application')), handle: { roles: STUDENT_TEACHER } },
   { path: '/showleaves/:filename', lazy: page(() => import('../components/admin/Leave/PDFViewer')), handle: { roles: STUDENT_TEACHER } },
   { path: '/noticeapprove', lazy: page(() => import('../components/students/news/Noticeapprove')), handle: { roles: STUDENT_TEACHER } },
@@ -51,14 +37,9 @@ export const pendingLegacyRoutes = [
   { path: '/quizquestion', lazy: page(() => import('../components/admin/kahoot/kahootQueeze')), handle: { roles: STUDENT_TEACHER } },
   { path: '/quizmember', lazy: page(() => import('../components/admin/kahoot/kahootWaiting')), handle: { roles: STUDENT_TEACHER } },
 
-  { path: '/teacherassignment', lazy: page(() => import('../pages/TeacherAssign')), handle: { roles: TEACHER } },
   { path: '/createtimetable', lazy: page(() => import('../components/admin/adminTt')), handle: { roles: TEACHER } },
-  { path: '/register', lazy: page(() => import('../pages/Registration')), handle: { roles: TEACHER } },
-  { path: '/teacherassignmentupload', lazy: page(() => import('../pages/teachersassignment')), handle: { roles: TEACHER } },
-  { path: '/teacherassignmentupload/:id', lazy: page(() => import('../pages/UploadedFiles')), handle: { roles: TEACHER } },
   { path: '/takeattendance', lazy: page(() => import('../components/admin/attendance/TakeAttendance')), handle: { roles: TEACHER } },
   { path: '/leavesection', lazy: page(() => import('../components/admin/Leave/LeavesSection')), handle: { roles: TEACHER } },
-  { path: '/studentdesh', lazy: page(() => import('../pages/Students_data')), handle: { roles: TEACHER } },
 
   { path: '/attendance', lazy: page(() => import('../components/students/attendance/index')), handle: { roles: STUDENT } },
   { path: '/assignment', lazy: page(() => import('../components/students/assignments/Assignmentpage')), handle: { roles: STUDENT } },
