@@ -41,10 +41,14 @@ const controllerZones = MODULES.map((m) => ({
 // Controllers that already violate the models rule. This list is the backlog:
 // it only shrinks. Do not add to it — extract a service instead.
 const LEGACY_CONTROLLERS = [
-  // These two arrived from src-old/controller during the academics migration. The
-  // violation is not new — it was outside the linted tree until the files moved.
+  // These arrived from src-old/controller during the migration. The violation is
+  // not new — it was outside the linted tree until the files moved. The three
+  // god-controllers leave this list as their functions are extracted.
   'apps/api/src/modules/academics/controllers/assignmentController.js',
   'apps/api/src/modules/academics/controllers/uploadAssignmentController.js',
+  'apps/api/src/modules/people/controllers/adminController.js',
+  'apps/api/src/modules/people/controllers/studentController.js',
+  'apps/api/src/modules/people/controllers/teacherController.js',
   'apps/api/src/modules/admissions/controllers/admissionController.js',
   'apps/api/src/modules/admissions/controllers/admissionTemplateController.js',
   'apps/api/src/modules/admissions/controllers/customFormController.js',

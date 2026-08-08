@@ -1,3 +1,5 @@
+// Legacy god-controller. Being extracted into domain modules — see
+// docs/GOD-CONTROLLER-PLAN.md. Do not add to this file.
 const {
   TeacherSubjectAssignment,
   ClassTeacherAssignment,
@@ -6,37 +8,26 @@ const {
   AcademicSession,
   ClassModel,
   ClassSubjectMap,
-} = require('../../src/modules/academics');
-const {
-  MarksModel: Marks,
-  MarksAuditLog,
-  ExamSubjectConfig,
-  Exam,
-} = require('../../src/modules/examination');
-const Attendance = require('../../src/modules/attendance/models/attendance');
-const Leave = require('../../src/modules/communication').Leave;
-const Knowledgecenter = require('../../src/modules/communication').Knowledgecenter;
-const StudentProfile = require('../../src/modules/people/models/StudentProfile');
-const ReportTemplate = require('../../src/modules/reportcards').ReportTemplate;
-const TemplateFieldExtractor = require('../../src/modules/reportcards').TemplateFieldExtractor;
-const { refreshExamEvaluationStatus } = require('../../src/modules/examination').marksReadinessService;
-const { User } = require('../../src/modules/identity');
+} = require('../../academics');
+const { MarksModel: Marks, MarksAuditLog, ExamSubjectConfig, Exam } = require('../../examination');
+const { Attendance } = require('../../attendance');
+const Leave = require('../../communication').Leave;
+const Knowledgecenter = require('../../communication').Knowledgecenter;
+const StudentProfile = require('../models/StudentProfile');
+const ReportTemplate = require('../../reportcards').ReportTemplate;
+const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
+const { refreshExamEvaluationStatus } = require('../../examination').marksReadinessService;
+const { User } = require('../../identity');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
-const { uploadoncloud } = require('../../src/core/config/storage.js');
-const logger = require('../../src/core/logging/logger.js');
+const { uploadoncloud } = require('../../../core/config/storage.js');
+const logger = require('../../../core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
-const {
-  createInAppNotification,
-  notifyMultipleUsers,
-  sendEmailNotification,
-  sendBulkEmails,
-} = require('../../src/modules/notifications').notificationService;
-const {
-  attendanceAbsentTemplate,
-  marksPublishedTemplate,
-} = require('../../src/modules/notifications').emailTemplates;
+const { createInAppNotification, notifyMultipleUsers, sendEmailNotification, sendBulkEmails } =
+  require('../../notifications').notificationService;
+const { attendanceAbsentTemplate, marksPublishedTemplate } =
+  require('../../notifications').emailTemplates;
 
 const toObjectId = (value) => {
   if (!value) return null;
@@ -80,7 +71,10 @@ exports.getMyAssignments = async (req, res) => {
 // Check if I am class teacher
 exports.getMyClassTeacherAssignment = async (req, res) => {
   try {
-    const assignment = await ClassTeacherAssignment.find({ teacherId: req.user._id, schoolId: req.schoolId })
+    const assignment = await ClassTeacherAssignment.find({
+      teacherId: req.user._id,
+      schoolId: req.schoolId,
+    })
       .populate('classId', 'name numericOrder')
       .populate('sectionId', 'name')
       .populate('session', 'name isActive');
@@ -93,20 +87,27 @@ exports.getMyClassTeacherAssignment = async (req, res) => {
 // ========================
 // ATTENDANCE
 // ========================
-const SchoolSettings = require('../../src/modules/tenancy').SchoolSettings;
-// const Leave = require('../../src/modules/communication').Leave;
+const SchoolSettings = require('../../tenancy').SchoolSettings;
+// const Leave = require('../../communication').Leave;
 
 // GET students for a class+section for taking attendance (any teacher)
 exports.getStudentsForAttendance = async (req, res) => {
   try {
     const { classId, sectionId, session } = req.query;
     if (!classId || !sectionId || !session) {
-      return res.status(400).json({ success: false, message: 'classId, sectionId and session required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'classId, sectionId and session required' });
     }
 
     // SECURITY: scope by schoolId
-    const students = await StudentProfile.find({ classId, sectionId, session, status: 'active', schoolId: req.schoolId })
-      .sort({ rollNo: 1 });
+    const students = await StudentProfile.find({
+      classId,
+      sectionId,
+      session,
+      status: 'active',
+      schoolId: req.schoolId,
+    }).sort({ rollNo: 1 });
 
     // Check for approved leaves active TODAY
     const today = new Date();
@@ -114,23 +115,23 @@ exports.getStudentsForAttendance = async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const studentUserIds = students.map(s => s.userId);
+    const studentUserIds = students.map((s) => s.userId);
     const activeLeaves = await Leave.find({
       appliedBy: { $in: studentUserIds },
       role: 'student',
       status: 'approved',
       startDate: { $lte: tomorrow },
       endDate: { $gte: today },
-      schoolId: req.schoolId
+      schoolId: req.schoolId,
     });
 
     // Map leaveId by userId for quick lookup
     const leaveMap = {};
-    activeLeaves.forEach(l => {
+    activeLeaves.forEach((l) => {
       leaveMap[l.appliedBy.toString()] = l._id;
     });
 
-    const enriched = students.map(s => ({
+    const enriched = students.map((s) => ({
       _id: s._id,
       userId: s.userId,
       firstName: s.firstName,
@@ -138,7 +139,7 @@ exports.getStudentsForAttendance = async (req, res) => {
       rollNo: s.rollNo,
       admissionNumber: s.admissionNumber,
       onLeave: !!leaveMap[s.userId?.toString()],
-      leaveId: leaveMap[s.userId?.toString()] || null
+      leaveId: leaveMap[s.userId?.toString()] || null,
     }));
 
     res.status(200).json({ success: true, data: enriched });
@@ -149,7 +150,15 @@ exports.getStudentsForAttendance = async (req, res) => {
 
 exports.takeAttendance = async (req, res) => {
   try {
-    const { classId, sectionId, subjectId, session, date, records, attendanceType = 'subject' } = req.body;
+    const {
+      classId,
+      sectionId,
+      subjectId,
+      session,
+      date,
+      records,
+      attendanceType = 'subject',
+    } = req.body;
 
     // ── Same-day-only check (IST) ──
     const todayIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
@@ -159,7 +168,9 @@ exports.takeAttendance = async (req, res) => {
       inputDate.getMonth() === todayIST.getMonth() &&
       inputDate.getDate() === todayIST.getDate();
     if (!isSameDay) {
-      return res.status(400).json({ success: false, message: 'Attendance can only be taken for today.' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Attendance can only be taken for today.' });
     }
 
     // ── Hall attendance: check permission ──
@@ -167,12 +178,16 @@ exports.takeAttendance = async (req, res) => {
       // SECURITY: scope SchoolSettings to current school (FIX 8A)
       const settings = await SchoolSettings.findOne({ schoolId: req.schoolId });
       if (!settings?.allowHallAttendance) {
-        return res.status(403).json({ success: false, message: 'Hall/Full-day attendance is not enabled by admin.' });
+        return res
+          .status(403)
+          .json({ success: false, message: 'Hall/Full-day attendance is not enabled by admin.' });
       }
     } else {
       // Subject attendance: verify teacher is assigned to this subject
       if (!subjectId) {
-        return res.status(400).json({ success: false, message: 'subjectId is required for subject attendance.' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'subjectId is required for subject attendance.' });
       }
       const assignment = await TeacherSubjectAssignment.findOne({
         teacherId: req.user._id,
@@ -183,7 +198,12 @@ exports.takeAttendance = async (req, res) => {
         schoolId: req.schoolId,
       });
       if (!assignment) {
-        return res.status(403).json({ success: false, message: 'You are not assigned to teach this subject in this class/section.' });
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message: 'You are not assigned to teach this subject in this class/section.',
+          });
       }
     }
 
@@ -192,19 +212,21 @@ exports.takeAttendance = async (req, res) => {
     dateObj.setHours(0, 0, 0, 0);
 
     const filterWithoutSchoolId = {
-      classId, sectionId, session,
+      classId,
+      sectionId,
+      session,
       attendanceType,
       date: dateObj,
-      ...(attendanceType === 'subject' ? { subjectId } : { subjectId: null })
+      ...(attendanceType === 'subject' ? { subjectId } : { subjectId: null }),
     };
 
     // Always check for existing attendance first — scoped to school (FIX 8B)
     const existing = await Attendance.findOne({ ...filterWithoutSchoolId, schoolId: req.schoolId });
-    
+
     const updateData = {
       takenBy: req.user._id,
       records,
-      schoolId: req.schoolId
+      schoolId: req.schoolId,
     };
 
     if (existing) {
@@ -218,137 +240,153 @@ exports.takeAttendance = async (req, res) => {
         success: true,
         message: 'Attendance updated successfully',
         data: attendance,
-        alreadyExists: true
+        alreadyExists: true,
       });
 
       // ── NOTIFICATION BLOCK — non-blocking ─────────────────────────────────
-      ;(async () => {
+      (async () => {
         try {
           const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-          const School = require('../../src/modules/tenancy').School;
+          const School = require('../../tenancy').School;
           const school = await School.findById(req.schoolId).select('name').lean();
           const schoolName = school?.name || 'School';
 
-          const absentRecords = (records || []).filter(r => r.status === 'absent');
+          const absentRecords = (records || []).filter((r) => r.status === 'absent');
 
-          await Promise.allSettled(absentRecords.map(async (record) => {
-            const studentProf = await StudentProfile.findById(record.studentId)
-              .populate('userId', 'firstName lastName email').lean();
-            if (!studentProf?.userId) return;
+          await Promise.allSettled(
+            absentRecords.map(async (record) => {
+              const studentProf = await StudentProfile.findById(record.studentId)
+                .populate('userId', 'firstName lastName email')
+                .lean();
+              if (!studentProf?.userId) return;
 
-            const studentUser = studentProf.userId;
-            const studentName = `${studentUser.firstName} ${studentUser.lastName}`;
-            const formattedDate = new Date().toLocaleDateString('en-IN', {
-              day: 'numeric', month: 'long', year: 'numeric',
-            });
+              const studentUser = studentProf.userId;
+              const studentName = `${studentUser.firstName} ${studentUser.lastName}`;
+              const formattedDate = new Date().toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              });
 
-            // In-app: absent notification
-            await createInAppNotification({
-              userId:   studentUser._id,
-              schoolId: req.schoolId,
-              type:     'attendance',
-              title:    'Absent Today',
-              message:  `You were marked absent on ${formattedDate}.`,
-              link:     '/student/attendance',
-              metadata: { date: formattedDate },
-            });
-
-            // Low attendance check
-            const allAttendance = await Attendance.find({
-              schoolId: req.schoolId,
-              'records.studentId': studentProf._id,
-            }).select('records').lean();
-
-            let totalCount = 0, presentCount = 0;
-            allAttendance.forEach(att => {
-              const rec = att.records?.find(
-                r => r.studentId?.toString() === studentProf._id.toString()
-              );
-              if (rec) {
-                totalCount++;
-                if (rec.status === 'present') presentCount++;
-              }
-            });
-
-            const attendancePct = totalCount > 0
-              ? Math.round((presentCount / totalCount) * 100)
-              : 100;
-
-            if (attendancePct < 75) {
+              // In-app: absent notification
               await createInAppNotification({
-                userId:   studentUser._id,
+                userId: studentUser._id,
                 schoolId: req.schoolId,
-                type:     'attendance',
-                title:    'Low Attendance Warning',
-                message:  `Your attendance is ${attendancePct}%, below the required 75%. Please attend regularly.`,
-                link:     '/student/attendance',
-                metadata: { percentage: attendancePct },
+                type: 'attendance',
+                title: 'Absent Today',
+                message: `You were marked absent on ${formattedDate}.`,
+                link: '/student/attendance',
+                metadata: { date: formattedDate },
               });
 
-              const adminUser = await User.findOne({
+              // Low attendance check
+              const allAttendance = await Attendance.find({
                 schoolId: req.schoolId,
-                role: 'admin',
-                isActive: true,
-              }).select('_id').lean();
-              if (adminUser) {
-                await createInAppNotification({
-                  userId:   adminUser._id,
-                  schoolId: req.schoolId,
-                  type:     'attendance',
-                  title:    `Low Attendance — ${studentName}`,
-                  message:  `${studentName}'s attendance is at ${attendancePct}%, below 75%.`,
-                  link:     '/admin/dashboard',
-                  metadata: { studentName, percentage: attendancePct },
-                });
-              }
-            }
+                'records.studentId': studentProf._id,
+              })
+                .select('records')
+                .lean();
 
-            // Consecutive absence check (3+ days)
-            const recentAttendances = await Attendance.find({
-              schoolId: req.schoolId,
-              'records.studentId': studentProf._id,
-            }).sort({ date: -1 }).limit(3).lean();
-
-            const allRecentAbsent = recentAttendances.length >= 3 &&
-              recentAttendances.every(att => {
+              let totalCount = 0,
+                presentCount = 0;
+              allAttendance.forEach((att) => {
                 const rec = att.records?.find(
-                  r => r.studentId?.toString() === studentProf._id.toString()
+                  (r) => r.studentId?.toString() === studentProf._id.toString()
                 );
-                return rec?.status === 'absent';
+                if (rec) {
+                  totalCount++;
+                  if (rec.status === 'present') presentCount++;
+                }
               });
 
-            if (allRecentAbsent) {
-              const classTeacher = await ClassTeacherAssignment.findOne({
-                schoolId: req.schoolId,
-                classId,
-              }).populate('teacherId', '_id firstName lastName').lean();
-              if (classTeacher?.teacherId) {
+              const attendancePct =
+                totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 100;
+
+              if (attendancePct < 75) {
                 await createInAppNotification({
-                  userId:   classTeacher.teacherId._id,
+                  userId: studentUser._id,
                   schoolId: req.schoolId,
-                  type:     'attendance',
-                  title:    `Student Absent 3+ Days — ${studentName}`,
-                  message:  `${studentName} has been absent for 3 or more consecutive days. Please follow up.`,
-                  link:     '/teacher/my-students',
-                  metadata: { studentName },
+                  type: 'attendance',
+                  title: 'Low Attendance Warning',
+                  message: `Your attendance is ${attendancePct}%, below the required 75%. Please attend regularly.`,
+                  link: '/student/attendance',
+                  metadata: { percentage: attendancePct },
                 });
+
+                const adminUser = await User.findOne({
+                  schoolId: req.schoolId,
+                  role: 'admin',
+                  isActive: true,
+                })
+                  .select('_id')
+                  .lean();
+                if (adminUser) {
+                  await createInAppNotification({
+                    userId: adminUser._id,
+                    schoolId: req.schoolId,
+                    type: 'attendance',
+                    title: `Low Attendance — ${studentName}`,
+                    message: `${studentName}'s attendance is at ${attendancePct}%, below 75%.`,
+                    link: '/admin/dashboard',
+                    metadata: { studentName, percentage: attendancePct },
+                  });
+                }
               }
-            }
-          }));
+
+              // Consecutive absence check (3+ days)
+              const recentAttendances = await Attendance.find({
+                schoolId: req.schoolId,
+                'records.studentId': studentProf._id,
+              })
+                .sort({ date: -1 })
+                .limit(3)
+                .lean();
+
+              const allRecentAbsent =
+                recentAttendances.length >= 3 &&
+                recentAttendances.every((att) => {
+                  const rec = att.records?.find(
+                    (r) => r.studentId?.toString() === studentProf._id.toString()
+                  );
+                  return rec?.status === 'absent';
+                });
+
+              if (allRecentAbsent) {
+                const classTeacher = await ClassTeacherAssignment.findOne({
+                  schoolId: req.schoolId,
+                  classId,
+                })
+                  .populate('teacherId', '_id firstName lastName')
+                  .lean();
+                if (classTeacher?.teacherId) {
+                  await createInAppNotification({
+                    userId: classTeacher.teacherId._id,
+                    schoolId: req.schoolId,
+                    type: 'attendance',
+                    title: `Student Absent 3+ Days — ${studentName}`,
+                    message: `${studentName} has been absent for 3 or more consecutive days. Please follow up.`,
+                    link: '/teacher/my-students',
+                    metadata: { studentName },
+                  });
+                }
+              }
+            })
+          );
 
           // Confirmation to teacher
           await createInAppNotification({
-            userId:   req.user._id,
+            userId: req.user._id,
             schoolId: req.schoolId,
-            type:     'attendance',
-            title:    'Attendance Saved',
-            message:  'Attendance updated successfully for today.',
-            link:     '/teacher/attendance',
+            type: 'attendance',
+            title: 'Attendance Saved',
+            message: 'Attendance updated successfully for today.',
+            link: '/teacher/attendance',
             metadata: {},
           });
         } catch (notifErr) {
           logger.warn('[Notif] Attendance notification failed', {
-            error: notifErr.message, schoolId: req.schoolId,
+            error: notifErr.message,
+            schoolId: req.schoolId,
           });
         }
       })();
@@ -356,147 +394,165 @@ exports.takeAttendance = async (req, res) => {
     } else {
       // Create new attendance
       const attendance = await Attendance.create({
-        classId, sectionId, session,
+        classId,
+        sectionId,
+        session,
         attendanceType,
         date: dateObj,
         ...(attendanceType === 'subject' ? { subjectId } : { subjectId: null }),
-        ...updateData
+        ...updateData,
       });
       res.status(200).json({
         success: true,
         message: 'Attendance recorded successfully',
         data: attendance,
-        alreadyExists: false
+        alreadyExists: false,
       });
 
       // ── NOTIFICATION BLOCK — non-blocking ─────────────────────────────────
-      ;(async () => {
+      (async () => {
         try {
           const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-          const School = require('../../src/modules/tenancy').School;
+          const School = require('../../tenancy').School;
           const school = await School.findById(req.schoolId).select('name').lean();
           const schoolName = school?.name || 'School';
 
-          const absentRecords = (records || []).filter(r => r.status === 'absent');
+          const absentRecords = (records || []).filter((r) => r.status === 'absent');
 
-          await Promise.allSettled(absentRecords.map(async (record) => {
-            const studentProf = await StudentProfile.findById(record.studentId)
-              .populate('userId', 'firstName lastName email').lean();
-            if (!studentProf?.userId) return;
+          await Promise.allSettled(
+            absentRecords.map(async (record) => {
+              const studentProf = await StudentProfile.findById(record.studentId)
+                .populate('userId', 'firstName lastName email')
+                .lean();
+              if (!studentProf?.userId) return;
 
-            const studentUser = studentProf.userId;
-            const studentName = `${studentUser.firstName} ${studentUser.lastName}`;
-            const formattedDate = new Date().toLocaleDateString('en-IN', {
-              day: 'numeric', month: 'long', year: 'numeric',
-            });
+              const studentUser = studentProf.userId;
+              const studentName = `${studentUser.firstName} ${studentUser.lastName}`;
+              const formattedDate = new Date().toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              });
 
-            // In-app: absent notification
-            await createInAppNotification({
-              userId:   studentUser._id,
-              schoolId: req.schoolId,
-              type:     'attendance',
-              title:    'Absent Today',
-              message:  `You were marked absent on ${formattedDate}.`,
-              link:     '/student/attendance',
-              metadata: { date: formattedDate },
-            });
-
-            // Low attendance check
-            const allAttendance = await Attendance.find({
-              schoolId: req.schoolId,
-              'records.studentId': studentProf._id,
-            }).select('records').lean();
-
-            let totalCount = 0, presentCount = 0;
-            allAttendance.forEach(att => {
-              const rec = att.records?.find(
-                r => r.studentId?.toString() === studentProf._id.toString()
-              );
-              if (rec) {
-                totalCount++;
-                if (rec.status === 'present') presentCount++;
-              }
-            });
-
-            const attendancePct = totalCount > 0
-              ? Math.round((presentCount / totalCount) * 100)
-              : 100;
-
-            if (attendancePct < 75) {
+              // In-app: absent notification
               await createInAppNotification({
-                userId:   studentUser._id,
+                userId: studentUser._id,
                 schoolId: req.schoolId,
-                type:     'attendance',
-                title:    'Low Attendance Warning',
-                message:  `Your attendance is ${attendancePct}%, below the required 75%. Please attend regularly.`,
-                link:     '/student/attendance',
-                metadata: { percentage: attendancePct },
+                type: 'attendance',
+                title: 'Absent Today',
+                message: `You were marked absent on ${formattedDate}.`,
+                link: '/student/attendance',
+                metadata: { date: formattedDate },
               });
 
-              const adminUser = await User.findOne({
+              // Low attendance check
+              const allAttendance = await Attendance.find({
                 schoolId: req.schoolId,
-                role: 'admin',
-                isActive: true,
-              }).select('_id').lean();
-              if (adminUser) {
-                await createInAppNotification({
-                  userId:   adminUser._id,
-                  schoolId: req.schoolId,
-                  type:     'attendance',
-                  title:    `Low Attendance — ${studentName}`,
-                  message:  `${studentName}'s attendance is at ${attendancePct}%, below 75%.`,
-                  link:     '/admin/dashboard',
-                  metadata: { studentName, percentage: attendancePct },
-                });
-              }
-            }
+                'records.studentId': studentProf._id,
+              })
+                .select('records')
+                .lean();
 
-            // Consecutive absence check (3+ days)
-            const recentAttendances = await Attendance.find({
-              schoolId: req.schoolId,
-              'records.studentId': studentProf._id,
-            }).sort({ date: -1 }).limit(3).lean();
-
-            const allRecentAbsent = recentAttendances.length >= 3 &&
-              recentAttendances.every(att => {
+              let totalCount = 0,
+                presentCount = 0;
+              allAttendance.forEach((att) => {
                 const rec = att.records?.find(
-                  r => r.studentId?.toString() === studentProf._id.toString()
+                  (r) => r.studentId?.toString() === studentProf._id.toString()
                 );
-                return rec?.status === 'absent';
+                if (rec) {
+                  totalCount++;
+                  if (rec.status === 'present') presentCount++;
+                }
               });
 
-            if (allRecentAbsent) {
-              const classTeacher = await ClassTeacherAssignment.findOne({
-                schoolId: req.schoolId,
-                classId,
-              }).populate('teacherId', '_id firstName lastName').lean();
-              if (classTeacher?.teacherId) {
+              const attendancePct =
+                totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 100;
+
+              if (attendancePct < 75) {
                 await createInAppNotification({
-                  userId:   classTeacher.teacherId._id,
+                  userId: studentUser._id,
                   schoolId: req.schoolId,
-                  type:     'attendance',
-                  title:    `Student Absent 3+ Days — ${studentName}`,
-                  message:  `${studentName} has been absent for 3 or more consecutive days. Please follow up.`,
-                  link:     '/teacher/my-students',
-                  metadata: { studentName },
+                  type: 'attendance',
+                  title: 'Low Attendance Warning',
+                  message: `Your attendance is ${attendancePct}%, below the required 75%. Please attend regularly.`,
+                  link: '/student/attendance',
+                  metadata: { percentage: attendancePct },
                 });
+
+                const adminUser = await User.findOne({
+                  schoolId: req.schoolId,
+                  role: 'admin',
+                  isActive: true,
+                })
+                  .select('_id')
+                  .lean();
+                if (adminUser) {
+                  await createInAppNotification({
+                    userId: adminUser._id,
+                    schoolId: req.schoolId,
+                    type: 'attendance',
+                    title: `Low Attendance — ${studentName}`,
+                    message: `${studentName}'s attendance is at ${attendancePct}%, below 75%.`,
+                    link: '/admin/dashboard',
+                    metadata: { studentName, percentage: attendancePct },
+                  });
+                }
               }
-            }
-          }));
+
+              // Consecutive absence check (3+ days)
+              const recentAttendances = await Attendance.find({
+                schoolId: req.schoolId,
+                'records.studentId': studentProf._id,
+              })
+                .sort({ date: -1 })
+                .limit(3)
+                .lean();
+
+              const allRecentAbsent =
+                recentAttendances.length >= 3 &&
+                recentAttendances.every((att) => {
+                  const rec = att.records?.find(
+                    (r) => r.studentId?.toString() === studentProf._id.toString()
+                  );
+                  return rec?.status === 'absent';
+                });
+
+              if (allRecentAbsent) {
+                const classTeacher = await ClassTeacherAssignment.findOne({
+                  schoolId: req.schoolId,
+                  classId,
+                })
+                  .populate('teacherId', '_id firstName lastName')
+                  .lean();
+                if (classTeacher?.teacherId) {
+                  await createInAppNotification({
+                    userId: classTeacher.teacherId._id,
+                    schoolId: req.schoolId,
+                    type: 'attendance',
+                    title: `Student Absent 3+ Days — ${studentName}`,
+                    message: `${studentName} has been absent for 3 or more consecutive days. Please follow up.`,
+                    link: '/teacher/my-students',
+                    metadata: { studentName },
+                  });
+                }
+              }
+            })
+          );
 
           // Confirmation to teacher
           await createInAppNotification({
-            userId:   req.user._id,
+            userId: req.user._id,
             schoolId: req.schoolId,
-            type:     'attendance',
-            title:    'Attendance Saved',
-            message:  'Attendance recorded successfully for today.',
-            link:     '/teacher/attendance',
+            type: 'attendance',
+            title: 'Attendance Saved',
+            message: 'Attendance recorded successfully for today.',
+            link: '/teacher/attendance',
             metadata: {},
           });
         } catch (notifErr) {
           logger.warn('[Notif] Attendance notification failed', {
-            error: notifErr.message, schoolId: req.schoolId,
+            error: notifErr.message,
+            schoolId: req.schoolId,
           });
         }
       })();
@@ -538,13 +594,13 @@ exports.getAttendanceRecords = async (req, res) => {
       .populate('records.studentId', 'firstName lastName rollNo admissionNumber')
       .sort({ date: -1 });
 
-    const enriched = records.map(r => {
+    const enriched = records.map((r) => {
       const obj = r.toObject();
       const total = obj.records.length;
-      const present = obj.records.filter(x => x.status === 'present').length;
-      const absent = obj.records.filter(x => x.status === 'absent').length;
-      const late = obj.records.filter(x => x.status === 'late').length;
-      const leave = obj.records.filter(x => x.status === 'leave').length;
+      const present = obj.records.filter((x) => x.status === 'present').length;
+      const absent = obj.records.filter((x) => x.status === 'absent').length;
+      const late = obj.records.filter((x) => x.status === 'late').length;
+      const leave = obj.records.filter((x) => x.status === 'leave').length;
       return { ...obj, summary: { total, present, absent, late, leave } };
     });
 
@@ -553,8 +609,6 @@ exports.getAttendanceRecords = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
 
 // ========================
 // TEACHER LEAVE
@@ -566,7 +620,9 @@ exports.applyLeave = async (req, res) => {
 
     // SECURITY: Ensure schoolId is present
     if (!req.schoolId) {
-      return res.status(400).json({ success: false, message: 'Authentication required: Missing school context' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Authentication required: Missing school context' });
     }
 
     const leave = await Leave.create({
@@ -576,35 +632,37 @@ exports.applyLeave = async (req, res) => {
       startDate,
       endDate,
       reason,
-      schoolId: req.schoolId
+      schoolId: req.schoolId,
     });
 
     res.status(201).json({ success: true, message: 'Leave applied successfully', data: leave });
 
     // ── NOTIFICATION BLOCK — non-blocking ───────────────────────────────────
-    ;(async () => {
+    (async () => {
       try {
         const admin = await User.findOne({
           schoolId: req.schoolId,
           role: 'admin',
           isActive: true,
-        }).select('_id').lean();
+        })
+          .select('_id')
+          .lean();
         if (!admin) return;
 
         const teacherName = `${req.user.firstName} ${req.user.lastName}`;
         const fromDate = new Date(leave.startDate).toLocaleDateString('en-IN');
-        const toDate   = new Date(leave.endDate).toLocaleDateString('en-IN');
+        const toDate = new Date(leave.endDate).toLocaleDateString('en-IN');
 
         await createInAppNotification({
-          userId:          admin._id,
-          schoolId:        req.schoolId,
-          type:            'leave',
-          title:           `Leave Request — ${teacherName}`,
-          message:         `${teacherName} has applied for leave from ${fromDate} to ${toDate}.`,
-          link:            '/admin/teacher-leaves',
-          triggeredBy:     req.user._id,
+          userId: admin._id,
+          schoolId: req.schoolId,
+          type: 'leave',
+          title: `Leave Request — ${teacherName}`,
+          message: `${teacherName} has applied for leave from ${fromDate} to ${toDate}.`,
+          link: '/admin/teacher-leaves',
+          triggeredBy: req.user._id,
           triggeredByName: teacherName,
-          metadata:        { leaveId: leave._id, fromDate, toDate, teacherName },
+          metadata: { leaveId: leave._id, fromDate, toDate, teacherName },
         });
       } catch (notifErr) {
         logger.warn('[Notif] Teacher leave apply notification failed', { error: notifErr.message });
@@ -618,7 +676,11 @@ exports.applyLeave = async (req, res) => {
 
 exports.getMyLeaves = async (req, res) => {
   try {
-    const leaves = await Leave.find({ appliedBy: req.user._id, role: 'teacher', schoolId: req.schoolId })
+    const leaves = await Leave.find({
+      appliedBy: req.user._id,
+      role: 'teacher',
+      schoolId: req.schoolId,
+    })
       .populate('approvedBy', 'firstName lastName')
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: leaves });
@@ -634,14 +696,14 @@ exports.getMyLeaves = async (req, res) => {
 exports.getStudentLeaves = async (req, res) => {
   try {
     // Check if this teacher is a class teacher — scoped to school (FIX 9A)
-    const ctAssignment = await ClassTeacherAssignment.findOne({ 
+    const ctAssignment = await ClassTeacherAssignment.findOne({
       teacherId: req.user._id,
-      schoolId: req.schoolId
+      schoolId: req.schoolId,
     });
     if (!ctAssignment) {
       return res.status(403).json({
         success: false,
-        message: 'You are not assigned as a class teacher to any class'
+        message: 'You are not assigned as a class teacher to any class',
       });
     }
 
@@ -650,7 +712,7 @@ exports.getStudentLeaves = async (req, res) => {
       role: 'student',
       classId: ctAssignment.classId,
       sectionId: ctAssignment.sectionId,
-      schoolId: req.schoolId
+      schoolId: req.schoolId,
     };
     if (req.query.status) filter.status = req.query.status;
 
@@ -667,13 +729,15 @@ exports.approveStudentLeave = async (req, res) => {
   try {
     const { status, approvalRemarks } = req.body;
     if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ success: false, message: 'Status must be approved or rejected' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Status must be approved or rejected' });
     }
 
     // Verify class teacher — scoped to school (FIX 9A for approveStudentLeave)
-    const ctAssignment = await ClassTeacherAssignment.findOne({ 
+    const ctAssignment = await ClassTeacherAssignment.findOne({
       teacherId: req.user._id,
-      schoolId: req.schoolId
+      schoolId: req.schoolId,
     });
     if (!ctAssignment) {
       return res.status(403).json({ success: false, message: 'Not a class teacher' });
@@ -681,66 +745,72 @@ exports.approveStudentLeave = async (req, res) => {
 
     // SECURITY: scope leave update to current school (FIX 9C)
     const leave = await Leave.findOneAndUpdate(
-      { 
-        _id: req.params.id, 
-        classId: ctAssignment.classId, 
+      {
+        _id: req.params.id,
+        classId: ctAssignment.classId,
         sectionId: ctAssignment.sectionId,
-        schoolId: req.schoolId
+        schoolId: req.schoolId,
       },
       { status, approvedBy: req.user._id, approvalRemarks },
       { new: true }
     );
-    if (!leave) return res.status(404).json({ success: false, message: 'Leave not found or not in your class' });
+    if (!leave)
+      return res
+        .status(404)
+        .json({ success: false, message: 'Leave not found or not in your class' });
 
     res.status(200).json({ success: true, message: `Leave ${status}`, data: leave });
 
     // ── NOTIFICATION BLOCK — non-blocking ───────────────────────────────────
-    ;(async () => {
+    (async () => {
       try {
         const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-        const School = require('../../src/modules/tenancy').School;
+        const School = require('../../tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
 
         const studentUser = await User.findById(leave.appliedBy)
-          .select('firstName lastName email').lean();
+          .select('firstName lastName email')
+          .lean();
         if (!studentUser) return;
 
-        const studentName   = `${studentUser.firstName} ${studentUser.lastName}`;
-        const approverName  = `${req.user.firstName} ${req.user.lastName}`;
-        const isApproved    = leave.status === 'approved';
-        const fromDate      = new Date(leave.startDate).toLocaleDateString('en-IN');
-        const toDate        = new Date(leave.endDate).toLocaleDateString('en-IN');
+        const studentName = `${studentUser.firstName} ${studentUser.lastName}`;
+        const approverName = `${req.user.firstName} ${req.user.lastName}`;
+        const isApproved = leave.status === 'approved';
+        const fromDate = new Date(leave.startDate).toLocaleDateString('en-IN');
+        const toDate = new Date(leave.endDate).toLocaleDateString('en-IN');
 
         // In-app to student
         await createInAppNotification({
-          userId:          studentUser._id,
-          schoolId:        req.schoolId,
-          type:            'leave',
-          title:           `Leave ${isApproved ? 'Approved' : 'Rejected'}`,
-          message:         `Your leave request (${fromDate} to ${toDate}) has been ${leave.status} by ${approverName}.`,
-          link:            '/student/leave',
-          triggeredBy:     req.user._id,
+          userId: studentUser._id,
+          schoolId: req.schoolId,
+          type: 'leave',
+          title: `Leave ${isApproved ? 'Approved' : 'Rejected'}`,
+          message: `Your leave request (${fromDate} to ${toDate}) has been ${leave.status} by ${approverName}.`,
+          link: '/student/leave',
+          triggeredBy: req.user._id,
           triggeredByName: approverName,
-          metadata:        { status: leave.status, fromDate, toDate, approverName },
+          metadata: { status: leave.status, fromDate, toDate, approverName },
         });
 
         // Email to student
-        const { leaveDecisionTemplate } = require('../../src/modules/notifications').emailTemplates;
+        const { leaveDecisionTemplate } = require('../../notifications').emailTemplates;
         const { subject, html } = leaveDecisionTemplate({
-          applicantName:  studentName,
-          leaveType:      leave.leaveType || 'Leave',
+          applicantName: studentName,
+          leaveType: leave.leaveType || 'Leave',
           fromDate,
           toDate,
-          status:         leave.status.toUpperCase(),
-          reason:         leave.approvalRemarks || '',
+          status: leave.status.toUpperCase(),
+          reason: leave.approvalRemarks || '',
           approvedByName: approverName,
           schoolName,
           loginUrl,
         });
         await sendEmailNotification({ to: studentUser.email, subject, html });
       } catch (notifErr) {
-        logger.warn('[Notif] Student leave decision notification failed', { error: notifErr.message });
+        logger.warn('[Notif] Student leave decision notification failed', {
+          error: notifErr.message,
+        });
       }
     })();
     // ── END NOTIFICATION BLOCK ─────────────────────────────────────────────
@@ -759,10 +829,17 @@ exports.createAssignment = async (req, res) => {
 
     // Verify teacher is assigned to this
     const assignment = await TeacherSubjectAssignment.findOne({
-      teacherId: req.user._id, subjectId, classId, sectionId, session, schoolId: req.schoolId
+      teacherId: req.user._id,
+      subjectId,
+      classId,
+      sectionId,
+      session,
+      schoolId: req.schoolId,
     });
     if (!assignment) {
-      return res.status(403).json({ success: false, message: 'You are not assigned to this subject/class' });
+      return res
+        .status(403)
+        .json({ success: false, message: 'You are not assigned to this subject/class' });
     }
 
     // Upload file to Cloudinary
@@ -776,25 +853,33 @@ exports.createAssignment = async (req, res) => {
     }
 
     const newAssignment = await Assignment.create({
-      teacherid: req.user._id, title, description, dueDate,
-      subjectId, classId, sectionId, session,
+      teacherid: req.user._id,
+      title,
+      description,
+      dueDate,
+      subjectId,
+      classId,
+      sectionId,
+      session,
       photo: photoUrl || '',
-      schoolId: req.schoolId  // ── multi-tenancy stamp ──
+      schoolId: req.schoolId, // ── multi-tenancy stamp ──
     });
 
     res.status(201).json({ success: true, message: 'Assignment created', data: newAssignment });
 
     // ── NOTIFICATION BLOCK — non-blocking ───────────────────────────────────
-    ;(async () => {
+    (async () => {
       try {
         const students = await StudentProfile.find({
           schoolId: req.schoolId,
-          classId:  newAssignment.classId,
+          classId: newAssignment.classId,
           sectionId: newAssignment.sectionId,
           status: 'active',
-        }).select('userId').lean();
+        })
+          .select('userId')
+          .lean();
 
-        const studentUserIds = students.map(s => s.userId).filter(Boolean);
+        const studentUserIds = students.map((s) => s.userId).filter(Boolean);
         if (studentUserIds.length === 0) return;
 
         const dueDateFormatted = newAssignment.dueDate
@@ -802,14 +887,14 @@ exports.createAssignment = async (req, res) => {
           : 'No due date';
 
         await notifyMultipleUsers(studentUserIds, {
-          schoolId:        req.schoolId,
-          type:            'assignment',
-          title:           `New Assignment — ${newAssignment.title}`,
-          message:         `A new assignment "${newAssignment.title}" has been posted. Due: ${dueDateFormatted}`,
-          link:            '/student/assignments',
-          triggeredBy:     req.user._id,
+          schoolId: req.schoolId,
+          type: 'assignment',
+          title: `New Assignment — ${newAssignment.title}`,
+          message: `A new assignment "${newAssignment.title}" has been posted. Due: ${dueDateFormatted}`,
+          link: '/student/assignments',
+          triggeredBy: req.user._id,
           triggeredByName: `${req.user.firstName} ${req.user.lastName}`,
-          metadata:        { assignmentId: newAssignment._id, dueDate: dueDateFormatted },
+          metadata: { assignmentId: newAssignment._id, dueDate: dueDateFormatted },
         });
       } catch (notifErr) {
         logger.warn('[Notif] Assignment notification failed', { error: notifErr.message });
@@ -835,17 +920,19 @@ exports.getMyCreatedAssignments = async (req, res) => {
       .sort({ createdAt: -1 });
 
     // Attach real submission counts from Assignmentupload
-    const assignmentIds = assignments.map(a => a._id);
+    const assignmentIds = assignments.map((a) => a._id);
     const submissionCounts = await Assignmentupload.aggregate([
       { $match: { assignmentid: { $in: assignmentIds } } },
-      { $group: { _id: '$assignmentid', count: { $sum: 1 } } }
+      { $group: { _id: '$assignmentid', count: { $sum: 1 } } },
     ]);
     const countMap = {};
-    submissionCounts.forEach(s => { countMap[s._id.toString()] = s.count; });
+    submissionCounts.forEach((s) => {
+      countMap[s._id.toString()] = s.count;
+    });
 
-    const enriched = assignments.map(a => ({
+    const enriched = assignments.map((a) => ({
       ...a.toObject(),
-      submissionCount: countMap[a._id.toString()] || 0
+      submissionCount: countMap[a._id.toString()] || 0,
     }));
 
     res.status(200).json({ success: true, data: enriched });
@@ -853,7 +940,6 @@ exports.getMyCreatedAssignments = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 exports.getAssignmentSubmissions = async (req, res) => {
   try {
@@ -871,28 +957,31 @@ exports.getNotSubmittedStudents = async (req, res) => {
     const { assignmentId } = req.params;
     // SECURITY: scope by schoolId to prevent cross-tenant access
     const assignment = await Assignment.findOne({ _id: assignmentId, schoolId: req.schoolId });
-    if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
+    if (!assignment)
+      return res.status(404).json({ success: false, message: 'Assignment not found' });
 
     // Get all students in this class/section/session
     const allStudents = await StudentProfile.find({
       classId: assignment.classId,
       sectionId: assignment.sectionId,
       session: assignment.session,
-      isActive: { $ne: false }
+      isActive: { $ne: false },
     }).select('firstName lastName rollNo admissionNumber');
 
     // Get who has submitted
-    const submitted = await Assignmentupload.find({ assignmentid: assignmentId }).select('studentid');
-    const submittedIds = new Set(submitted.map(s => s.studentid.toString()));
+    const submitted = await Assignmentupload.find({ assignmentid: assignmentId }).select(
+      'studentid'
+    );
+    const submittedIds = new Set(submitted.map((s) => s.studentid.toString()));
 
-    const notSubmitted = allStudents.filter(s => !submittedIds.has(s._id.toString()));
+    const notSubmitted = allStudents.filter((s) => !submittedIds.has(s._id.toString()));
 
     res.status(200).json({
       success: true,
       data: notSubmitted,
       total: allStudents.length,
       submitted: submittedIds.size,
-      pending: notSubmitted.length
+      pending: notSubmitted.length,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -904,9 +993,12 @@ exports.updateAssignment = async (req, res) => {
     const { assignmentId } = req.params;
     // SECURITY: scope by schoolId to prevent cross-tenant modification
     const assignment = await Assignment.findOne({ _id: assignmentId, schoolId: req.schoolId });
-    if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
+    if (!assignment)
+      return res.status(404).json({ success: false, message: 'Assignment not found' });
     if (assignment.teacherid.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized to edit this assignment' });
+      return res
+        .status(403)
+        .json({ success: false, message: 'Not authorized to edit this assignment' });
     }
 
     const { title, description, dueDate } = req.body;
@@ -917,7 +1009,8 @@ exports.updateAssignment = async (req, res) => {
     // If a new file is uploaded, replace it on Cloudinary
     if (req.file) {
       const uploaded = await uploadoncloud(req.file.path);
-      if (!uploaded) return res.status(500).json({ success: false, message: 'File upload to cloud failed' });
+      if (!uploaded)
+        return res.status(500).json({ success: false, message: 'File upload to cloud failed' });
       assignment.photo = uploaded.url;
     }
 
@@ -933,9 +1026,12 @@ exports.deleteAssignment = async (req, res) => {
     const { assignmentId } = req.params;
     // SECURITY: scope by schoolId
     const assignment = await Assignment.findOne({ _id: assignmentId, schoolId: req.schoolId });
-    if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
+    if (!assignment)
+      return res.status(404).json({ success: false, message: 'Assignment not found' });
     if (assignment.teacherid.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized to delete this assignment' });
+      return res
+        .status(403)
+        .json({ success: false, message: 'Not authorized to delete this assignment' });
     }
 
     // Remove all student submissions for this assignment
@@ -948,14 +1044,14 @@ exports.deleteAssignment = async (req, res) => {
   }
 };
 
-
 // ========================
 // KNOWLEDGE CENTER
 // ========================
 
 exports.uploadMaterial = async (req, res) => {
   try {
-    const { title, description, subjectId, customSubjectName, classId, sectionId, session } = req.body;
+    const { title, description, subjectId, customSubjectName, classId, sectionId, session } =
+      req.body;
 
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Please attach a file' });
@@ -967,9 +1063,12 @@ exports.uploadMaterial = async (req, res) => {
     }
 
     const ext = req.file.originalname?.split('.').pop()?.toLowerCase() || '';
-    const fileType = ['pdf'].includes(ext) ? 'pdf'
-      : ['doc', 'docx'].includes(ext) ? 'doc'
-        : ['jpg', 'jpeg', 'png', 'gif'].includes(ext) ? 'image'
+    const fileType = ['pdf'].includes(ext)
+      ? 'pdf'
+      : ['doc', 'docx'].includes(ext)
+        ? 'doc'
+        : ['jpg', 'jpeg', 'png', 'gif'].includes(ext)
+          ? 'image'
           : ext || 'other';
 
     const material = await Knowledgecenter.create({
@@ -984,13 +1083,13 @@ exports.uploadMaterial = async (req, res) => {
       session,
       fileUrl: uploaded.url,
       fileType,
-      schoolId: req.schoolId  // ── multi-tenancy stamp ──
+      schoolId: req.schoolId, // ── multi-tenancy stamp ──
     });
 
     const populated = await material.populate([
       { path: 'subjectId', select: 'name code' },
       { path: 'classId', select: 'name' },
-      { path: 'sectionId', select: 'name' }
+      { path: 'sectionId', select: 'name' },
     ]);
 
     res.status(201).json({ success: true, message: 'Material uploaded', data: populated });
@@ -1018,10 +1117,10 @@ exports.getMyMaterials = async (req, res) => {
       .populate('sectionId', 'name')
       .sort({ createdAt: -1 });
 
-    const enriched = materials.map(m => ({
+    const enriched = materials.map((m) => ({
       ...m.toObject(),
       viewCount: m.views?.length || 0,
-      subjectDisplay: m.customSubjectName || m.subjectId?.name || 'Other'
+      subjectDisplay: m.customSubjectName || m.subjectId?.name || 'Other',
     }));
 
     res.status(200).json({ success: true, data: enriched });
@@ -1033,7 +1132,10 @@ exports.getMyMaterials = async (req, res) => {
 exports.updateMaterial = async (req, res) => {
   try {
     // SECURITY: scope by schoolId to prevent cross-tenant material access
-    const material = await Knowledgecenter.findOne({ _id: req.params.materialId, schoolId: req.schoolId });
+    const material = await Knowledgecenter.findOne({
+      _id: req.params.materialId,
+      schoolId: req.schoolId,
+    });
     if (!material) return res.status(404).json({ success: false, message: 'Material not found' });
     if (material.teacherid.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
@@ -1060,7 +1162,10 @@ exports.updateMaterial = async (req, res) => {
 exports.deleteMaterial = async (req, res) => {
   try {
     // SECURITY: scope by schoolId
-    const material = await Knowledgecenter.findOne({ _id: req.params.materialId, schoolId: req.schoolId });
+    const material = await Knowledgecenter.findOne({
+      _id: req.params.materialId,
+      schoolId: req.schoolId,
+    });
     if (!material) return res.status(404).json({ success: false, message: 'Material not found' });
     if (material.teacherid.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
@@ -1072,8 +1177,6 @@ exports.deleteMaterial = async (req, res) => {
   }
 };
 
-
-
 // ========================
 // MARKS
 // ========================
@@ -1083,19 +1186,26 @@ exports.getStudentsForMarks = async (req, res) => {
   try {
     const { classId, sectionId, session } = req.query;
     if (!classId || !sectionId || !session) {
-      return res.status(400).json({ success: false, message: 'classId, sectionId and session are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'classId, sectionId and session are required' });
     }
 
     const students = await StudentProfile.find({
-      classId, sectionId, session, status: 'active', schoolId: req.schoolId
-    }).populate('userId', 'firstName lastName email').sort({ rollNo: 1 });
+      classId,
+      sectionId,
+      session,
+      status: 'active',
+      schoolId: req.schoolId,
+    })
+      .populate('userId', 'firstName lastName email')
+      .sort({ rollNo: 1 });
 
     res.status(200).json({ success: true, data: students });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 // GET exams available for this teacher (based on their assigned classes)
 exports.getMyExams = async (req, res) => {
@@ -1117,14 +1227,14 @@ exports.getMyExams = async (req, res) => {
         .select('classId')
         .lean();
 
-      const classIds = [...new Set(assignments.map(a => String(a.classId)).filter(Boolean))];
+      const classIds = [...new Set(assignments.map((a) => String(a.classId)).filter(Boolean))];
 
       if (classIds.length === 0) {
         return res.status(200).json({ success: true, data: [] });
       }
 
       // Find exams that include ANY of the teacher's classes
-      filter.classIds = { $in: classIds.map(id => toObjectId(id)) };
+      filter.classIds = { $in: classIds.map((id) => toObjectId(id)) };
     }
 
     const exams = await Exam.find(filter)
@@ -1143,10 +1253,14 @@ exports.getMyExams = async (req, res) => {
 exports.uploadMarks = async (req, res) => {
   try {
     const {
-      examId, subjectId, classId, sectionId, session,
+      examId,
+      subjectId,
+      classId,
+      sectionId,
+      session,
       marks,
-      marksType = 'theory',    // used in OLD format
-      templateId,              // optional: for new dynamic-fields format
+      marksType = 'theory', // used in OLD format
+      templateId, // optional: for new dynamic-fields format
     } = req.body;
     // marks = [
     //   OLD: { studentId, marksObtained, remarks }
@@ -1154,7 +1268,8 @@ exports.uploadMarks = async (req, res) => {
     // ]
 
     // Detect format: if ANY mark entry has a `fields` map, use the new pipeline
-    const isNewFormat = Array.isArray(marks) && marks.some(m => m.fields && typeof m.fields === 'object');
+    const isNewFormat =
+      Array.isArray(marks) && marks.some((m) => m.fields && typeof m.fields === 'object');
 
     // normalizedType defined HERE (before it is used in maxMarks calculation below)
     const normalizedType = (marksType || 'theory').toString().trim().toLowerCase();
@@ -1166,8 +1281,16 @@ exports.uploadMarks = async (req, res) => {
     const sessionObjectId = toObjectId(session);
     const schoolObjectId = toObjectId(req.schoolId);
 
-    if (!examObjectId || !subjectObjectId || !classObjectId || !sectionObjectId || !sessionObjectId) {
-      return res.status(400).json({ success: false, message: 'Invalid examId/subjectId/classId/sectionId/session' });
+    if (
+      !examObjectId ||
+      !subjectObjectId ||
+      !classObjectId ||
+      !sectionObjectId ||
+      !sessionObjectId
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid examId/subjectId/classId/sectionId/session' });
     }
 
     const examExists = await validateExamContext({
@@ -1177,7 +1300,9 @@ exports.uploadMarks = async (req, res) => {
       schoolId: req.schoolId,
     });
     if (!examExists) {
-      return res.status(400).json({ success: false, message: 'Exam not found for this school/session/class' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Exam not found for this school/session/class' });
     }
 
     // ── EXAM_CONTROLLER: MARKS_ALL_ACCESS — bypass assignment check ──────────
@@ -1193,30 +1318,40 @@ exports.uploadMarks = async (req, res) => {
         schoolId: req.schoolId,
       });
       if (!assignment) {
-        return res.status(403).json({ success: false, message: 'You are not assigned to this subject/class/section' });
+        return res
+          .status(403)
+          .json({ success: false, message: 'You are not assigned to this subject/class/section' });
       }
     }
 
     // ExamSubjectConfig: REQUIRED for legacy format, OPTIONAL for dynamic template format.
     // For dynamic format we use it only for per-field max-marks validation.
     const examConfig = await ExamSubjectConfig.findOne({
-      examId: examObjectId, subjectId: subjectObjectId,
-      classId: classObjectId, schoolId: req.schoolId,
+      examId: examObjectId,
+      subjectId: subjectObjectId,
+      classId: classObjectId,
+      schoolId: req.schoolId,
     });
     if (!examConfig && !isNewFormat) {
-      return res.status(400).json({ success: false, message: 'This subject is not configured for this class in this exam' });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'This subject is not configured for this class in this exam',
+        });
     }
 
     // Build per-field max map from marksDistribution
     // e.g. { theory: 80, practical: 20, oral: 20, notebook: 10 }
     const fieldMaxMap = {};
-    let totalMaxMarks  = 100;
+    let totalMaxMarks = 100;
     if (examConfig) {
       if (Array.isArray(examConfig.marksDistribution) && examConfig.marksDistribution.length > 0) {
-        examConfig.marksDistribution.forEach(d => {
+        examConfig.marksDistribution.forEach((d) => {
           if (d.type) fieldMaxMap[d.type.toLowerCase()] = Number(d.maxMarks) || Infinity;
         });
-        totalMaxMarks = examConfig.marksDistribution.reduce((s, d) => s + (Number(d.maxMarks) || 0), 0) || 100;
+        totalMaxMarks =
+          examConfig.marksDistribution.reduce((s, d) => s + (Number(d.maxMarks) || 0), 0) || 100;
       } else if (normalizedType === 'practical' && (examConfig.practicalMaxMarks || 0) > 0) {
         totalMaxMarks = Number(examConfig.practicalMaxMarks);
       } else if (normalizedType === 'project' && (examConfig.projectMaxMarks || 0) > 0) {
@@ -1244,7 +1379,7 @@ exports.uploadMarks = async (req, res) => {
     const maxMarks = totalMaxMarks;
     let clampedCount = 0;
     const sanitizedMarks = (Array.isArray(marks) ? marks : [])
-      .filter(m => m && m.marksObtained !== '' && m.marksObtained !== undefined)
+      .filter((m) => m && m.marksObtained !== '' && m.marksObtained !== undefined)
       .map((m) => {
         const studentObjectId = toObjectId(m.studentId);
         if (!studentObjectId) return null;
@@ -1259,48 +1394,55 @@ exports.uploadMarks = async (req, res) => {
     if (isNewFormat) {
       // ══ NEW FORMAT: dynamic template fields ═══════════════════════════════════
       const validMarks = (Array.isArray(marks) ? marks : []).filter(
-        m => m && m.studentId && m.fields && typeof m.fields === 'object' && Object.keys(m.fields).length > 0
+        (m) =>
+          m &&
+          m.studentId &&
+          m.fields &&
+          typeof m.fields === 'object' &&
+          Object.keys(m.fields).length > 0
       );
       if (validMarks.length === 0) {
         return res.status(400).json({ success: false, message: 'No valid marks entries provided' });
       }
 
-      const operations = validMarks.map(m => {
-        const studentObjectId = toObjectId(m.studentId);
-        if (!studentObjectId) return null;
-        const cleanedFields = {};
-        Object.entries(m.fields).forEach(([k, v]) => {
-          const num = Number(v);
-          if (Number.isFinite(num)) {
-            const cap = resolveFieldMax(k);
-            cleanedFields[k] = Math.max(0, isFinite(cap) ? Math.min(cap, num) : num);
-          }
-        });
-        if (Object.keys(cleanedFields).length === 0) return null;
-        return {
-          updateOne: {
-            filter: {
-              examId:    examObjectId,
-              studentId: studentObjectId,
-              subjectId: subjectObjectId,
-              schoolId:  schoolObjectId || req.schoolId,
-            },
-            update: {
-              $set: {
-                schoolId:   schoolObjectId || req.schoolId,
-                classId:    classObjectId,
-                sectionId:  sectionObjectId,
-                session:    sessionObjectId,
-                fields:     cleanedFields,
-                uploadedBy: req.user._id,
-                remarks:    m.remarks || '',
-                marksType:  'fields',
+      const operations = validMarks
+        .map((m) => {
+          const studentObjectId = toObjectId(m.studentId);
+          if (!studentObjectId) return null;
+          const cleanedFields = {};
+          Object.entries(m.fields).forEach(([k, v]) => {
+            const num = Number(v);
+            if (Number.isFinite(num)) {
+              const cap = resolveFieldMax(k);
+              cleanedFields[k] = Math.max(0, isFinite(cap) ? Math.min(cap, num) : num);
+            }
+          });
+          if (Object.keys(cleanedFields).length === 0) return null;
+          return {
+            updateOne: {
+              filter: {
+                examId: examObjectId,
+                studentId: studentObjectId,
+                subjectId: subjectObjectId,
+                schoolId: schoolObjectId || req.schoolId,
               },
+              update: {
+                $set: {
+                  schoolId: schoolObjectId || req.schoolId,
+                  classId: classObjectId,
+                  sectionId: sectionObjectId,
+                  session: sessionObjectId,
+                  fields: cleanedFields,
+                  uploadedBy: req.user._id,
+                  remarks: m.remarks || '',
+                  marksType: 'fields',
+                },
+              },
+              upsert: true,
             },
-            upsert: true,
-          },
-        };
-      }).filter(Boolean);
+          };
+        })
+        .filter(Boolean);
 
       if (operations.length > 0) await Marks.bulkWrite(operations);
 
@@ -1308,18 +1450,24 @@ exports.uploadMarks = async (req, res) => {
       await refreshExamEvaluationStatus({ examId: examObjectId, schoolId: req.schoolId });
 
       await MarksAuditLog.create({
-        examId: examObjectId, classId: classObjectId, sectionId: sectionObjectId,
-        subjectId: subjectObjectId, uploadedBy: req.user._id,
+        examId: examObjectId,
+        classId: classObjectId,
+        sectionId: sectionObjectId,
+        subjectId: subjectObjectId,
+        uploadedBy: req.user._id,
         uploadedByRole: req.user.role === 'exam_controller' ? 'exam_controller' : 'teacher',
         uploadMethod: 'manual_dynamic',
         studentCount: operations.length,
-        session: sessionObjectId, schoolId: schoolObjectId || req.schoolId,
+        session: sessionObjectId,
+        schoolId: schoolObjectId || req.schoolId,
       });
 
       return res.status(200).json({
         success: true,
         message: `Dynamic marks uploaded for ${operations.length} student(s)`,
-        ...(examConfig ? {} : { warning: 'Subject not pre-configured; saved without max-marks cap' }),
+        ...(examConfig
+          ? {}
+          : { warning: 'Subject not pre-configured; saved without max-marks cap' }),
       });
     }
 
@@ -1328,26 +1476,25 @@ exports.uploadMarks = async (req, res) => {
       return res.status(400).json({ success: false, message: 'marksType is required' });
     }
 
-
-    const operations = sanitizedMarks.map(m => ({
+    const operations = sanitizedMarks.map((m) => ({
       updateOne: {
         filter: {
-          examId:    examObjectId,
+          examId: examObjectId,
           studentId: m.studentId,
           subjectId: subjectObjectId,
           marksType: normalizedType,
-          schoolId:  schoolObjectId || req.schoolId,
+          schoolId: schoolObjectId || req.schoolId,
         },
         update: {
           $set: {
-            schoolId:     schoolObjectId || req.schoolId,
-            classId:      classObjectId,
-            sectionId:    sectionObjectId,
-            session:      sessionObjectId,
+            schoolId: schoolObjectId || req.schoolId,
+            classId: classObjectId,
+            sectionId: sectionObjectId,
+            session: sessionObjectId,
             marksObtained: m.marksObtained,
-            marksType:    normalizedType,
-            uploadedBy:   req.user._id,
-            remarks:      m.remarks || '',
+            marksType: normalizedType,
+            uploadedBy: req.user._id,
+            remarks: m.remarks || '',
           },
         },
         upsert: true,
@@ -1363,65 +1510,88 @@ exports.uploadMarks = async (req, res) => {
 
     // Create audit log entry
     await MarksAuditLog.create({
-      examId: examObjectId, classId: classObjectId, sectionId: sectionObjectId, subjectId: subjectObjectId,
+      examId: examObjectId,
+      classId: classObjectId,
+      sectionId: sectionObjectId,
+      subjectId: subjectObjectId,
       uploadedBy: req.user._id,
       uploadedByRole: req.user.role === 'exam_controller' ? 'exam_controller' : 'teacher',
       uploadMethod: 'manual',
       studentCount: sanitizedMarks.length,
       session: sessionObjectId,
-      schoolId: schoolObjectId || req.schoolId
+      schoolId: schoolObjectId || req.schoolId,
     });
 
-    const clampMsg = clampedCount > 0 ? ` (clamped ${clampedCount} value(s) to max ${maxMarks})` : '';
-    res.status(200).json({ success: true, message: `${marksType} marks uploaded for ${sanitizedMarks.length} student(s)${clampMsg}` });
+    const clampMsg =
+      clampedCount > 0 ? ` (clamped ${clampedCount} value(s) to max ${maxMarks})` : '';
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: `${marksType} marks uploaded for ${sanitizedMarks.length} student(s)${clampMsg}`,
+      });
 
     // ── NOTIFICATION BLOCK — non-blocking ───────────────────────────────────
-    ;(async () => {
+    (async () => {
       try {
         if (sanitizedMarks.length === 0) return;
 
         const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
-        const School = require('../../src/modules/tenancy').School;
+        const School = require('../../tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
 
         // Resolve exam and subject names from already-validated docs
-        const examDoc    = await Exam.findById(examObjectId).select('name').lean();
+        const examDoc = await Exam.findById(examObjectId).select('name').lean();
         const subjectDoc = await ExamSubjectConfig.findOne({
-          examId: examObjectId, subjectId: subjectObjectId, classId: classObjectId, schoolId: req.schoolId,
-        }).populate('subjectId', 'name').lean();
-        const examName    = examDoc?.name    || 'Exam';
+          examId: examObjectId,
+          subjectId: subjectObjectId,
+          classId: classObjectId,
+          schoolId: req.schoolId,
+        })
+          .populate('subjectId', 'name')
+          .lean();
+        const examName = examDoc?.name || 'Exam';
         const subjectName = subjectDoc?.subjectId?.name || 'Subject';
 
         // sanitizedMarks[].studentId = StudentProfile._id
         // Need to resolve to User._id for notifications
-        const studentProfileIds = sanitizedMarks.map(m => m.studentId);
-        const studentProfiles   = await StudentProfile.find({
-          _id: { $in: studentProfileIds }, schoolId: req.schoolId,
-        }).select('userId').lean();
+        const studentProfileIds = sanitizedMarks.map((m) => m.studentId);
+        const studentProfiles = await StudentProfile.find({
+          _id: { $in: studentProfileIds },
+          schoolId: req.schoolId,
+        })
+          .select('userId')
+          .lean();
 
-        const studentUserIds = studentProfiles.map(p => p.userId).filter(Boolean);
+        const studentUserIds = studentProfiles.map((p) => p.userId).filter(Boolean);
         if (studentUserIds.length === 0) return;
 
         // In-app for all students
         await notifyMultipleUsers(studentUserIds, {
           schoolId: req.schoolId,
-          type:     'marks',
-          title:    `Marks Published — ${subjectName}`,
-          message:  `Your marks for ${subjectName} in ${examName} have been published. Login to view.`,
-          link:     '/student/marks',
+          type: 'marks',
+          title: `Marks Published — ${subjectName}`,
+          message: `Your marks for ${subjectName} in ${examName} have been published. Login to view.`,
+          link: '/student/marks',
           metadata: { examName, subjectName },
         });
 
         // Build email list (fetch users in one query)
         const studentUsers = await User.find({
-          _id: { $in: studentUserIds }, schoolId: req.schoolId,
-        }).select('_id firstName lastName email').lean();
+          _id: { $in: studentUserIds },
+          schoolId: req.schoolId,
+        })
+          .select('_id firstName lastName email')
+          .lean();
 
-        const emailList = studentUsers.map(su => {
+        const emailList = studentUsers.map((su) => {
           const { subject, html } = marksPublishedTemplate({
             studentName: `${su.firstName} ${su.lastName}`,
-            subjectName, examName, schoolName, loginUrl,
+            subjectName,
+            examName,
+            schoolName,
+            loginUrl,
           });
           return { to: su.email, subject, html };
         });
@@ -1431,36 +1601,43 @@ exports.uploadMarks = async (req, res) => {
         const passingMarks = examConfig?.passingMarks || 0;
         if (passingMarks > 0) {
           const failedProfileIds = sanitizedMarks
-            .filter(m => m.marksObtained < passingMarks)
-            .map(m => m.studentId);
+            .filter((m) => m.marksObtained < passingMarks)
+            .map((m) => m.studentId);
 
           if (failedProfileIds.length > 0) {
             const failedProfiles = await StudentProfile.find({
-              _id: { $in: failedProfileIds }, schoolId: req.schoolId,
-            }).select('userId').lean();
-            const failedUserIds = failedProfiles.map(p => p.userId).filter(Boolean);
+              _id: { $in: failedProfileIds },
+              schoolId: req.schoolId,
+            })
+              .select('userId')
+              .lean();
+            const failedUserIds = failedProfiles.map((p) => p.userId).filter(Boolean);
 
             if (failedUserIds.length > 0) {
               await notifyMultipleUsers(failedUserIds, {
                 schoolId: req.schoolId,
-                type:     'marks',
-                title:    `Below Passing — ${subjectName}`,
-                message:  `You have scored below the passing marks in ${subjectName} (${examName}). Please consult your teacher.`,
-                link:     '/student/marks',
+                type: 'marks',
+                title: `Below Passing — ${subjectName}`,
+                message: `You have scored below the passing marks in ${subjectName} (${examName}). Please consult your teacher.`,
+                link: '/student/marks',
                 metadata: { examName, subjectName, passingMarks },
               });
 
               const admin = await User.findOne({
-                schoolId: req.schoolId, role: 'admin', isActive: true,
-              }).select('_id').lean();
+                schoolId: req.schoolId,
+                role: 'admin',
+                isActive: true,
+              })
+                .select('_id')
+                .lean();
               if (admin) {
                 await createInAppNotification({
-                  userId:   admin._id,
+                  userId: admin._id,
                   schoolId: req.schoolId,
-                  type:     'marks',
-                  title:    `${failedUserIds.length} Student(s) Failed — ${subjectName}`,
-                  message:  `${failedUserIds.length} student(s) scored below passing in ${subjectName} (${examName}).`,
-                  link:     '/admin/marks-audit-log',
+                  type: 'marks',
+                  title: `${failedUserIds.length} Student(s) Failed — ${subjectName}`,
+                  message: `${failedUserIds.length} student(s) scored below passing in ${subjectName} (${examName}).`,
+                  link: '/admin/marks-audit-log',
                   metadata: { examName, subjectName, count: failedUserIds.length },
                 });
               }
@@ -1468,7 +1645,10 @@ exports.uploadMarks = async (req, res) => {
           }
         }
       } catch (notifErr) {
-        logger.warn('[Notif] Marks notification failed', { error: notifErr.message, schoolId: req.schoolId });
+        logger.warn('[Notif] Marks notification failed', {
+          error: notifErr.message,
+          schoolId: req.schoolId,
+        });
       }
     })();
     // ── END NOTIFICATION BLOCK ─────────────────────────────────────────────
@@ -1489,8 +1669,16 @@ exports.uploadMarksExcel = async (req, res) => {
     const sessionObjectId = toObjectId(session);
     const schoolObjectId = toObjectId(req.schoolId);
 
-    if (!examObjectId || !subjectObjectId || !classObjectId || !sectionObjectId || !sessionObjectId) {
-      return res.status(400).json({ success: false, message: 'Invalid examId/subjectId/classId/sectionId/session' });
+    if (
+      !examObjectId ||
+      !subjectObjectId ||
+      !classObjectId ||
+      !sectionObjectId ||
+      !sessionObjectId
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid examId/subjectId/classId/sectionId/session' });
     }
 
     const examExists = await validateExamContext({
@@ -1500,7 +1688,9 @@ exports.uploadMarksExcel = async (req, res) => {
       schoolId: req.schoolId,
     });
     if (!examExists) {
-      return res.status(400).json({ success: false, message: 'Exam not found for this school/session/class' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Exam not found for this school/session/class' });
     }
 
     if (!req.file) {
@@ -1520,21 +1710,31 @@ exports.uploadMarksExcel = async (req, res) => {
         schoolId: req.schoolId,
       });
       if (!assignment) {
-        return res.status(403).json({ success: false, message: 'You are not assigned to this subject/class/section' });
+        return res
+          .status(403)
+          .json({ success: false, message: 'You are not assigned to this subject/class/section' });
       }
     }
 
     // Verify exam subject config
-    const examConfig = await ExamSubjectConfig.findOne({ examId: examObjectId, subjectId: subjectObjectId, classId: classObjectId, schoolId: req.schoolId });
+    const examConfig = await ExamSubjectConfig.findOne({
+      examId: examObjectId,
+      subjectId: subjectObjectId,
+      classId: classObjectId,
+      schoolId: req.schoolId,
+    });
     if (!examConfig) {
-      return res.status(400).json({ success: false, message: 'Subject not configured for this class in this exam' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Subject not configured for this class in this exam' });
     }
 
     // Determine max marks from distribution or legacy fields
     let maxMarks = 100;
     if (Array.isArray(examConfig.marksDistribution) && examConfig.marksDistribution.length > 0) {
-      const distEntry = examConfig.marksDistribution.find(d => d.type === normalizedType);
-      maxMarks = distEntry ? Number(distEntry.maxMarks) || 100
+      const distEntry = examConfig.marksDistribution.find((d) => d.type === normalizedType);
+      maxMarks = distEntry
+        ? Number(distEntry.maxMarks) || 100
         : examConfig.marksDistribution.reduce((s, d) => s + (Number(d.maxMarks) || 0), 0) || 100;
     } else {
       const mx = Number(examConfig.maxMarks);
@@ -1552,10 +1752,15 @@ exports.uploadMarksExcel = async (req, res) => {
 
     // Get all students in this class/section to match by roll no
     const students = await StudentProfile.find({
-      classId: classObjectId, sectionId: sectionObjectId, session: sessionObjectId, status: 'active'
+      classId: classObjectId,
+      sectionId: sectionObjectId,
+      session: sessionObjectId,
+      status: 'active',
     });
     const rollNoMap = {};
-    students.forEach(s => { rollNoMap[String(s.rollNo)] = s.userId.toString(); });
+    students.forEach((s) => {
+      rollNoMap[String(s.rollNo)] = s.userId.toString();
+    });
 
     // Build marks from Excel rows
     // Expected columns: Roll No (or RollNo), Marks (or MarksObtained), Remarks
@@ -1594,7 +1799,7 @@ exports.uploadMarksExcel = async (req, res) => {
             studentId: toObjectId(studentId) || studentId,
             subjectId: subjectObjectId,
             marksType: normalizedType,
-            schoolId: schoolObjectId || req.schoolId
+            schoolId: schoolObjectId || req.schoolId,
           },
           update: {
             $set: {
@@ -1605,11 +1810,11 @@ exports.uploadMarksExcel = async (req, res) => {
               marksObtained: clamped,
               marksType: normalizedType,
               uploadedBy: req.user._id,
-              remarks: String(remarks)
-            }
+              remarks: String(remarks),
+            },
           },
-          upsert: true
-        }
+          upsert: true,
+        },
       });
     });
 
@@ -1622,20 +1827,24 @@ exports.uploadMarksExcel = async (req, res) => {
 
     // Audit log
     await MarksAuditLog.create({
-      examId: examObjectId, classId: classObjectId, sectionId: sectionObjectId, subjectId: subjectObjectId,
+      examId: examObjectId,
+      classId: classObjectId,
+      sectionId: sectionObjectId,
+      subjectId: subjectObjectId,
       uploadedBy: req.user._id,
       uploadedByRole: req.user.role === 'exam_controller' ? 'exam_controller' : 'teacher',
       uploadMethod: 'excel',
       studentCount: operations.length,
       session: sessionObjectId,
-      schoolId: schoolObjectId || req.schoolId
+      schoolId: schoolObjectId || req.schoolId,
     });
 
-    const clampMsg = clampedCount > 0 ? ` (clamped ${clampedCount} value(s) to max ${maxMarks})` : '';
+    const clampMsg =
+      clampedCount > 0 ? ` (clamped ${clampedCount} value(s) to max ${maxMarks})` : '';
     res.status(200).json({
       success: true,
       message: `${operations.length} marks uploaded via Excel${clampMsg}`,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -1681,11 +1890,13 @@ exports.createTeacherTest = async (req, res) => {
     });
 
     if (myAssignments.length === 0) {
-      return res.status(400).json({ success: false, message: 'You have no teaching assignments for this session' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'You have no teaching assignments for this session' });
     }
 
     // Group unique classIds from assignments
-    const classIdSet = [...new Set(myAssignments.map(a => a.classId.toString()))];
+    const classIdSet = [...new Set(myAssignments.map((a) => a.classId.toString()))];
 
     // Create test (type = unit_test, createdByRole = teacher)
     const exam = await Exam.create({
@@ -1694,7 +1905,8 @@ exports.createTeacherTest = async (req, res) => {
       description,
       session,
       classIds: classIdSet,
-      startDate, endDate,
+      startDate,
+      endDate,
       createdBy: req.user._id,
       createdByRole: 'teacher',
       schoolId: req.schoolId,
@@ -1724,7 +1936,7 @@ exports.createTeacherTest = async (req, res) => {
     res.status(201).json({
       success: true,
       message: `Test created for ${classIdSet.length} class(es) with ${configCount} subject config(s)`,
-      data: exam
+      data: exam,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -1760,8 +1972,8 @@ exports.getMyExams = async (req, res) => {
       session,
       schoolId: req.schoolId,
     });
-    const myClassIds = [...new Set(myAssignments.map(a => a.classId.toString()))];
-    
+    const myClassIds = [...new Set(myAssignments.map((a) => a.classId.toString()))];
+
     if (myClassIds.length === 0) {
       return res.status(200).json({ success: true, data: [] });
     }
@@ -1783,7 +1995,6 @@ exports.getMyExams = async (req, res) => {
   }
 };
 
-
 // ========================
 // CLASS TEACHER: VIEW MY STUDENTS (supports multiple class assignments)
 // ========================
@@ -1791,7 +2002,10 @@ exports.getMyExams = async (req, res) => {
 exports.getMyClassStudents = async (req, res) => {
   try {
     // SECURITY: scope class-teacher lookup by schoolId
-    const ctAssignments = await ClassTeacherAssignment.find({ teacherId: req.user._id, schoolId: req.schoolId })
+    const ctAssignments = await ClassTeacherAssignment.find({
+      teacherId: req.user._id,
+      schoolId: req.schoolId,
+    })
       .populate('classId', 'name numericOrder')
       .populate('sectionId', 'name')
       .populate('session', 'name isActive');
@@ -1805,18 +2019,19 @@ exports.getMyClassStudents = async (req, res) => {
     let selected = ctAssignments[0];
     if (classId && sectionId && session) {
       const match = ctAssignments.find(
-        a => a.classId?._id?.toString() === classId &&
-             a.sectionId?._id?.toString() === sectionId &&
-             a.session?._id?.toString() === session
+        (a) =>
+          a.classId?._id?.toString() === classId &&
+          a.sectionId?._id?.toString() === sectionId &&
+          a.session?._id?.toString() === session
       );
       if (match) selected = match;
     }
 
     const students = await StudentProfile.find({
-      classId:   selected.classId?._id,
+      classId: selected.classId?._id,
       sectionId: selected.sectionId?._id,
-      session:   selected.session?._id,
-      status: 'active'
+      session: selected.session?._id,
+      status: 'active',
     })
       .populate('userId', 'firstName lastName email isActive')
       .sort({ rollNo: 1 });
@@ -1824,24 +2039,24 @@ exports.getMyClassStudents = async (req, res) => {
     res.status(200).json({
       success: true,
       // All assignments for the filter dropdowns
-      assignments: ctAssignments.map(a => ({
-        classId:   a.classId?._id,
+      assignments: ctAssignments.map((a) => ({
+        classId: a.classId?._id,
         className: a.classId?.name,
         sectionId: a.sectionId?._id,
         sectionName: a.sectionId?.name,
-        sessionId:  a.session?._id,
+        sessionId: a.session?._id,
         sessionName: a.session?.name,
       })),
       // Currently selected slot
       classInfo: {
-        classId:   selected.classId?._id,
-        class:     selected.classId?.name,
+        classId: selected.classId?._id,
+        class: selected.classId?.name,
         sectionId: selected.sectionId?._id,
-        section:   selected.sectionId?.name,
+        section: selected.sectionId?.name,
         sessionId: selected.session?._id,
-        session:   selected.session?.name,
+        session: selected.session?.name,
       },
-      data: students
+      data: students,
     });
   } catch (error) {
     logger.error('Error fetching class students', { error: error.message });
@@ -1861,9 +2076,9 @@ exports.getStudentPerformance = async (req, res) => {
     // Verify this teacher is class teacher of that class+section+session
     const ctAssignment = await ClassTeacherAssignment.findOne({
       teacherId: req.user._id,
-      ...(classId   && { classId }),
+      ...(classId && { classId }),
       ...(sectionId && { sectionId }),
-      ...(session   && { session }),
+      ...(session && { session }),
     });
     if (!ctAssignment) {
       return res.status(403).json({ success: false, message: 'Not your class' });
@@ -1871,17 +2086,21 @@ exports.getStudentPerformance = async (req, res) => {
 
     // --- Attendance summary ---
     const attendanceDocs = await Attendance.find({
-      classId:   ctAssignment.classId,
+      classId: ctAssignment.classId,
       sectionId: ctAssignment.sectionId,
-      session:   ctAssignment.session,
+      session: ctAssignment.session,
       'records.studentId': studentId,
     }).select('date attendanceType subjectId records');
 
-    let totalSessions = 0, present = 0, absent = 0, late = 0, leave = 0;
+    let totalSessions = 0,
+      present = 0,
+      absent = 0,
+      late = 0,
+      leave = 0;
     const recentAttendance = [];
 
-    attendanceDocs.forEach(doc => {
-      const rec = doc.records.find(r => r.studentId?.toString() === studentId);
+    attendanceDocs.forEach((doc) => {
+      const rec = doc.records.find((r) => r.studentId?.toString() === studentId);
       if (!rec) return;
       totalSessions++;
       if (rec.status === 'present') present++;
@@ -1899,10 +2118,12 @@ exports.getStudentPerformance = async (req, res) => {
 
     // --- Assignment summary ---
     const assignments = await Assignment.find({
-      classId:   ctAssignment.classId,
+      classId: ctAssignment.classId,
       sectionId: ctAssignment.sectionId,
-      session:   ctAssignment.session,
-    }).select('title dueDate subjectId createdAt').populate('subjectId', 'name');
+      session: ctAssignment.session,
+    })
+      .select('title dueDate subjectId createdAt')
+      .populate('subjectId', 'name');
 
     const studentProfile = await StudentProfile.findById(studentId).select('userId');
 
@@ -1951,7 +2172,10 @@ exports.getStudentPerformance = async (req, res) => {
 exports.getClassMarks = async (req, res) => {
   try {
     // SECURITY: scope class-teacher lookup by schoolId
-    const ctAssignment = await ClassTeacherAssignment.findOne({ teacherId: req.user._id, schoolId: req.schoolId });
+    const ctAssignment = await ClassTeacherAssignment.findOne({
+      teacherId: req.user._id,
+      schoolId: req.schoolId,
+    });
     if (!ctAssignment) {
       return res.status(404).json({ success: false, message: 'You are not a class teacher' });
     }
@@ -1960,7 +2184,7 @@ exports.getClassMarks = async (req, res) => {
       classId: ctAssignment.classId,
       sectionId: ctAssignment.sectionId,
       session: ctAssignment.session,
-      schoolId: req.schoolId   // SECURITY: always scope marks by school
+      schoolId: req.schoolId, // SECURITY: always scope marks by school
     };
     if (req.query.examId) filter.examId = req.query.examId;
 
@@ -1990,7 +2214,7 @@ exports.getClassMarks = async (req, res) => {
 exports.getTemplateForExam = async (req, res) => {
   try {
     const { examId } = req.query;
-    const schoolId   = req.schoolId;
+    const schoolId = req.schoolId;
 
     const SELECT = 'name templateSchema htmlContent isDefault createdAt';
     let template = null;
@@ -1998,12 +2222,15 @@ exports.getTemplateForExam = async (req, res) => {
 
     // ── Tier 1: exam has an explicit templateId ─────────────────────────
     if (examId && mongoose.Types.ObjectId.isValid(examId)) {
-      const exam = await Exam.findOne({ _id: examId, schoolId })
-        .select('templateId name').lean();
+      const exam = await Exam.findOne({ _id: examId, schoolId }).select('templateId name').lean();
       if (exam?.templateId) {
         template = await ReportTemplate.findOne({
-          _id: exam.templateId, schoolId, isActive: true,
-        }).select(SELECT).lean();
+          _id: exam.templateId,
+          schoolId,
+          isActive: true,
+        })
+          .select(SELECT)
+          .lean();
         if (template) tier = 1;
       }
     }
@@ -2011,7 +2238,8 @@ exports.getTemplateForExam = async (req, res) => {
     // ── Tier 2: school default template ────────────────────────────────
     if (!template) {
       template = await ReportTemplate.findOne({ schoolId, isActive: true, isDefault: true })
-        .select(SELECT).lean();
+        .select(SELECT)
+        .lean();
       if (template) tier = 2;
     }
 
@@ -2020,7 +2248,8 @@ exports.getTemplateForExam = async (req, res) => {
     if (!template) {
       template = await ReportTemplate.findOne({ schoolId, isActive: true })
         .sort({ createdAt: -1 })
-        .select(SELECT).lean();
+        .select(SELECT)
+        .lean();
       if (template) tier = 3;
     }
 
@@ -2044,12 +2273,14 @@ exports.getTemplateForExam = async (req, res) => {
     // The marksFields[] array may have been saved by an old extractor run that correctly
     // identified marks fields by name but stored them in schema.fields with category:'other'.
     // Using marksFields.length > 0 would falsely skip re-extraction in that case.
-    const hasMarksFields = schemaFields.some(f => f.category === 'marks');
-    const hasStaleCategoryFields = schemaFields.some(f => !f.category || f.category === 'other');
+    const hasMarksFields = schemaFields.some((f) => f.category === 'marks');
+    const hasStaleCategoryFields = schemaFields.some((f) => !f.category || f.category === 'other');
 
     if (!schema || schemaFields.length === 0 || !hasMarksFields || hasStaleCategoryFields) {
       logger.info('[Teacher] getTemplateForExam: re-extracting schema', {
-        name: template.name, hasMarksFields, hasStaleCategoryFields,
+        name: template.name,
+        hasMarksFields,
+        hasStaleCategoryFields,
       });
       schema = TemplateFieldExtractor.extractAndClassify(template.htmlContent);
 
@@ -2059,7 +2290,9 @@ exports.getTemplateForExam = async (req, res) => {
       });
     }
 
-    console.log(`[Teacher] getTemplateForExam: resolved via Tier ${tier} → "${template.name}" | marks fields: ${schema?.marksFields?.length ?? schema?.fields?.filter(f=>f.category==='marks').length ?? 0}`);
+    console.log(
+      `[Teacher] getTemplateForExam: resolved via Tier ${tier} → "${template.name}" | marks fields: ${schema?.marksFields?.length ?? schema?.fields?.filter((f) => f.category === 'marks').length ?? 0}`
+    );
 
     // ── Load marksDistribution so frontend can display max marks per field ────
     // When classId is provided (EC path), scope to that class so fieldMaxMap is accurate.
@@ -2071,30 +2304,34 @@ exports.getTemplateForExam = async (req, res) => {
       const configFilter = { examId, schoolId };
       if (classId && mongoose.Types.ObjectId.isValid(classId)) configFilter.classId = classId;
       const configs = await ExamSubjectConfig.find(configFilter);
-      configs.forEach(cfg => {
-        (cfg.marksDistribution || []).forEach(d => {
+      configs.forEach((cfg) => {
+        (cfg.marksDistribution || []).forEach((d) => {
           if (d.type && fieldMaxMap[d.type.toLowerCase()] === undefined) {
             fieldMaxMap[d.type.toLowerCase()] = Number(d.maxMarks) || 0;
           }
         });
         // Also populate from legacy maxMarks/practicalMaxMarks fields
         if (!fieldMaxMap['theory'] && cfg.maxMarks) fieldMaxMap['theory'] = Number(cfg.maxMarks);
-        if (!fieldMaxMap['practical'] && cfg.practicalMaxMarks) fieldMaxMap['practical'] = Number(cfg.practicalMaxMarks);
+        if (!fieldMaxMap['practical'] && cfg.practicalMaxMarks)
+          fieldMaxMap['practical'] = Number(cfg.practicalMaxMarks);
       });
-      marksDistribution = Object.entries(fieldMaxMap).map(([type, maxMarks]) => ({ type, maxMarks }));
+      marksDistribution = Object.entries(fieldMaxMap).map(([type, maxMarks]) => ({
+        type,
+        maxMarks,
+      }));
       totalMaxMarks = marksDistribution.reduce((s, d) => s + (Number(d.maxMarks) || 0), 0) || 100;
     }
 
     return res.status(200).json({
       success: true,
       data: {
-        templateId:        template._id,
-        templateName:      template.name,
+        templateId: template._id,
+        templateName: template.name,
         schema,
-        tier,              // 1=exam-specific, 2=school-default, 3=any-active
+        tier, // 1=exam-specific, 2=school-default, 3=any-active
         marksDistribution, // [{type, maxMarks}] e.g. [{type:'theory',maxMarks:80}]
-        fieldMaxMap,       // {theory:80, practical:20, ...} for quick lookup
-        totalMaxMarks,     // fallback cap for fields not in fieldMaxMap
+        fieldMaxMap, // {theory:80, practical:20, ...} for quick lookup
+        totalMaxMarks, // fallback cap for fields not in fieldMaxMap
       },
     });
   } catch (error) {
@@ -2104,8 +2341,8 @@ exports.getTemplateForExam = async (req, res) => {
 };
 
 // ─── Co-Scholastic Marks (Discipline / Activity) ──────────────────────────────
-const { CoScholasticMark } = require('../../src/modules/examination');
-const ReportCard       = require('../../src/modules/reportcards').ReportCard;
+const { CoScholasticMark } = require('../../examination');
+const ReportCard = require('../../reportcards').ReportCard;
 
 // const TEMPLATE_EXAM_TYPES = new Set(['annual', 'half_yearly', 'term1', 'term2', 'custom']);
 // const TEMPLATE_SYSTEM_KEYS = new Set([
@@ -2338,16 +2575,24 @@ const ReportCard       = require('../../src/modules/reportcards').ReportCard;
  */
 exports.getCoScholasticMarks = async (req, res) => {
   try {
-  const { classId, sectionId, session: sessionParam } = req.query;
+    const { classId, sectionId, session: sessionParam } = req.query;
     const skillNames = (req.query.skills || 'Discipline,Activity,Games,Drawing,Music')
-      .split(',').map(s => s.trim()).filter(Boolean);
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (!classId) return res.status(400).json({ success: false, message: 'classId is required' });
 
     // ── Resolve session ──────────────────────────────────────────────────────
     const sessionDoc = sessionParam
       ? await AcademicSession.findById(sessionParam).lean()
       : await AcademicSession.findOne({ schoolId: req.schoolId, isActive: true }).lean();
-    if (!sessionDoc) return res.status(400).json({ success: false, message: 'No active session found. Please create or activate an academic session.' });
+    if (!sessionDoc)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'No active session found. Please create or activate an academic session.',
+        });
 
     // ── Class-teacher guard — session-agnostic ────────────────────────────────
     // We search WITHOUT session so that assignments created in any session for
@@ -2363,7 +2608,8 @@ exports.getCoScholasticMarks = async (req, res) => {
     if (!ctAssignment) {
       return res.status(403).json({
         success: false,
-        message: 'You are not the class teacher of this class/section. Only the designated class teacher can enter co-scholastic marks.',
+        message:
+          'You are not the class teacher of this class/section. Only the designated class teacher can enter co-scholastic marks.',
       });
     }
 
@@ -2419,21 +2665,26 @@ exports.getCoScholasticMarks = async (req, res) => {
     if (sectionId) studentFilter.sectionId = sectionId;
 
     let students = await StudentProfile.find(studentFilter)
-      .select('firstName lastName rollNo scholarNo').sort({ rollNo: 1 }).lean();
+      .select('firstName lastName rollNo scholarNo')
+      .sort({ rollNo: 1 })
+      .lean();
 
     // Fallback: if the session stored on StudentProfile is the session name string
     // instead of ObjectId (legacy data), try matching by name.
     if (students.length === 0) {
       students = await StudentProfile.find({
         classId,
-        session: sessionDoc.name,   // some schools store session name as string
+        session: sessionDoc.name, // some schools store session name as string
         schoolId: req.schoolId,
         status: 'active',
         ...(sectionId ? { sectionId } : {}),
-      }).select('firstName lastName rollNo scholarNo').sort({ rollNo: 1 }).lean();
+      })
+        .select('firstName lastName rollNo scholarNo')
+        .sort({ rollNo: 1 })
+        .lean();
     }
 
-    const studentIds = students.map(s => s._id);
+    const studentIds = students.map((s) => s._id);
 
     // ── Load existing co-scholastic grades ───────────────────────────────────
     const reportCards = studentIds.length
@@ -2441,58 +2692,65 @@ exports.getCoScholasticMarks = async (req, res) => {
           studentId: { $in: studentIds },
           session: sessionDoc._id,
           schoolId: req.schoolId,
-        }).select('_id studentId').lean()
+        })
+          .select('_id studentId')
+          .lean()
       : [];
 
     // Also try with session name string (fallback for legacy ReportCard docs)
-    const reportCards2 = (reportCards.length === 0 && studentIds.length)
-      ? await ReportCard.find({
-          studentId: { $in: studentIds },
-          session: sessionDoc.name,
-          schoolId: req.schoolId,
-        }).select('_id studentId').lean()
-      : [];
+    const reportCards2 =
+      reportCards.length === 0 && studentIds.length
+        ? await ReportCard.find({
+            studentId: { $in: studentIds },
+            session: sessionDoc.name,
+            schoolId: req.schoolId,
+          })
+            .select('_id studentId')
+            .lean()
+        : [];
 
     const allReportCards = [...reportCards, ...reportCards2];
-    const rcByStudent   = Object.fromEntries(allReportCards.map(rc => [String(rc.studentId), rc._id]));
-    const rcIds         = allReportCards.map(r => r._id);
+    const rcByStudent = Object.fromEntries(
+      allReportCards.map((rc) => [String(rc.studentId), rc._id])
+    );
+    const rcIds = allReportCards.map((r) => r._id);
 
     const existingMarks = rcIds.length
       ? await CoScholasticMark.find({
           reportCardId: { $in: rcIds },
-          skillName:    { $in: skillNames },
-          schoolId:     req.schoolId,
+          skillName: { $in: skillNames },
+          schoolId: req.schoolId,
         }).lean()
       : [];
     // Index: reportCardId → skillName → { grade, t1Grade, t2Grade }
-     const gradeIndex = {};
-    existingMarks.forEach(m => {
+    const gradeIndex = {};
+    existingMarks.forEach((m) => {
       const key = String(m.reportCardId);
       if (!gradeIndex[key]) gradeIndex[key] = {};
       gradeIndex[key][m.skillName] = {
-        grade:   m.grade   || '',
+        grade: m.grade || '',
         t1Grade: m.t1Grade || '',
         t2Grade: m.t2Grade || '',
       };
     });
 
-    const data = students.map(st => {
-      const rcId  = rcByStudent[String(st._id)] || null;
-        const coScholastic = skillNames.map(skill => {
+    const data = students.map((st) => {
+      const rcId = rcByStudent[String(st._id)] || null;
+      const coScholastic = skillNames.map((skill) => {
         const saved = (rcId && gradeIndex[String(rcId)]?.[skill]) || {};
         return {
           skillName: skill,
-          grade:     saved.grade   || '',
-          t1Grade:   saved.t1Grade || '',
-          t2Grade:   saved.t2Grade || '',
+          grade: saved.grade || '',
+          t1Grade: saved.t1Grade || '',
+          t2Grade: saved.t2Grade || '',
         };
       });
       return {
-        studentId:    st._id,
-        name:         `${st.firstName || ''} ${st.lastName || ''}`.trim(),
-        firstName:    st.firstName,
-        lastName:     st.lastName,
-        rollNo:       st.rollNo || '',
+        studentId: st._id,
+        name: `${st.firstName || ''} ${st.lastName || ''}`.trim(),
+        firstName: st.firstName,
+        lastName: st.lastName,
+        rollNo: st.rollNo || '',
         reportCardId: rcId,
         coScholastic,
       };
@@ -2511,7 +2769,6 @@ exports.getCoScholasticMarks = async (req, res) => {
   }
 };
 
-
 /**
  * POST /api/v1/teacher/co-scholastic
  * Body: { classId, sectionId, session, rows: [{ studentId, grades: { Discipline:'A', Activity:'B' } }] }
@@ -2527,14 +2784,22 @@ exports.saveCoScholasticMarks = async (req, res) => {
     const entries = req.body.entries || req.body.rows || [];
 
     if (!classId || !entries.length) {
-      return res.status(400).json({ success: false, message: 'classId and entries[] are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'classId and entries[] are required' });
     }
 
     // ── Resolve session ──────────────────────────────────────────────────────
     const sessionDoc = sessionParam
       ? await AcademicSession.findById(sessionParam).lean()
       : await AcademicSession.findOne({ schoolId: req.schoolId, isActive: true }).lean();
-    if (!sessionDoc) return res.status(400).json({ success: false, message: 'No active session found. Please activate an academic session.' });
+    if (!sessionDoc)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'No active session found. Please activate an academic session.',
+        });
 
     // ── Class-teacher guard (session-agnostic) ───────────────────────────────
     const ctFilter = { teacherId: req.user._id, classId, schoolId: req.schoolId };
@@ -2584,37 +2849,54 @@ exports.saveCoScholasticMarks = async (req, res) => {
 
       // Ensure a ReportCard exists for this student + session
       let rc = await ReportCard.findOne({
-        studentId: sp._id, session: sessionDoc._id, schoolId: req.schoolId,
+        studentId: sp._id,
+        session: sessionDoc._id,
+        schoolId: req.schoolId,
       });
       if (!rc) {
         // Also try session name string as fallback
         rc = await ReportCard.findOne({
-          studentId: sp._id, session: sessionDoc.name, schoolId: req.schoolId,
+          studentId: sp._id,
+          session: sessionDoc.name,
+          schoolId: req.schoolId,
         });
       }
       if (!rc) {
         rc = await ReportCard.create({
-          studentId:   sp._id,
-          classId:     sp.classId,
-          sectionId:   sp.sectionId,
-          session:     sessionDoc._id,
-          schoolId:    req.schoolId,
+          studentId: sp._id,
+          classId: sp.classId,
+          sectionId: sp.sectionId,
+          session: sessionDoc._id,
+          schoolId: req.schoolId,
           isFinalized: false,
         });
       }
       if (rc.isFinalized) continue; // locked — skip silently
 
       // ── New format: each entry has ONE skillName + grade (+ optional t1Grade/t2Grade) ─
-       if (entry.skillName !== undefined) {
-        const normalizedSkill  = String(entry.skillName || '').trim();
-        const normalizedT1     = String(entry.t1Grade   || '').trim().toUpperCase();
-        const normalizedT2     = String(entry.t2Grade   || '').trim().toUpperCase();
+      if (entry.skillName !== undefined) {
+        const normalizedSkill = String(entry.skillName || '').trim();
+        const normalizedT1 = String(entry.t1Grade || '')
+          .trim()
+          .toUpperCase();
+        const normalizedT2 = String(entry.t2Grade || '')
+          .trim()
+          .toUpperCase();
         // Overall grade: use explicit value if provided, otherwise derive from T1/T2
-        const normalizedGrade  = String(entry.grade || entry.t1Grade || entry.t2Grade || '').trim().toUpperCase();
+        const normalizedGrade = String(entry.grade || entry.t1Grade || entry.t2Grade || '')
+          .trim()
+          .toUpperCase();
         if (!normalizedSkill) continue;
         await CoScholasticMark.findOneAndUpdate(
           { reportCardId: rc._id, skillName: normalizedSkill, schoolId: req.schoolId },
-          { $set: { grade: normalizedGrade, t1Grade: normalizedT1, t2Grade: normalizedT2, studentId: sp._id } },
+          {
+            $set: {
+              grade: normalizedGrade,
+              t1Grade: normalizedT1,
+              t2Grade: normalizedT2,
+              studentId: sp._id,
+            },
+          },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );
         saved++;
@@ -2624,8 +2906,10 @@ exports.saveCoScholasticMarks = async (req, res) => {
       // ── Old format: entry has a grades object ─────────────────────────────
       if (entry.grades && typeof entry.grades === 'object') {
         for (const [skillName, grade] of Object.entries(entry.grades)) {
-            const normalizedSkill = String(skillName || '').trim();
-          const normalizedGrade = String(grade || '').trim().toUpperCase();
+          const normalizedSkill = String(skillName || '').trim();
+          const normalizedGrade = String(grade || '')
+            .trim()
+            .toUpperCase();
           if (!normalizedSkill) continue;
           await CoScholasticMark.findOneAndUpdate(
             { reportCardId: rc._id, skillName: normalizedSkill, schoolId: req.schoolId },
@@ -2644,9 +2928,7 @@ exports.saveCoScholasticMarks = async (req, res) => {
   }
 };
 
-
 // ─── Template Skills Extractor (for Co-Scholastic page) ──────────────────────
-
 
 /**
  * GET /api/v1/teacher/co-scholastic/skills?classId=&session=
@@ -2667,12 +2949,29 @@ exports.getCoScholasticSkills = async (req, res) => {
     // ── 1. DB-first: fetch distinct skillNames saved for this school ──────────
     // distinct() returns a plain array — filter out empties and reserved tokens
     const RESERVED = new Set([
-      'overall','overalltotal','t1','t2','element','remarks','remark',
-      'promotedclass','promoted','date','total','rank','result','grade',
-      'signature','principal','teacher','elements','dates','totals',
+      'overall',
+      'overalltotal',
+      't1',
+      't2',
+      'element',
+      'remarks',
+      'remark',
+      'promotedclass',
+      'promoted',
+      'date',
+      'total',
+      'rank',
+      'result',
+      'grade',
+      'signature',
+      'principal',
+      'teacher',
+      'elements',
+      'dates',
+      'totals',
     ]);
     const cleanDb = (await CoScholasticMark.distinct('skillName', { schoolId: req.schoolId }))
-      .filter(s => {
+      .filter((s) => {
         if (!s || typeof s !== 'string') return false;
         const norm = s.toLowerCase().replace(/[^a-z0-9]/g, '');
         return !RESERVED.has(norm);
@@ -2684,9 +2983,11 @@ exports.getCoScholasticSkills = async (req, res) => {
     }
 
     // ── 2. Find the active template for this school ───────────────────────────
-    const template = await ReportTemplate.findOne({ schoolId: req.schoolId, isActive: true })
-      .sort({ updatedAt: -1 }).lean()
-      || await ReportTemplate.findOne({ schoolId: req.schoolId }).sort({ updatedAt: -1 }).lean();
+    const template =
+      (await ReportTemplate.findOne({ schoolId: req.schoolId, isActive: true })
+        .sort({ updatedAt: -1 })
+        .lean()) ||
+      (await ReportTemplate.findOne({ schoolId: req.schoolId }).sort({ updatedAt: -1 }).lean());
 
     if (!template?.htmlContent) {
       return res.json({ success: true, skills: DEFAULT_SKILLS, source: 'defaults' });
@@ -2699,8 +3000,8 @@ exports.getCoScholasticSkills = async (req, res) => {
     if (hasCoScholasticLoop) {
       return res.json({
         success: true,
-        skills:  DEFAULT_SKILLS,
-        source:  'template_loop',
+        skills: DEFAULT_SKILLS,
+        source: 'template_loop',
         templateName: template.name || '',
       });
     }
@@ -2712,42 +3013,92 @@ exports.getCoScholasticSkills = async (req, res) => {
     const simpleTokens = Array.isArray(extracted.simple) ? extracted.simple : [];
 
     const CO_SCHOLASTIC_KEYWORDS = [
-      'discipline', 'activity', 'games', 'drawing', 'music', 'dance', 'sports',
-      'punctuality', 'behaviour', 'behavior', 'neatness', 'regularity', 'confidence',
-      'leadership', 'communication', 'hygiene', 'concentration', 'crafts',
-      'yoga', 'scouting', 'elocution', 'debate', 'participation',
+      'discipline',
+      'activity',
+      'games',
+      'drawing',
+      'music',
+      'dance',
+      'sports',
+      'punctuality',
+      'behaviour',
+      'behavior',
+      'neatness',
+      'regularity',
+      'confidence',
+      'leadership',
+      'communication',
+      'hygiene',
+      'concentration',
+      'crafts',
+      'yoga',
+      'scouting',
+      'elocution',
+      'debate',
+      'participation',
     ];
     const SYSTEM_PREFIXES = [
-      'student', 'school', 'class', 'section', 'roll', 'admission', 'scholar',
-      'academic', 'session', 'exam', 'date', 'rank', 'result', 'grade', 'grand',
-      'total', 'percentage', 'subjects', 'subject', 'promoted', 'height', 'weight',
-      'remark', 'teacher', 'principal', 'signature', 'logo', 'name', 'father',
-      'mother', 'guardian', 'dob', 'address', 'phone', 'co_scholastic',
+      'student',
+      'school',
+      'class',
+      'section',
+      'roll',
+      'admission',
+      'scholar',
+      'academic',
+      'session',
+      'exam',
+      'date',
+      'rank',
+      'result',
+      'grade',
+      'grand',
+      'total',
+      'percentage',
+      'subjects',
+      'subject',
+      'promoted',
+      'height',
+      'weight',
+      'remark',
+      'teacher',
+      'principal',
+      'signature',
+      'logo',
+      'name',
+      'father',
+      'mother',
+      'guardian',
+      'dob',
+      'address',
+      'phone',
+      'co_scholastic',
     ];
 
-    const detectedSkills = simpleTokens.filter(token => {
-      const t = token.toLowerCase().replace(/[^a-z]/g, '');
-      const isSystem = SYSTEM_PREFIXES.some(p => t.startsWith(p.replace(/[^a-z]/g, '')));
-      if (isSystem) return false;
-      return CO_SCHOLASTIC_KEYWORDS.some(kw => t.includes(kw));
-    }).map(t => t.charAt(0).toUpperCase() + t.slice(1));
+    const detectedSkills = simpleTokens
+      .filter((token) => {
+        const t = token.toLowerCase().replace(/[^a-z]/g, '');
+        const isSystem = SYSTEM_PREFIXES.some((p) => t.startsWith(p.replace(/[^a-z]/g, '')));
+        if (isSystem) return false;
+        return CO_SCHOLASTIC_KEYWORDS.some((kw) => t.includes(kw));
+      })
+      .map((t) => t.charAt(0).toUpperCase() + t.slice(1));
 
-    const skills = detectedSkills.length > 0
-      ? [...new Set(detectedSkills)]
-      : DEFAULT_SKILLS;
+    const skills = detectedSkills.length > 0 ? [...new Set(detectedSkills)] : DEFAULT_SKILLS;
 
     return res.json({
       success: true,
       skills,
-      source:       detectedSkills.length > 0 ? 'template' : 'defaults',
+      source: detectedSkills.length > 0 ? 'template' : 'defaults',
       templateName: template.name || '',
     });
-
   } catch (err) {
     logger.error('[Teacher] getCoScholasticSkills', { error: err.message, stack: err.stack });
     // Never 500 the UI — return safe defaults
-    return res.json({ success: true, skills: ['Discipline', 'Activity', 'Games', 'Drawing', 'Music'], source: 'defaults' });
+    return res.json({
+      success: true,
+      skills: ['Discipline', 'Activity', 'Games', 'Drawing', 'Music'],
+      source: 'defaults',
+    });
   }
 };
-
-

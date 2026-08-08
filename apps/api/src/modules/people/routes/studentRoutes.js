@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { varifyToken } = require('../../../core/security/authenticate.js');
 const { authorize } = require('../../../core/security/roleMiddleware.js');
-const student = require('../../../../src-old/controller/studentController');
+const student = require('../controllers/studentController');
 const upload = require('../../../core/http/upload.disk.js');
 
 // All student routes are protected
@@ -29,7 +29,6 @@ router.get('/complaints', student.getMyComplaints);
 // Knowledge Center
 router.get('/knowledge-center', student.getMaterials);
 router.post('/knowledge-center/:materialId/view', student.markMaterialViewed);
-
 
 // Notices
 router.get('/notices', student.getNotices);

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const admin = require('../../../../src-old/controller/adminController');
+const admin = require('../controllers/adminController');
 const { sessionController, classController, sectionController } = require('../../academics');
 const { varifyToken } = require('../../../core/security/authenticate.js');
 const { authorize } = require('../../../core/security/roleMiddleware.js');

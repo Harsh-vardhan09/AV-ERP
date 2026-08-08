@@ -14,4 +14,14 @@ module.exports = {
   get TeacherProfile() {
     return require('./models/TeacherProfile');
   },
+
+  // The two legacy god-controllers, consumed by
+  // modules/examination/routes/examControllerRoutes. These exports disappear as
+  // their functions are extracted — see docs/GOD-CONTROLLER-PLAN.md
+  get adminController() {
+    return require('./controllers/adminController');
+  },
+  get teacherController() {
+    return require('./controllers/teacherController');
+  },
 };

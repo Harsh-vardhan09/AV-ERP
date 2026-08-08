@@ -2,10 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { varifyToken } = require('../../../core/security/authenticate.js');
 const { authorize } = require('../../../core/security/roleMiddleware.js');
-const teacher = require('../../../../src-old/controller/teacherController');
+const teacher = require('../controllers/teacherController');
 const upload = require('../../../core/http/upload.disk.js');
 const uploadMemory = require('../../../core/http/upload.memory.js');
-
 
 // All teacher routes are protected
 router.use(varifyToken, authorize('teacher'));
@@ -18,7 +17,6 @@ router.get('/my-class-teacher', teacher.getMyClassTeacherAssignment);
 router.get('/students-for-attendance', teacher.getStudentsForAttendance);
 router.post('/attendance', teacher.takeAttendance);
 router.get('/attendance', teacher.getAttendanceRecords);
-
 
 // Teacher leave
 router.post('/leave/apply', teacher.applyLeave);
@@ -36,14 +34,11 @@ router.delete('/assignment/:assignmentId', teacher.deleteAssignment);
 router.get('/assignment-submissions/:assignmentId', teacher.getAssignmentSubmissions);
 router.get('/assignment-not-submitted/:assignmentId', teacher.getNotSubmittedStudents);
 
-
-
 // Knowledge Center
 router.post('/material', upload.single('photo'), teacher.uploadMaterial);
 router.get('/materials', teacher.getMyMaterials);
 router.put('/material/:materialId', upload.single('photo'), teacher.updateMaterial);
 router.delete('/material/:materialId', teacher.deleteMaterial);
-
 
 // Marks
 router.get('/students-for-marks', teacher.getStudentsForMarks);
@@ -65,9 +60,8 @@ router.get('/class-marks', teacher.getClassMarks);
 
 // Co-scholastic (Discipline / Activity) marks — class teacher entry
 // router.get('/co-scholastic/templates', teacher.getCoScholasticTemplates);
-router.get('/co-scholastic/skills', teacher.getCoScholasticSkills);     // detect skills from active template
-router.get('/co-scholastic',        teacher.getCoScholasticMarks);
-router.post('/co-scholastic',       teacher.saveCoScholasticMarks);
-
+router.get('/co-scholastic/skills', teacher.getCoScholasticSkills); // detect skills from active template
+router.get('/co-scholastic', teacher.getCoScholasticMarks);
+router.post('/co-scholastic', teacher.saveCoScholasticMarks);
 
 module.exports = router;

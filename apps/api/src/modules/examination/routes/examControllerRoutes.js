@@ -14,9 +14,9 @@ const router = express.Router();
 const { varifyToken } = require('../../../core/security/authenticate.js');
 const { authorize } = require('../../../core/security/roleMiddleware.js');
 const validateObjectId = require('../../../core/http/validateObjectId.js');
-// TEMP: moves to modules/people — the two god-controllers are still in src-old
-const teacher = require('../../../../src-old/controller/teacherController');
-const admin = require('../../../../src-old/controller/adminController');
+// These reuse people's two legacy god-controllers; they are being extracted into
+// domain modules, see docs/GOD-CONTROLLER-PLAN.md
+const { adminController: admin, teacherController: teacher } = require('../../people');
 const { sessionController, classController, sectionController } = require('../../academics');
 const uploadMemory = require('../../../core/http/upload.memory.js');
 
