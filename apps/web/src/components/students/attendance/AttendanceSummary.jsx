@@ -60,51 +60,17 @@
 
 // export default AttendanceSummary;
 import React from 'react';
-import { Doughnut } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from 'chart.js';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// Register necessary components
-ChartJS.register(ArcElement, Tooltip, Legend, Title);
+const SLICE_COLORS = ['#4ade80', '#f87171', '#facc15', '#94a3b8'];
 
 const AttendanceSummary = ({ summary, calculatePercent }) => {
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          boxWidth: 12,
-          padding: 15,
-          font: {
-            size: 12
-          }
-        }
-      },
-      title: {
-        display: true,
-        text: 'Attendance Distribution',
-        font: {
-          size: 16,
-          weight: 'bold'
-        }
-      }
-    },
-    cutout: '65%'
-  };
-
-  const gradesData = {
-    labels: ["Present", "Absent", "Leave", "Not Applicable"],
-    datasets: [
-      {
-        label: "Attendance",
-        data: [summary.present, summary.absent, summary.leaves, summary.notApplicable],
-        backgroundColor: ["#4ade80", "#f87171", "#facc15", "#94a3b8"],
-        hoverBackgroundColor: ["#22c55e", "#ef4444", "#eab308", "#64748b"],
-        borderWidth: 0,
-      },
-    ],
-  };
+  const gradesData = [
+    { name: 'Present', value: summary.present },
+    { name: 'Absent', value: summary.absent },
+    { name: 'Leave', value: summary.leaves },
+    { name: 'Not Applicable', value: summary.notApplicable },
+  ];
 
   // Calculate overall attendance percentage
   const attendancePercentage = calculatePercent(summary.present, summary.total);
@@ -152,7 +118,20 @@ const AttendanceSummary = ({ summary, calculatePercent }) => {
       
       <div className="p-4 pt-0">
         <div className="h-64">
-          <Doughnut data={gradesData} options={chartOptions} />
+          <p className="text-center text-base font-bold text-gray-800 mb-1">Attendance Distribution</p>
+          <ResponsiveContainer width="100%" height="90%">
+            <PieChart>
+              {/* cutout was 65% of the outer radius on the chart.js doughnut */}
+              <Pie data={gradesData} dataKey="value" nameKey="name"
+                innerRadius="65%" outerRadius="100%" stroke="none">
+                {gradesData.map((entry, i) => (
+                  <Cell key={entry.name} fill={SLICE_COLORS[i]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend verticalAlign="bottom" iconSize={12} wrapperStyle={{ fontSize: 12, paddingTop: 15 }} />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
