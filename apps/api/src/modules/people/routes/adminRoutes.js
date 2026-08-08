@@ -19,7 +19,12 @@ const readGuard = authorize('admin', 'admission', 'teacher', 'exam_controller');
 router.post('/session', authorize('admin'), sessionController.createSession);
 router.get('/sessions', readGuard, sessionController.getAllSessions);
 router.get('/session/active', readGuard, sessionController.getActiveSession);
-router.put('/session/:id', authorize('admin'), validateObjectId('id'), admin.updateSession);
+router.put(
+  '/session/:id',
+  authorize('admin'),
+  validateObjectId('id'),
+  sessionController.updateSession
+);
 router.delete('/session/:id', authorize('admin'), validateObjectId('id'), admin.deleteSession);
 router.post(
   '/session/:id/copy-classes',

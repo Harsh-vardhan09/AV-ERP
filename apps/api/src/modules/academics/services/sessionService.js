@@ -13,4 +13,15 @@ const findActiveSession = async ({ schoolId }) => {
   return AcademicSession.findOne({ schoolId }).sort({ createdAt: -1 });
 };
 
-module.exports = { createSession, listSessions, findActiveSession };
+// Uses .save(), not findOneAndUpdate: the pre-save hook deactivates every other
+// session for this school when isActive is set true
+const updateSession = async ({ id, schoolId, updateFields }) => {
+  const session = await AcademicSession.findOne({ _id: id, schoolId });
+  if (!session) return null;
+
+  Object.assign(session, updateFields);
+  await session.save();
+  return session;
+};
+
+module.exports = { createSession, listSessions, findActiveSession, updateSession };

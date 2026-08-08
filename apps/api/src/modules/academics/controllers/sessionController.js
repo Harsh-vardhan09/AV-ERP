@@ -41,3 +41,33 @@ exports.getActiveSession = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.updateSession = async (req, res, next) => {
+  try {
+    const { name, startDate, endDate, isActive } = req.body;
+
+    // Whitelist allowed fields — do not pass raw req.body
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name;
+    if (startDate !== undefined) updateFields.startDate = startDate;
+    if (endDate !== undefined) updateFields.endDate = endDate;
+    if (isActive !== undefined) updateFields.isActive = isActive;
+
+    const session = await sessionService.updateSession({
+      id: req.params.id,
+      schoolId: req.schoolId,
+      updateFields,
+    });
+    if (!session) {
+      return res.status(404).json({ success: false, message: 'Session not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Session updated successfully',
+      data: session,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

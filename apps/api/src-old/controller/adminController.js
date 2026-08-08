@@ -30,43 +30,6 @@ const { scheduleMarksDeadlineReminder } = require('../../src/modules/notificatio
 // SESSION MANAGEMENT
 // ========================
 
-exports.updateSession = async (req, res, next) => {
-  try {
-    const { name, startDate, endDate, isActive } = req.body;
-
-    // Whitelist allowed fields — do not pass raw req.body
-    const updateFields = {};
-    if (name      !== undefined) updateFields.name      = name;
-    if (startDate !== undefined) updateFields.startDate = startDate;
-    if (endDate   !== undefined) updateFields.endDate   = endDate;
-    if (isActive  !== undefined) updateFields.isActive  = isActive;
-
-    // Load the document first
-    const session = await AcademicSession.findOne({
-      _id: req.params.id,
-      schoolId: req.schoolId
-    });
-    if (!session) {
-      return res.status(404).json({ success: false, message: 'Session not found' });
-    }
-
-    // Apply updates in-place
-    Object.assign(session, updateFields);
-
-    // Use .save() — this triggers the pre-save hook which deactivates
-    // all other sessions for this school when isActive is set to true
-    await session.save();
-
-    return res.status(200).json({
-      success: true,
-      message: 'Session updated successfully',
-      data: session
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 exports.deleteSession = async (req, res, next) => {
   try {
     const sessionId = req.params.id;
