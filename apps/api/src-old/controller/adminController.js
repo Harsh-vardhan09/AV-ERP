@@ -30,15 +30,6 @@ const { scheduleMarksDeadlineReminder } = require('../../src/modules/notificatio
 // SESSION MANAGEMENT
 // ========================
 
-exports.getAllSessions = async (req, res, next) => {
-  try {
-    const sessions = await AcademicSession.find({ schoolId: req.schoolId }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: sessions });
-  } catch (error) {
-    return next(error);
-  }
-};
-
 exports.getActiveSession = async (req, res) => {
   try {
     // Try to find a session explicitly marked active

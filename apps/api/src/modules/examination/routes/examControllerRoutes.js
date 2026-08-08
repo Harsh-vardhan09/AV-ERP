@@ -17,6 +17,7 @@ const validateObjectId = require('../../../core/http/validateObjectId.js');
 // TEMP: moves to modules/people — the two god-controllers are still in src-old
 const teacher = require('../../../../src-old/controller/teacherController');
 const admin = require('../../../../src-old/controller/adminController');
+const { sessionController } = require('../../academics');
 const uploadMemory = require('../../../core/http/upload.memory.js');
 
 // ── Security guard ────────────────────────────────────────────────────────────
@@ -25,7 +26,7 @@ router.use(varifyToken, authorize('exam_controller'));
 // ── Reference data (read-only) ────────────────────────────────────────────────
 // Sessions
 router.get('/session/active', admin.getActiveSession);
-router.get('/sessions', admin.getAllSessions);
+router.get('/sessions', sessionController.getAllSessions);
 
 // Classes / Sections (admin endpoints support ?session= / ?classId=)
 router.get('/classes', admin.getAllClasses);

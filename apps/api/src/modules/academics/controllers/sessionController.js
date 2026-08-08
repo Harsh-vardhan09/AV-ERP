@@ -15,3 +15,12 @@ exports.createSession = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.getAllSessions = async (req, res, next) => {
+  try {
+    const sessions = await sessionService.listSessions({ schoolId: req.schoolId });
+    res.status(200).json({ success: true, data: sessions });
+  } catch (error) {
+    return next(error);
+  }
+};
