@@ -1,19 +1,75 @@
 # God-controller extraction plan
 
-Status: **awaiting approval.** Nothing has been extracted.
+Status: **in progress.** The three controllers now live at
+`apps/api/src/modules/people/controllers/`; `src-old` is deleted.
 
-The last three files in `src-old/controller/` hold **106 exported functions across 5,395
-lines**. This plan assigns each one a destination module and records the routes it serves,
-so the extraction in Step 2 is mechanical.
+## Progress
 
-| file                                      | lines | exported functions |
-| ----------------------------------------- | ----- | ------------------ |
-| `src-old/controller/adminController.js`   | 2,048 | 60                 |
-| `src-old/controller/teacherController.js` | 2,753 | 33                 |
-| `src-old/controller/studentController.js` | 591   | 13                 |
+| file                                      | exports left | of  | lines |
+| ----------------------------------------- | ------------ | --- | ----- |
+| `people/controllers/adminController.js`   | **41**       | 60  | 1,547 |
+| `people/controllers/teacherController.js` | **33**       | 33  | 3,104 |
+| `people/controllers/studentController.js` | **13**       | 13  | 613   |
+| **total**                                 | **87**       | 106 |       |
 
-Importers: `modules/people/routes/{adminRoutes,teacherRoutes,studentRoutes}.js` and
-`modules/examination/routes/examControllerRoutes.js`.
+### Done — 19 handlers
+
+| group                   | destination              | handlers                                                                                              | commit    |
+| ----------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------- | --------- |
+| sessions (create)       | academics/sessionService | `createSession`                                                                                       | `ecf747e` |
+| sessions (list)         | academics/sessionService | `getAllSessions`                                                                                      | `a77343e` |
+| sessions (active)       | academics/sessionService | `getActiveSession`                                                                                    | `503705d` |
+| sessions (update)       | academics/sessionService | `updateSession`                                                                                       | `2cddd3e` |
+| sessions (copy classes) | academics/sessionService | `copyClassesToSession`                                                                                | `b14cac8` |
+| sessions (rest)         | academics/sessionService | `deleteSession`, `syncStudentSessions`, `copySubjectMapsToSession`, `copyTeacherAssignmentsToSession` | `7afa0b3` |
+| classes                 | academics/classService   | `createClass`, `getAllClasses`, `updateClass`, `deleteClass`, `getAllClassesAdmin`                    | `3dbc1bd` |
+| sections                | academics/sectionService | `createSection`, `createBulkSections`, `getAllSections`, `updateSection`, `deleteSection`             | `1586c57` |
+
+### Next groups, in order
+
+academics: subjects · class-subject mapping · teacher-subject assignment ·
+class-teacher assignment · `getAllSubjectsAdmin` · teacher assignment handlers ·
+student `getMyAssignments`/`submitAssignment`
+
+then examination (25) · communication (18) · attendance (4, gains its first
+service layer + `module.js`) · people's own (11) · reportcards (3) ·
+new `modules/dashboard` for `getDashboardAnalytics`
+
+## Conventions (established, keep following)
+
+- Service is pure: no `req`/`res`. Controller is thin and owns HTTP.
+- Services throw `ApiError`; controllers `next(error)`. `core/http/errorMiddleware`
+  renders `{success, message}` at that status — byte-identical to the inline
+  responses being replaced. **Exception:** where the original response carries an
+  extra field (`createBulkSections` returns `data: []` on its 400) or a blanket
+  500 with the raw message (`createClass`/`createSection` duplicate-key catch),
+  the controller renders it directly instead.
+- Every new controller is exported through the destination module's `index.js`;
+  route files import through the index, never module internals.
+- Route files stay where they are. Only the handler reference changes — same URL,
+  same guards, same position in the router.
+- Handlers mounted twice (`getAllSessions`, `getActiveSession`, `getAllClasses`,
+  `getAllSections`) must be repointed in **both** `people/routes/adminRoutes.js`
+  and `examination/routes/examControllerRoutes.js`.
+- Route-count invariants: adminRoutes **60**, studentRoutes **13**,
+  teacherRoutes **32**, examControllerRoutes **24**, boot **33 mounts**.
+
+## Resolved decisions
+
+- `deleteSession` → academics (done)
+- `getDashboardAnalytics` → new `modules/dashboard`
+- `getTemplateForExam` → reportcards
+- `getCoScholasticMarks` / `saveCoScholasticMarks` → examination
+- `getMyReport` → reportcards, keep the self-access guard
+- `getMyExams` at old L1101 → delete as dead code (the second definition wins)
+- The four overlapping admin list endpoints → move verbatim, do not merge
+
+## Open question
+
+`getDashboardStats` (`GET /dashboard`) is assigned **people** below but sits
+adjacent to `getDashboardAnalytics` (`GET /dashboard/analytics`) in the same
+router. Splitting them across two modules looks wrong; intent is to move both
+into `modules/dashboard` unless told otherwise.
 
 ---
 
