@@ -10,8 +10,7 @@
 // import { IoMdMenu } from "react-icons/io";
 // import { RxCross2 } from "react-icons/rx";
 // import { useDispatch, useSelector } from 'react-redux';
-// import { toggleSidebar } from '../redux/reducers/sidebarslice';
-// import '../App.css'; 
+// import { toggleSidebar } from '@shared/lib/store/sidebarSlice';
 
 // const Sidebar = () => {
 //   const dispatch = useDispatch();
@@ -97,7 +96,7 @@ import { IoCalendarOutline } from "react-icons/io5";
 import { TbFileDescription } from "react-icons/tb";
 import { AiOutlineHome } from "react-icons/ai";
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleSidebar } from '../redux/reducers/sidebarslice';
+import { toggleSidebar } from '@shared/lib/store/sidebarSlice';
 
 const Sidebar = () => {
   const dispatch = useDispatch();

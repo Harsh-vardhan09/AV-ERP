@@ -7,7 +7,7 @@
 // import AttendanceSummary from './AttendanceSummary';
 // import DateSelect from './DateWiseAttendnce';
 // import { useSelector } from 'react-redux';
-// import Loader from '../../Loader';
+// import Loader from '@shared/ui/Loader';
 
 // const AttendancePage = () => {
 //   const subjects = [
@@ -118,7 +118,7 @@ import AttendanceTable from './AttendanceTable';
 import AttendanceSummary from './AttendanceSummary';
 import DateSelect from './DateWiseAttendnce';
 import { useSelector } from 'react-redux';
-import Loader from '../../Loader';
+import Loader from '@shared/ui/Loader';
 
 const AttendancePage = () => {
   const subjects = [

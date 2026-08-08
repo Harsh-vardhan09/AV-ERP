@@ -13,7 +13,7 @@ import {
   useGetFlexibleHistoryQuery,
   useGetThreeInstallmentsQuery,
   usePayThreeInstallmentMutation,
-} from '../api/feeApi';
+} from '@modules/fees/api/feeApi';
 
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

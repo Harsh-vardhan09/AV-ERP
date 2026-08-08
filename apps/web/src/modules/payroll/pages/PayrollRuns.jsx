@@ -9,9 +9,9 @@ import {
   useGetAcademicSessionsQuery,
   useAutoMarkAttendanceMutation,
   useGetPayrollStatusQuery
-} from '../api/payrollApi';
-import { hasPermission } from '../../../utils/permissionUtils';
-import { showPermissionError } from '../../../utils/permissionAlert';
+} from '@modules/payroll/api/payrollApi';
+import { hasPermission } from '@shared/utils/permissionUtils';
+import { showPermissionError } from '@shared/utils/permissionAlert';
 import { 
   Tooltip, 
   Modal, 
@@ -45,7 +45,7 @@ import {
   HistoryOutlined,
   FileTextOutlined
 } from '@ant-design/icons';
-import PayslipViewer from '../../../components/payroll/PayslipViewer';
+import PayslipViewer from '../components/PayslipViewer';
 
 const { Title, Text } = Typography;
 

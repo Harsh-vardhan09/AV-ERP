@@ -5,7 +5,7 @@ import {
   useGetClassFeeStatusQuery,
   useCollectStudentPaymentMutation,
   useGetStudentFeeSummaryQuery,
-} from '../api/feeApi';
+} from '@modules/fees/api/feeApi';
 import toast from 'react-hot-toast';
 
 const PAYMENT_MODES = ['Cash', 'Online Transfer', 'Cheque', 'DD', 'UPI'];

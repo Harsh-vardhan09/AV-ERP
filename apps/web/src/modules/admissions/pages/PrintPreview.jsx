@@ -3,11 +3,11 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   useGetStudentDetailsQuery,
-} from '../../../redux/api/admissionApi';
+} from '../api/admissionApi';
 import {
   useGetActiveAdmissionTemplateQuery,
   useGenerateAdmissionPDFMutation,
-} from '../../../redux/api/admissionTemplateApi';
+} from '../api/admissionTemplateApi';
 
 const API_BASE = import.meta.env.VITE_PORT;
 

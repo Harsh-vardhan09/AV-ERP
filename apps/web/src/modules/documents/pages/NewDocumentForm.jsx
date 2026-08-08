@@ -4,8 +4,8 @@ import toast from 'react-hot-toast';
 import {
   useCreateGeneratedDocumentMutation,
   useGetNewDocumentContextQuery,
-} from '../api/generatedDocumentsApi';
-import '../../../styles/certificate.css';
+} from '@modules/documents/api/generatedDocumentsApi';
+import '@styles/certificate.css';
 
 const NewDocumentForm = ({ forcedType = '' }) => {
   const { type = 'TC', studentId } = useParams();

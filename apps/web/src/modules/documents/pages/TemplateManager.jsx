@@ -7,9 +7,9 @@ import {
   useSaveTemplateFieldsMutation,
   useDeleteTemplateMutation,
   useSaveTemplateLayoutMutation,
-} from '../api/documentTemplateApi';
-import LayoutBuilder from './LayoutBuilder';
-import './templateManager.css';
+} from '@modules/documents/api/documentTemplateApi';
+import LayoutBuilder from '@modules/documents/pages/LayoutBuilder';
+import '@modules/documents/pages/templateManager.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FIELD LIBRARY

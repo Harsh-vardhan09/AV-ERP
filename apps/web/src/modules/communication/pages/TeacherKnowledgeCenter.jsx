@@ -5,7 +5,7 @@ import {
   useUpdateMaterialMutation,
   useDeleteMaterialMutation,
   useGetMyAssignmentsQuery,
-} from '../../../redux/api/teacherApi';
+} from '@modules/people/api/teacherApi';
 import { useGetActiveSessionQuery } from '../../../redux/api/adminApi';
 import toast from 'react-hot-toast';
 

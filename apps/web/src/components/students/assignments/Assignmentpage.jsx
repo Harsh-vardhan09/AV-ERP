@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useGetMyStudentAssignmentsQuery, useSubmitAssignmentMutation } from '../../../redux/api/studentApi';
-import Loader from '../../Loader';
+import { useGetMyStudentAssignmentsQuery, useSubmitAssignmentMutation } from '@modules/people/api/studentApi';
+import Loader from '@shared/ui/Loader';
 import toast from 'react-hot-toast';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : null;

@@ -1,8 +1,8 @@
 import React from 'react';
 import { IoReorderThreeOutline } from "react-icons/io5";
 import { useDispatch } from 'react-redux';
-import { toggleSidebar } from '../redux/reducers/sidebarslice';
-import '../App.css'
+import { toggleSidebar } from '@shared/lib/store/sidebarSlice';
+import '@app/App.css'
 const Threeline = () => {
   const dispatch = useDispatch();
 

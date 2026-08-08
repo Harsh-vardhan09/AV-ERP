@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useGetDeletedFormsQuery, useRestoreFormMutation } from '../../../redux/api/customFormApi';
+import { useGetDeletedFormsQuery, useRestoreFormMutation } from '../api/customFormApi';
 import { ArrowLeft, RotateCcw } from 'lucide-react';
 
 const DeletedForms = () => {

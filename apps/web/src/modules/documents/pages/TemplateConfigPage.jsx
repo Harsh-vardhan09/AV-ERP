@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
-import { DEFAULT_FIELDS, FIELD_TYPES } from '../../../lib/fieldDefaults';
-import { slugifyToCamelCase } from '../../../lib/slugify';
+import { DEFAULT_FIELDS, FIELD_TYPES } from '@shared/lib/fieldDefaults';
+import { slugifyToCamelCase } from '@shared/lib/slugify';
 import {
   useGetTemplateConfigQuery,
   useSaveTemplateConfigMutation,
-} from '../api/templateConfigApi';
+} from '@modules/documents/api/templateConfigApi';
 import { ArrowLeft, Plus, MoveUp, MoveDown, X, Save, FileText } from 'lucide-react';
 
 const TemplateConfigPage = () => {

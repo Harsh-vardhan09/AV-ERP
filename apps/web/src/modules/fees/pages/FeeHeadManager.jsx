@@ -5,7 +5,7 @@ import {
   useCreateFeeHeadMutation,
   useUpdateFeeHeadMutation,
   useDeleteFeeHeadMutation,
-} from '../api/feeApi';
+} from '@modules/fees/api/feeApi';
 import toast from 'react-hot-toast';
 
 const FEE_CATEGORIES = ['one-time', 'monthly', 'yearly', 'optional'];

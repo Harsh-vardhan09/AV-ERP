@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGetAllStudentsQuery, useGetAllTeachersQuery } from '../../../redux/api/admissionApi';
+import { useGetAllStudentsQuery, useGetAllTeachersQuery } from '../api/admissionApi';
 import { MdPersonAdd, MdPeople, MdArrowForward } from 'react-icons/md';
 import { FaChalkboardTeacher, FaUserGraduate } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';

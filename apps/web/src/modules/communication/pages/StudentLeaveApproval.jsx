@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGetStudentLeavesQuery, useApproveStudentLeaveMutation } from '../../../redux/api/teacherApi';
+import { useGetStudentLeavesQuery, useApproveStudentLeaveMutation } from '@modules/people/api/teacherApi';
 import toast from 'react-hot-toast';
 
 const StudentLeaveApproval = () => {

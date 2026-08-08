@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FiUsers, FiBell } from 'react-icons/fi';
 import { MdWarning } from 'react-icons/md';
 import toast from 'react-hot-toast';
-import { useGetDefaultersReportQuery } from '../api/feeApi';
+import { useGetDefaultersReportQuery } from '@modules/fees/api/feeApi';
 import { useGetClassesQuery, useGetSessionsQuery } from '../../../redux/api/adminApi';
 
 // Backend GET /reports/pending?cohortKey=&billingPeriodId=&minDue=

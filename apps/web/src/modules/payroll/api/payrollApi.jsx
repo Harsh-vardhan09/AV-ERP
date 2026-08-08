@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import toast from 'react-hot-toast';
-import { prepareAuthHeaders } from '../../../redux/api/authHeader';
+import { prepareAuthHeaders } from '@shared/lib/authHeader';
 
 const BASE = `${import.meta.env.VITE_PORT}/api/v1/payroll`;
 

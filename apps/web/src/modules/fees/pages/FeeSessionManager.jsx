@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FiCalendar, FiTrash2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { useGetFeeSessionsQuery } from '../api/feeApi';
+import { useGetFeeSessionsQuery } from '@modules/fees/api/feeApi';
 import { useGetSessionsQuery } from '../../../redux/api/adminApi';
 
 // Direct fetch helpers for session CRUD actions (PATCH/DELETE) not in RTK

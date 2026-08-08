@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { useGetStudentNoticesQuery } from '../../../redux/api/studentApi';
+import { useGetStudentNoticesQuery } from '@modules/people/api/studentApi';
 import { Filter, Search, X, Bell, Calendar, ChevronDown, Check } from 'lucide-react';
 
 const Allnoticepage = () => {

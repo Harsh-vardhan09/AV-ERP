@@ -16,8 +16,8 @@ import {
   useCancelPayrollMutation,
   useGetPayslipsQuery,
   useCreatePaymentBatchMutation,
-} from '../api/payrollApi';
-import { formatINR, formatMonth, getStatusColor, getStatusLabel } from '../../../utils/payrollFormatters';
+} from '@modules/payroll/api/payrollApi';
+import { formatINR, formatMonth, getStatusColor, getStatusLabel } from '@shared/utils/payrollFormatters';
 
 
 const { Title, Text } = Typography;

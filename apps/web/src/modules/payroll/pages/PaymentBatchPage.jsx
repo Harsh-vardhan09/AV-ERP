@@ -11,14 +11,14 @@ import {
   useGetPayrollRunsQuery,
   useGetPaymentBatchQuery,
   useCreatePaymentBatchMutation,
-} from '../api/payrollApi';
+} from '@modules/payroll/api/payrollApi';
 
 import {
   formatINR,
   formatMonth,
   getStatusColor,
   getStatusLabel,
-} from '../../../utils/payrollFormatters';
+} from '@shared/utils/payrollFormatters';
 
 const { Title, Text } = Typography;
 

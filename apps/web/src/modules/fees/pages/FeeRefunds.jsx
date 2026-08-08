@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import {
   useGetRefundsByPaymentQuery,
   useCreateRefundMutation,
-} from '../api/feeApi';
+} from '@modules/fees/api/feeApi';
 
 // POST /refunds  requires: { paymentId, accountFeeId, amount, reason, requestedBy }
 // GET  /refunds/payment/:paymentId  — refunds for a payment

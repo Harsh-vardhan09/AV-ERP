@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useGetFormStudentsQuery } from '../../../redux/api/admissionApi';
+import { useGetFormStudentsQuery } from '../api/admissionApi';
 import { useGetClassesQuery, useGetSectionsQuery } from '../../../redux/api/adminApi';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────

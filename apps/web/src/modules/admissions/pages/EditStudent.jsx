@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useGetStudentDetailsQuery, useUpdateStudentDetailsMutation } from '../../../redux/api/admissionApi';
+import { useGetStudentDetailsQuery, useUpdateStudentDetailsMutation } from '../api/admissionApi';
 import { useGetClassesQuery, useGetSectionsQuery, useGetActiveSessionQuery } from '../../../redux/api/adminApi';
 import toast from 'react-hot-toast';
 

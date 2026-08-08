@@ -7,8 +7,8 @@ import {
   useUpdateDocumentMutation,
   useLockDocumentMutation,
   useUnlockDocumentMutation,
-} from '../api/documentApi';
-import { useGetTemplateQuery, useGenerateFromTemplateMutation } from '../api/documentTemplateApi';
+} from '@modules/documents/api/documentApi';
+import { useGetTemplateQuery, useGenerateFromTemplateMutation } from '@modules/documents/api/documentTemplateApi';
 import {
   CertificateLine,
   CertificateFieldRow,
@@ -16,9 +16,9 @@ import {
   CertificateOverlay,
   useCertificateFormSync,
   usePrintCertificate,
-} from './certificateShared';
-import StructuredCertificateView from './StructuredCertificateView';
-import './documents.css';
+} from '@modules/documents/pages/certificateShared';
+import StructuredCertificateView from '@modules/documents/pages/StructuredCertificateView';
+import '@modules/documents/pages/documents.css';
 
 /* ══════════════════════════════════════════════════════════════
    TRANSFER CERTIFICATE — Production-ready

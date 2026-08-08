@@ -4,14 +4,14 @@ import toast from 'react-hot-toast';
 import {
   useGetAdmissionTemplateQuery,
   useGenerateAdmissionPDFMutation,
-} from '../../../redux/api/admissionTemplateApi';
+} from '../api/admissionTemplateApi';
 import {
   useGetAllStudentsQuery,
-} from '../../../redux/api/admissionApi';
+} from '../api/admissionApi';
 import {
   useGetClassesQuery,
   useGetSectionsQuery,
-} from '../../../redux/api/admissionApi';
+} from '../api/admissionApi';
 
 const API_BASE = import.meta.env.VITE_PORT;
 

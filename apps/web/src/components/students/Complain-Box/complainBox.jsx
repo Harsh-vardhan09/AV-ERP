@@ -5,7 +5,7 @@
 // import { useSelector,useDispatch } from 'react-redux';
 // import React, { useMemo, useContext } from 'react';
 // import { useNavigate } from 'react-router-dom';
-// import { complainData } from '../../../redux/features/complainSlice';
+// import { complainData } from '@modules/communication/store/complainSlice';
 
 // function ComplaintBox() {
 //     const dispatch = useDispatch();
@@ -228,7 +228,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { complainData } from '../../../redux/features/complainSlice';
+import { complainData } from '@modules/communication/store/complainSlice';
 
 // Assume we're using phosphor-react for icons (can be replaced with any icon library)
 import { 

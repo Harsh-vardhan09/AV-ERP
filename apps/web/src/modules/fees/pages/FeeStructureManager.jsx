@@ -6,7 +6,7 @@ import {
   useUpdateFeeStructureMutation,
   useDeleteFeeStructureMutation,
   useGetFeeHeadsQuery,
-} from '../api/feeApi';
+} from '@modules/fees/api/feeApi';
 import { useGetSessionsQuery, useGetClassesQuery } from '../../../redux/api/adminApi';
 import toast from 'react-hot-toast';
 

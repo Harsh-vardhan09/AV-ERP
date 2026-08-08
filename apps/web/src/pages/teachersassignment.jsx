@@ -2,7 +2,6 @@ import React from 'react'
 import { useTeacheruploadassignmentQuery } from '../redux/api/assignmentapi'
 import { useSelector } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
-// import Assignment from '../../../backend/src/models/assignment';
 
 const Teachersassignment = () => {
 const navigate=  useNavigate();

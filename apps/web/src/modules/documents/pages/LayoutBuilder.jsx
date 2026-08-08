@@ -11,8 +11,8 @@
  *   useSaveLayout   – RTK mutation hook
  */
 import React, { useState, useCallback, useRef } from 'react';
-import { DUMMY_DATA } from './layoutBuilderDummy';
-import StructuredCertificateView from './StructuredCertificateView';
+import { DUMMY_DATA } from '@modules/documents/pages/layoutBuilderDummy';
+import StructuredCertificateView from '@modules/documents/pages/StructuredCertificateView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Field key registry

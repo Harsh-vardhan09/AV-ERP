@@ -6,7 +6,7 @@ import {
   useGetStudentFeeSummaryQuery,
   useGetFeeStructuresQuery,
   useAssignStudentFeeMutation,
-} from '../api/feeApi';
+} from '@modules/fees/api/feeApi';
 import toast from 'react-hot-toast';
 
 // ─── Status badge config ──────────────────────────────────────────────────────

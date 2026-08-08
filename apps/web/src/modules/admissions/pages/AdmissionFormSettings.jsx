@@ -4,10 +4,10 @@ import toast from 'react-hot-toast';
 import {
   useGetAdmissionFormSettingsQuery,
   useUpdateAdmissionFormSettingsMutation,
-} from '../../../redux/api/admissionApi';
+} from '../api/admissionApi';
 import {
   useGetActiveAdmissionTemplateQuery,
-} from '../../../redux/api/admissionTemplateApi';
+} from '../api/admissionTemplateApi';
 
 // ─── All 60+ field definitions matching the screenshot ────────────────────────
 const FIELD_GROUPS = [

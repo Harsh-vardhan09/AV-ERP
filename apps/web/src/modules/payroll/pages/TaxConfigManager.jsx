@@ -15,9 +15,9 @@ import {
   useUpdateTaxConfigMutation,
   useToggleTaxConfigMutation,
   useGetTaxTemplateQuery,
-} from '../api/payrollApi';
-import { applyServerErrors } from '../../../utils/formErrors';
-import { formatINR } from '../../../utils/payrollFormatters';
+} from '@modules/payroll/api/payrollApi';
+import { applyServerErrors } from '@shared/utils/formErrors';
+import { formatINR } from '@shared/utils/payrollFormatters';
 
 const { Title, Text } = Typography;
 

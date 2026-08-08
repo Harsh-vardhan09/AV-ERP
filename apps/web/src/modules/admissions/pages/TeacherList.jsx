@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGetAllTeachersQuery, useActivateTeacherMutation, useDeactivateTeacherMutation } from '../../../redux/api/admissionApi';
-import EditTeacher from './EditTeacher';
+import { useGetAllTeachersQuery, useActivateTeacherMutation, useDeactivateTeacherMutation } from '../api/admissionApi';
+import EditTeacher from '@modules/admissions/pages/EditTeacher';
 import toast from 'react-hot-toast';
 
 const TeacherList = () => {

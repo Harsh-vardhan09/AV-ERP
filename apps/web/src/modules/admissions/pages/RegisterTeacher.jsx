@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { useRegisterTeacherMutation, useUploadTeacherPhotoMutation } from '../../../redux/api/admissionApi';
-import EmailOtpVerifier from '../../../components/EmailOtpVerifier';
+import { useRegisterTeacherMutation, useUploadTeacherPhotoMutation } from '../api/admissionApi';
+import EmailOtpVerifier from '@shared/ui/EmailOtpVerifier';
 import toast from 'react-hot-toast';
 
 const Section = ({ title, open, onToggle, children }) => (

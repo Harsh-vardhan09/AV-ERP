@@ -2,7 +2,7 @@
 // import { useParams } from 'react-router-dom';
 // import axios from "axios";
 // import { useEffect } from "react";
-// import { complainData } from "../../../redux/features/complainSlice";
+// import { complainData } from "@modules/communication/store/complainSlice";
 // function ComplaintNext() {
 //     const dispatch = useDispatch();
 //     useEffect(()=>{
@@ -178,7 +178,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams } from 'react-router-dom';
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { complainData } from "../../../redux/features/complainSlice";
+import { complainData } from "@modules/communication/store/complainSlice";
 
 function ComplaintNext() {
     const dispatch = useDispatch();

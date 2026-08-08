@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGetFormLeadsQuery } from '../../../redux/api/customFormApi';
+import { useGetFormLeadsQuery } from '../api/customFormApi';
 import { ArrowLeft, User, Search } from 'lucide-react';
 
 const FormLeads = () => {

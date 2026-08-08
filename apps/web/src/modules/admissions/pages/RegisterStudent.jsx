@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { useRegisterStudentMutation, useGetSchoolSettingsQuery, useCheckDuplicateFieldQuery, useUploadStudentPhotoMutation, useGetAdmissionFormSettingsQuery } from '../../../redux/api/admissionApi';
+import { useRegisterStudentMutation, useGetSchoolSettingsQuery, useCheckDuplicateFieldQuery, useUploadStudentPhotoMutation, useGetAdmissionFormSettingsQuery } from '../api/admissionApi';
 import { useGetClassesQuery, useGetSectionsQuery, useGetActiveSessionQuery } from '../../../redux/api/adminApi';
-import EmailOtpVerifier from '../../../components/EmailOtpVerifier';
+import EmailOtpVerifier from '@shared/ui/EmailOtpVerifier';
 import toast from 'react-hot-toast';
 
 // ─── Reusable UI primitives ────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Edit2, Trash2, Eye, Lock, Filter, Download, Camera, RefreshCw } from 'lucide-react';
 import { useGetAdminStudentsQuery, useGetActiveSessionQuery } from '../redux/api/adminApi';
-import { useUploadStudentPhotoMutation } from '../redux/api/admissionApi';
+import { useUploadStudentPhotoMutation } from '@modules/admissions/api/admissionApi';
 
 const StudentManagementDashboard = () => {
   const [students, setStudents] = useState([]);

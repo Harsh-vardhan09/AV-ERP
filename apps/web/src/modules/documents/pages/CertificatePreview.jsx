@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
-import { useGetGeneratedDocumentQuery } from '../api/generatedDocumentsApi';
-import '../../../styles/certificate.css';
+import { useGetGeneratedDocumentQuery } from '@modules/documents/api/generatedDocumentsApi';
+import '@styles/certificate.css';
 
 const CertificatePreview = () => {
   const { id } = useParams();

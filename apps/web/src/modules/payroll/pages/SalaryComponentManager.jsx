@@ -5,7 +5,7 @@ import {
   useUpdateComponentMutation, 
   useToggleComponentMutation,
   useSeedComponentsMutation
-} from '../api/payrollApi';
+} from '@modules/payroll/api/payrollApi';
 
 const SalaryComponentManager = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

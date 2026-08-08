@@ -8,8 +8,8 @@ import {
   useGetTdsReportQuery,
   useGetPfReportQuery,
   useGetEsiReportQuery,
-} from '../api/payrollApi';
-import { formatINR, formatMonth } from '../../../utils/payrollFormatters';
+} from '@modules/payroll/api/payrollApi';
+import { formatINR, formatMonth } from '@shared/utils/payrollFormatters';
 
 const { Title, Text } = Typography;
 

@@ -5,7 +5,7 @@ import {
   useGetAllFormsQuery,
   useToggleFormStatusMutation,
   useDeleteFormMutation,
-} from '../../../redux/api/customFormApi';
+} from '../api/customFormApi';
 import { Plus, Trash2, Edit3, Eye, Search, FileText, Link, Unlink, RotateCcw } from 'lucide-react';
 
 const AllForms = () => {

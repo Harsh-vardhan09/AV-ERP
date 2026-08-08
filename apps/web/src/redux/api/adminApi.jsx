@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { prepareAuthHeaders } from './authHeader';
+import { prepareAuthHeaders } from '@shared/lib/authHeader';
 
 const API_URL = `${import.meta.env.VITE_PORT}/api/v1/admin/`;
 

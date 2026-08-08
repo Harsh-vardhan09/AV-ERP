@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   useGetAdmissionTemplatesQuery,
   useGetAdmissionTemplateStatsQuery,
-} from '../../../redux/api/admissionTemplateApi';
+} from '../api/admissionTemplateApi';
 import { FileText, CheckCircle2, Star, Eye, Info } from 'lucide-react';
 
 const StatusBadge = ({ status }) => {

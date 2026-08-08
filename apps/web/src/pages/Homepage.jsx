@@ -2,10 +2,10 @@
 // import Sidebar from './Sidebar'; // Ensure Sidebar component is imported
 // import { Navigate, NavLink, useNavigate } from 'react-router-dom';
 // import { useDispatch, useSelector } from 'react-redux';
-// import { toggleSidebar } from '../redux/reducers/sidebarslice';
+// import { toggleSidebar } from '@shared/lib/store/sidebarSlice';
 // import { useState, useEffect, useRef } from 'react';
-// import { useLogoutMutation } from '../redux/api/userApi';
-// import { userlogout } from '../redux/reducers/userreducer';
+// import { useLogoutMutation } from '@modules/identity/api/userApi';
+// import { userlogout } from '@shared/lib/store/userSlice';
 // import { IoMdNotifications } from "react-icons/io";
 
 // const HomePage = () => {
@@ -206,9 +206,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleSidebar } from '../redux/reducers/sidebarslice';
-import { authApi, useLogoutMutation } from '../redux/api/userApi';
-import { userlogout } from '../redux/reducers/userreducer';
+import { toggleSidebar } from '@shared/lib/store/sidebarSlice';
+import { authApi, useLogoutMutation } from '@modules/identity/api/userApi';
+import { userlogout } from '@shared/lib/store/userSlice';
 import { IoMdNotifications, IoMdHome, IoMdCalendar, IoMdSearch, IoMdSettings ,IoMdDesktop ,IoMdAddCircle ,IoMdCheckmark,IoMdWarning ,IoMdExit } from "react-icons/io";
 import { FaChalkboardTeacher, FaBook, FaUserGraduate, FaChartLine, FaCalendarAlt, FaRegBell } from "react-icons/fa";
 import { MdAssignment, MdQuiz, MdEvent, MdChat, MdCode, MdOutlineLogout, MdHelp, MdPerson } from "react-icons/md";

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MdArrowBack, MdSave, MdAdd, MdDelete, MdDragIndicator } from 'react-icons/md';
 import toast from 'react-hot-toast';
-import { useGetFormByIdQuery, useUpdateFormMutation, useGetPredefinedFieldsQuery } from '../../../redux/api/customFormApi';
+import { useGetFormByIdQuery, useUpdateFormMutation, useGetPredefinedFieldsQuery } from '../api/customFormApi';
 
 const TOOLBAR_ACTIONS = [
   { cmd: 'bold', icon: 'B', style: { fontWeight: 700 } },

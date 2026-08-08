@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useGetMyPayslipsQuery } from '../api/payrollApi';
+import { useGetMyPayslipsQuery } from '@modules/payroll/api/payrollApi';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',

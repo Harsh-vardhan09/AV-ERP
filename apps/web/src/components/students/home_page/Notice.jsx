@@ -1,7 +1,7 @@
   import React from 'react';
   import { FaBell } from "react-icons/fa";
   import { useDispatch, useSelector } from 'react-redux';
-  import {togglenotice} from '../../../redux/reducers/sidebarslice'
+  import {togglenotice} from '@shared/lib/store/sidebarSlice'
   import { CiCircleRemove } from "react-icons/ci";
   const Notice = () => {
     const dispatch=useDispatch();

@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import {
   useGetFeeDashboardQuery,
   useBackfillStudentFeesMutation,
-} from '../api/feeApi';
+} from '@modules/fees/api/feeApi';
 
 const fmt = (n) =>
   typeof n === 'number'

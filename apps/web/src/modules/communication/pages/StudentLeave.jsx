@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useApplyStudentLeaveMutation, useGetMyStudentLeavesQuery } from '../../../redux/api/studentApi';
+import { useApplyStudentLeaveMutation, useGetMyStudentLeavesQuery } from '@modules/people/api/studentApi';
 import toast from 'react-hot-toast';
 import { Plus, X, Calendar, Clock } from 'lucide-react';
 

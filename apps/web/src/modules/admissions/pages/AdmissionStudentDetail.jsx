@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGetStudentDetailsQuery } from '../../../redux/api/admissionApi';
+import { useGetStudentDetailsQuery } from '../api/admissionApi';
 
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : null;

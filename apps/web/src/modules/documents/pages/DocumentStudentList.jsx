@@ -8,7 +8,7 @@ import {
   useGetAdminStudentsQuery,
 } from '../../../redux/api/adminApi';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import './documents.css';
+import '@modules/documents/pages/documents.css';
 
 const DocumentStudentList = ({ documentType, basePath }) => {
   const { data: activeSessionData } = useGetActiveSessionQuery();

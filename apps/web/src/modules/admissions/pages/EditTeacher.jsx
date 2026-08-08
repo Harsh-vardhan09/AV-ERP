@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useGetTeacherDetailsQuery, useUpdateTeacherDetailsMutation } from '../../../redux/api/admissionApi';
+import { useGetTeacherDetailsQuery, useUpdateTeacherDetailsMutation } from '../api/admissionApi';
 import toast from 'react-hot-toast';
 
 const Input = ({ label, required, ...props }) => (

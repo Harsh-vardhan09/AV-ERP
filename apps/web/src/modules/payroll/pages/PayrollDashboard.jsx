@@ -12,11 +12,11 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import {
   useGetPayrollRunsQuery,
   useGetEmployeeSalariesQuery
-} from '../api/payrollApi';
+} from '@modules/payroll/api/payrollApi';
 import {
   formatINR, formatMonth,
   getStatusColor, getStatusLabel
-} from '../../../utils/payrollFormatters';
+} from '@shared/utils/payrollFormatters';
 import dayjs from 'dayjs';
 
 const PayrollDashboard = () => {

@@ -7,7 +7,7 @@ import {
   useGetDefaultersReportQuery,
   useGetPaidAccountsReportQuery,
   useGetBillingPeriodsQuery,
-} from '../api/feeApi';
+} from '@modules/fees/api/feeApi';
 
 const fmt = (n) =>
   typeof n === 'number' ? `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '₹0';

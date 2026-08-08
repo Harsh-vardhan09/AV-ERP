@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-// import pdff from "./TOC-List_of_Experiments_e8d7a25b-6443-448b-af02-b4ae96404623.pdf";
 import { useParams } from 'react-router-dom';
 // Setting worker for PDF rendering
 // pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;

@@ -3,7 +3,7 @@
 // import { useState } from 'react';
 // import { useSelector } from 'react-redux';
 // import toast from 'react-hot-toast';
-// import Loader from '../../Loader';
+// import Loader from '@shared/ui/Loader';
 
 // function SubmissionPage() {
 //     const navigate = useNavigate();
@@ -105,7 +105,7 @@ import { useAssignmetuploaadMutation, useAssignmnetsbyidQuery } from '../../../r
 import { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import Loader from '../../Loader';
+import Loader from '@shared/ui/Loader';
 
 function SubmissionPage() {
     const navigate = useNavigate();

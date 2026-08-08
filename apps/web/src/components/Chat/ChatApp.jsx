@@ -2,7 +2,7 @@ import React,{useState} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMessage, faPeopleGroup, faMagnifyingGlass, faEllipsisVertical, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import profilepic from './profilepic.jpg';
-import { useGetallchatQuery } from '../../redux/api/chat';
+import { useGetallchatQuery } from '@modules/communication/api/chat';
 
 
 function ChatApp() {

@@ -15,8 +15,8 @@
  *   onChange     — (key, value) => void  (called on blur)
  */
 import React, { useCallback } from 'react';
-import { resolvePhotoSrc, StudentPhoto } from './certificateShared';
-import './documents.css';
+import { resolvePhotoSrc, StudentPhoto } from '@modules/documents/pages/certificateShared';
+import '@modules/documents/pages/documents.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Field Input — editable when unlocked, plain text when locked

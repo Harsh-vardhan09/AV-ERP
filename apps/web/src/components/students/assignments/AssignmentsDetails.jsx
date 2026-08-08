@@ -2,7 +2,7 @@
 // import { useAssignmnetsQuery, useExpiredassignmnetsbyidQuery, useNotExpiredassignmnetsbyidQuery, useAssignmentbyidQuery } from '../../../redux/api/assignmentapi';
 // import { useState } from 'react';
 // import { useSelector } from 'react-redux';
-// import Loader from '../../Loader';
+// import Loader from '@shared/ui/Loader';
 
 // function AssignmentsDetails() {
 //     const { subject } = useParams();
@@ -235,10 +235,10 @@
 // export default AssignmentsDetails;
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAssignmnetsQuery, useExpiredassignmnetsbyidQuery, useNotExpiredassignmnetsbyidQuery, useAssignmentbyidQuery } from '../../../redux/api/assignmentapi';
-import { useGetMyProfileQuery } from '../../../redux/api/studentApi';
+import { useGetMyProfileQuery } from '@modules/people/api/studentApi';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import Loader from '../../Loader';
+import Loader from '@shared/ui/Loader';
 
 function AssignmentsDetails() {
     const { subject } = useParams();

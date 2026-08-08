@@ -14,9 +14,9 @@ import {
   useBulkAttendanceMutation,
   useGetAttendanceSummaryQuery,
   useGetEmployeeSalariesQuery,
-} from '../api/payrollApi';
-import { applyServerErrors } from '../../../utils/formErrors';
-import { getDaysLabel } from '../../../utils/payrollFormatters';
+} from '@modules/payroll/api/payrollApi';
+import { applyServerErrors } from '@shared/utils/formErrors';
+import { getDaysLabel } from '@shared/utils/payrollFormatters';
 
 const { Title, Text } = Typography;
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useGetStudentMaterialsQuery, useMarkMaterialViewedMutation } from '../../../redux/api/studentApi';
+import { useGetStudentMaterialsQuery, useMarkMaterialViewedMutation } from '@modules/people/api/studentApi';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 

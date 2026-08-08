@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { previewImport, startImport, getImportStatus, getErrorReportUrl } from '../../../api/importApi';
+import { previewImport, startImport, getImportStatus, getErrorReportUrl } from '@shared/lib/importApi';
 import axios from 'axios';
 import { UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, ArrowLeft, ArrowRight, Download, RefreshCw, FileText } from 'lucide-react';
 
