@@ -59,4 +59,10 @@ module.exports = {
   get classController() {
     return require('./controllers/classController');
   },
+
+  // sectionController — consumers: modules/people/routes/adminRoutes,
+  // modules/examination/routes/examControllerRoutes
+  get sectionController() {
+    return require('./controllers/sectionController');
+  },
 };

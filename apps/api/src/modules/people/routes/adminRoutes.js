@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const admin = require('../../../../src-old/controller/adminController');
-const { sessionController, classController } = require('../../academics');
+const { sessionController, classController, sectionController } = require('../../academics');
 const { varifyToken } = require('../../../core/security/authenticate.js');
 const { authorize } = require('../../../core/security/roleMiddleware.js');
 const validateObjectId = require('../../../core/http/validateObjectId.js');
@@ -68,11 +68,16 @@ router.delete(
 );
 
 // ── Section management ────────────────────────────────────────────────────────
-router.post('/section', writeGuard, admin.createSection);
-router.post('/sections/bulk', writeGuard, admin.createBulkSections);
-router.get('/sections', readGuard, admin.getAllSections);
-router.put('/section/:id', writeGuard, validateObjectId('id'), admin.updateSection);
-router.delete('/section/:id', authorize('admin'), validateObjectId('id'), admin.deleteSection);
+router.post('/section', writeGuard, sectionController.createSection);
+router.post('/sections/bulk', writeGuard, sectionController.createBulkSections);
+router.get('/sections', readGuard, sectionController.getAllSections);
+router.put('/section/:id', writeGuard, validateObjectId('id'), sectionController.updateSection);
+router.delete(
+  '/section/:id',
+  authorize('admin'),
+  validateObjectId('id'),
+  sectionController.deleteSection
+);
 
 // ── Subject management ────────────────────────────────────────────────────────
 router.post('/subject', writeGuard, admin.createSubject);
