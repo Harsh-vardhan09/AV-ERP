@@ -1,6 +1,5 @@
   
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBoxArchive } from '@fortawesome/free-solid-svg-icons';
+import { Archive } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -40,7 +39,7 @@ function Noticeapprove() {
             <section className='main'>
                 <h1 className='heading'>
                     NOTICE REQUESTS
-                        <div className='cbox'><FontAwesomeIcon icon={faBoxArchive} /></div>
+                        <div className='cbox'><Archive size="1em" /></div>
                     <button onClick={newroutehandler} className='add-btn mx-20'>Add New</button>
                 </h1>
                 <div className="navbar">

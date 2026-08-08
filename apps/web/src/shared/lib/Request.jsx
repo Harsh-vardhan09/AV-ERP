@@ -1,5 +1,4 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBox } from '@fortawesome/free-solid-svg-icons';
+import { Box } from 'lucide-react';
 import { useState } from 'react';
 
 function Request() {
@@ -35,7 +34,7 @@ function Request() {
             <section className='main'>
                 <h1 className='heading'>
                     COMPLAINT REQUESTS
-                    <div className='cbox'><FontAwesomeIcon icon={faBox} /></div>
+                    <div className='cbox'><Box size="1em" /></div>
                 </h1>
                 <div className="navbar">
                     <p onClick={() => setView('all')} className={view === 'all' ? 'active' : ''}>All</p>

@@ -1,6 +1,5 @@
 import React,{useState} from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMessage, faPeopleGroup, faMagnifyingGlass, faEllipsisVertical, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { MessageSquare, Users, Search, EllipsisVertical, ArrowLeft } from 'lucide-react';
 import profilepic from './profilepic.jpg';
 import { useGetallchatQuery } from '@modules/communication/api/chat';
 
@@ -74,8 +73,8 @@ function ChatApp() {
         <div className='main'>
             <div className="sidebar1" id='sidebar1'>
                 <div className="bar">
-                    <FontAwesomeIcon onClick={grouphadler1} className="icon-chat" icon={faMessage} />
-                    <FontAwesomeIcon onClick={grouphandler} className='icon-chat' icon={faPeopleGroup} />
+                    <MessageSquare onClick={grouphadler1} className="icon-chat" size="1em" />
+                    <Users onClick={grouphandler} className='icon-chat' size="1em" />
                     <div className='add-icon' onClick={() => alert('Add chat clicked!')}>+</div>
                     <img className='profilepic' src={profilepic} alt='Profile' />
                 </div>
@@ -83,10 +82,10 @@ function ChatApp() {
                 <div className='chatbox'>
                     <div className="search-box">
                         <p className='chat-heading'>
-                           Chats <FontAwesomeIcon title='Menu' className='icon-menu' icon={faEllipsisVertical} />
+                           Chats <EllipsisVertical className='icon-menu' size="1em" />
                          </p>
                             <input className='search' placeholder='Search...' onChange={(e) => setSearchTerm(e.target.value)} />
-                            <FontAwesomeIcon icon={faMagnifyingGlass} />
+                            <Search size="1em" />
                     </div>
                     <div className='chats'>
     {groupstate ? (
@@ -116,7 +115,7 @@ function ChatApp() {
                                 <img src={activeChat.profilepicture
 } alt='Profile' className='active-img' />
                                 <h2>{activeChat.name}</h2>
-                                <FontAwesomeIcon icon={faArrowLeft} className='back-arrow' onClick={back} />
+                                <ArrowLeft className='back-arrow' size="1em" onClick={back} />
                             </div>
                             <div className='message-list'>
                                 {messages.map(msg => (

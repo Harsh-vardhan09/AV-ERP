@@ -1,5 +1,3 @@
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faBox } from '@fortawesome/free-solid-svg-icons';
 // import axios from 'axios';
 // import { useEffect, useState } from 'react';
 // import { useSelector,useDispatch } from 'react-redux';
