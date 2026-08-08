@@ -4,7 +4,7 @@
  */
 
 const SchoolSettings = require('../../tenancy').SchoolSettings;
-const Marks = require('../../../../src-old/models/MarksModel');  // TEMP: moves to modules/examination
+const { MarksModel: Marks } = require('../../examination');
 const logger = require('../../../core/logging/logger.js');
 
 /**
@@ -37,7 +37,7 @@ const canGenerateReport = async ({ classId, sessionId, schoolId, isOasesEnabled 
  * OASES ON: Validate evaluation completion
  */
 const canGenerateReportWithOases = async (classId, sessionId, schoolId) => {
-  const Exam = require('../../../../src-old/models/Exam');  // TEMP: moves to modules/examination
+  const { Exam } = require('../../examination');
 
   const exams = await Exam.find({
     classIds: classId,
@@ -62,7 +62,7 @@ const canGenerateReportWithOases = async (classId, sessionId, schoolId) => {
  * OASES OFF: Validate marks entry for all subjects
  */
 const canGenerateReportWithoutOases = async (classId, sessionId, schoolId) => {
-  const ClassSubjectMap = require('../../../../src-old/models/ClassSubjectMap');  // TEMP: moves to modules/academics
+  const { ClassSubjectMap } = require('../../academics');
 
   // Get all subjects for the class
   const subjects = await ClassSubjectMap.find({
@@ -78,9 +78,7 @@ const canGenerateReportWithoutOases = async (classId, sessionId, schoolId) => {
     return { allowed: false, reason: 'No subjects configured for this class' };
   }
 
-  const subjectIds = subjects
-    .filter((s) => s.subjectId)
-    .map((s) => s.subjectId._id.toString());
+  const subjectIds = subjects.filter((s) => s.subjectId).map((s) => s.subjectId._id.toString());
 
   if (!subjectIds.length) {
     return { allowed: false, reason: 'No valid subjects found' };
@@ -111,8 +109,8 @@ const canGenerateReportWithoutOases = async (classId, sessionId, schoolId) => {
  * OASES OFF: Return all exams (for informational purposes), but marks are from manual entry
  */
 const fetchExamsForReportCard = async (classId, sessionId, schoolId, isOasesEnabled) => {
-  const Exam = require('../../../../src-old/models/Exam');  // TEMP: moves to modules/examination
-  const ExamSubjectConfig = require('../../../../src-old/models/ExamSubjectConfig');  // TEMP: moves to modules/examination
+  const { Exam } = require('../../examination');
+  const { ExamSubjectConfig } = require('../../examination');
 
   const exams = await Exam.find({
     classIds: classId,

@@ -58,7 +58,10 @@ exports.login = async (req, res, next) => {
     // Sets the httpOnly superAdminToken cookie AND returns the raw JWT.
     const token = generateSuperAdminToken(res, superAdmin._id);
 
-    logger.info('[SuperAdmin] Login successful', { superAdminId: superAdmin._id, email: superAdmin.email });
+    logger.info('[SuperAdmin] Login successful', {
+      superAdminId: superAdmin._id,
+      email: superAdmin.email,
+    });
 
     return res.status(200).json({
       success: true,
@@ -252,7 +255,8 @@ exports.createSchool = async (req, res, next) => {
     if (!name || !code || !adminFirstName || !adminLastName || !adminEmail || !adminPassword) {
       return res.status(400).json({
         success: false,
-        message: 'name, code, adminFirstName, adminLastName, adminEmail, adminPassword are all required',
+        message:
+          'name, code, adminFirstName, adminLastName, adminEmail, adminPassword are all required',
       });
     }
 
@@ -297,7 +301,7 @@ exports.createSchool = async (req, res, next) => {
       schoolId: school._id,
       isActive: true,
       isVerified: true,
-      mustChangePassword: true,  // force change on first login
+      mustChangePassword: true, // force change on first login
     });
 
     // Step 3: Link admin user back to school
@@ -321,22 +325,29 @@ exports.createSchool = async (req, res, next) => {
     try {
       const { sendAdminCredentials } = require('../../notifications').emailService;
       await sendAdminCredentials({
-        to:           adminEmail.toLowerCase().trim(),
-        adminName:    `${adminFirstName.trim()} ${adminLastName.trim()}`,
-        schoolName:   name.trim(),
-        schoolCode:   normalizedCode,
-        tempPassword: adminPassword,  // plain text — only used here
-        loginUrl:     process.env.CLIENT_URL || 'https://campus.unifiedcampus.com',
+        to: adminEmail.toLowerCase().trim(),
+        adminName: `${adminFirstName.trim()} ${adminLastName.trim()}`,
+        schoolName: name.trim(),
+        schoolCode: normalizedCode,
+        tempPassword: adminPassword, // plain text — only used here
+        loginUrl: process.env.CLIENT_URL || 'https://campus.unifiedcampus.com',
       });
     } catch (emailErr) {
-      logger.error('[SuperAdmin] createSchool: admin credential email failed', { error: emailErr.message });
+      logger.error('[SuperAdmin] createSchool: admin credential email failed', {
+        error: emailErr.message,
+      });
     }
 
     return res.status(201).json({
       success: true,
       message: `School "${name}" created successfully`,
       data: {
-        school: { _id: school._id, name: school.name, code: school.code, isActive: school.isActive },
+        school: {
+          _id: school._id,
+          name: school.name,
+          code: school.code,
+          isActive: school.isActive,
+        },
         admin: { _id: adminUser._id, email: adminUser.email },
       },
     });
@@ -439,21 +450,28 @@ exports.updateSchool = async (req, res, next) => {
     if (code !== undefined) {
       const normalizedCode = code.toUpperCase().trim();
       if (!/^[A-Z0-9]{3,12}$/.test(normalizedCode)) {
-        return res.status(400).json({ success: false, message: 'School code must be 3–12 uppercase alphanumeric characters' });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: 'School code must be 3–12 uppercase alphanumeric characters',
+          });
       }
       if (normalizedCode !== school.code) {
         const existing = await School.findOne({ code: normalizedCode });
         if (existing) {
-          return res.status(400).json({ success: false, message: 'A school with this code already exists' });
+          return res
+            .status(400)
+            .json({ success: false, message: 'A school with this code already exists' });
         }
       }
       school.code = normalizedCode;
     }
 
-    if (name !== undefined)    school.name    = name.trim();
+    if (name !== undefined) school.name = name.trim();
     if (address !== undefined) school.address = address.trim();
-    if (phone !== undefined)   school.phone   = phone.trim();
-    if (email !== undefined)   school.email   = email.trim().toLowerCase();
+    if (phone !== undefined) school.phone = phone.trim();
+    if (email !== undefined) school.email = email.trim().toLowerCase();
 
     await school.save();
 
@@ -578,7 +596,12 @@ exports.getSchoolModules = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       data: {
-        school: { _id: school._id, name: school.name, code: school.code, isActive: school.isActive },
+        school: {
+          _id: school._id,
+          name: school.name,
+          code: school.code,
+          isActive: school.isActive,
+        },
         modules: moduleStatus,
       },
     });
@@ -602,16 +625,28 @@ exports.updateSchoolModule = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Invalid school ID' });
     }
     if (!moduleKey || typeof enabled !== 'boolean') {
-      return res.status(400).json({ success: false, message: 'moduleKey (string) and enabled (boolean) are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'moduleKey (string) and enabled (boolean) are required' });
     }
     if (!MODULE_KEYS.includes(moduleKey)) {
-      return res.status(400).json({ success: false, message: `Invalid module key. Valid keys: ${MODULE_KEYS.join(', ')}` });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Invalid module key. Valid keys: ${MODULE_KEYS.join(', ')}`,
+        });
     }
     if (moduleKey === 'core' && enabled === false) {
       return res.status(400).json({ success: false, message: 'Core module cannot be disabled' });
     }
     if (!MODULES[moduleKey].canDisable && enabled === false) {
-      return res.status(400).json({ success: false, message: `Module "${MODULES[moduleKey].label}" cannot be disabled` });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Module "${MODULES[moduleKey].label}" cannot be disabled`,
+        });
     }
 
     const school = await School.findById(id).select('name code');
@@ -633,7 +668,10 @@ exports.updateSchoolModule = async (req, res, next) => {
     );
 
     logger.info('[SuperAdmin] Module toggled', {
-      schoolId: id, schoolCode: school.code, moduleKey, enabled,
+      schoolId: id,
+      schoolCode: school.code,
+      moduleKey,
+      enabled,
       toggledBy: req.superAdmin._id,
     });
 
@@ -674,10 +712,22 @@ exports.bulkUpdateSchoolModules = async (req, res, next) => {
     const errors = [];
 
     Object.entries(modules).forEach(([key, value]) => {
-      if (!MODULE_KEYS.includes(key))           { errors.push(`Unknown module: ${key}`); return; }
-      if (typeof value !== 'boolean')            { errors.push(`Value for ${key} must be boolean`); return; }
-      if (key === 'core' && value === false)     { errors.push('Core module cannot be disabled'); return; }
-      if (!MODULES[key].canDisable && !value)    { errors.push(`Module "${MODULES[key].label}" cannot be disabled`); return; }
+      if (!MODULE_KEYS.includes(key)) {
+        errors.push(`Unknown module: ${key}`);
+        return;
+      }
+      if (typeof value !== 'boolean') {
+        errors.push(`Value for ${key} must be boolean`);
+        return;
+      }
+      if (key === 'core' && value === false) {
+        errors.push('Core module cannot be disabled');
+        return;
+      }
+      if (!MODULES[key].canDisable && !value) {
+        errors.push(`Module "${MODULES[key].label}" cannot be disabled`);
+        return;
+      }
       updateObj[`modules.${key}`] = value;
     });
 
@@ -690,14 +740,13 @@ exports.bulkUpdateSchoolModules = async (req, res, next) => {
       updateObj.isOasesEnabled = modules.oases;
     }
 
-    await SchoolSettings.findOneAndUpdate(
-      { schoolId: id },
-      { $set: updateObj },
-      { upsert: true }
-    );
+    await SchoolSettings.findOneAndUpdate({ schoolId: id }, { $set: updateObj }, { upsert: true });
 
     logger.info('[SuperAdmin] Bulk module update', {
-      schoolId: id, schoolCode: school.code, modules, updatedBy: req.superAdmin._id,
+      schoolId: id,
+      schoolCode: school.code,
+      modules,
+      updatedBy: req.superAdmin._id,
     });
 
     return res.status(200).json({
@@ -734,7 +783,9 @@ exports.getSchoolStaff = async (req, res, next) => {
       schoolId,
       role: { $in: ['admin', 'admission', 'accounts'] },
     })
-      .select('-password -resetPasswordToken -resetPasswordExpired -varificationToken -varificationTokenExpired')
+      .select(
+        '-password -resetPasswordToken -resetPasswordExpired -varificationToken -varificationTokenExpired'
+      )
       .populate('createdBy', 'firstName lastName email')
       .sort({ role: 1, createdAt: -1 })
       .lean();
@@ -772,7 +823,8 @@ exports.createStaffForSchool = async (req, res, next) => {
     if (!SA_CREATABLE_ROLES.includes(role)) {
       return res.status(400).json({
         success: false,
-        message: `Super admin can create users with roles: ${SA_CREATABLE_ROLES.join(', ')}. ` +
+        message:
+          `Super admin can create users with roles: ${SA_CREATABLE_ROLES.join(', ')}. ` +
           `Teachers and students are created through the school admission process.`,
       });
     }
@@ -798,23 +850,24 @@ exports.createStaffForSchool = async (req, res, next) => {
     }
 
     const { generateTempPassword } = require('../../identity').generatePassword;
-    const { sendAdminCredentials, sendStaffCredentials } = require('../../notifications').emailService;
+    const { sendAdminCredentials, sendStaffCredentials } =
+      require('../../notifications').emailService;
 
     const tempPassword = generateTempPassword();
-    const hashed       = await bcrypt.hash(tempPassword, 12);
+    const hashed = await bcrypt.hash(tempPassword, 12);
 
     const newUser = await User.create({
       firstName: firstName.trim(),
-      lastName:  lastName.trim(),
-      email:     email.toLowerCase().trim(),
-      phone:     phone?.trim() || undefined,
-      password:  hashed,
+      lastName: lastName.trim(),
+      email: email.toLowerCase().trim(),
+      phone: phone?.trim() || undefined,
+      password: hashed,
       role,
       schoolId,
-      isActive:           true,
-      isVerified:         true,
+      isActive: true,
+      isVerified: true,
       mustChangePassword: true,
-      createdBy:          null, // super admin has no User doc
+      createdBy: null, // super admin has no User doc
     });
 
     // Send appropriate credentials email (non-blocking)
@@ -822,20 +875,20 @@ exports.createStaffForSchool = async (req, res, next) => {
       const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
       if (role === 'admin') {
         await sendAdminCredentials({
-          to:           newUser.email,
-          adminName:    `${firstName.trim()} ${lastName.trim()}`,
-          schoolName:   school.name,
-          schoolCode:   school.code,
+          to: newUser.email,
+          adminName: `${firstName.trim()} ${lastName.trim()}`,
+          schoolName: school.name,
+          schoolCode: school.code,
           tempPassword,
           loginUrl,
         });
       } else {
         await sendStaffCredentials({
-          to:           newUser.email,
-          staffName:    `${firstName.trim()} ${lastName.trim()}`,
+          to: newUser.email,
+          staffName: `${firstName.trim()} ${lastName.trim()}`,
           role,
-          schoolName:   school.name,
-          schoolCode:   school.code,
+          schoolName: school.name,
+          schoolCode: school.code,
           tempPassword,
           loginUrl,
         });
@@ -843,7 +896,7 @@ exports.createStaffForSchool = async (req, res, next) => {
     } catch (emailErr) {
       logger.error('[SuperAdmin] createStaffForSchool: email failed', {
         userId: newUser._id,
-        error:  emailErr.message,
+        error: emailErr.message,
       });
     }
 
@@ -859,14 +912,14 @@ exports.createStaffForSchool = async (req, res, next) => {
       message: `${role.charAt(0).toUpperCase() + role.slice(1)} account created for ${school.name}. Credentials sent to ${email}.`,
       data: {
         user: {
-          _id:               newUser._id,
-          firstName:         newUser.firstName,
-          lastName:          newUser.lastName,
-          email:             newUser.email,
-          role:              newUser.role,
-          schoolId:          newUser.schoolId,
+          _id: newUser._id,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          email: newUser.email,
+          role: newUser.role,
+          schoolId: newUser.schoolId,
           mustChangePassword: true,
-          createdAt:         newUser.createdAt,
+          createdAt: newUser.createdAt,
         },
       },
     });
@@ -906,7 +959,9 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'School not found' });
     }
     if (!school.isActive) {
-      return res.status(403).json({ success: false, message: 'Cannot upload template for a suspended school' });
+      return res
+        .status(403)
+        .json({ success: false, message: 'Cannot upload template for a suspended school' });
     }
 
     const {
@@ -919,12 +974,12 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
       isDefault = false,
       config,
       // Class-group targeting (new)
-      classGroupName    = '',
-      classRangeFrom    = null,
-      classRangeTo      = null,
+      classGroupName = '',
+      classRangeFrom = null,
+      classRangeTo = null,
       applicableClassIds = [],
       // Lifecycle status
-      templateStatus    = 'published',
+      templateStatus = 'published',
     } = req.body;
 
     if (!name || !htmlContent) {
@@ -932,9 +987,9 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
     }
 
     // Extract dynamic fields + run advisory schema validation
-    const extraction  = TemplateFieldExtractor.extractFields(htmlContent);
-    const classified  = TemplateFieldExtractor.extractAndClassify(htmlContent);
-    const validation  = TemplateFieldExtractor.validateAgainstSchema(htmlContent);
+    const extraction = TemplateFieldExtractor.extractFields(htmlContent);
+    const classified = TemplateFieldExtractor.extractAndClassify(htmlContent);
+    const validation = TemplateFieldExtractor.validateAgainstSchema(htmlContent);
 
     // If this template is set as default, unset any existing default of same type for this school
     if (isDefault) {
@@ -958,8 +1013,8 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
       config: config || {},
       // Class-group targeting
       classGroupName,
-      classRangeFrom:     classRangeFrom     != null ? Number(classRangeFrom)     : null,
-      classRangeTo:       classRangeTo       != null ? Number(classRangeTo)       : null,
+      classRangeFrom: classRangeFrom != null ? Number(classRangeFrom) : null,
+      classRangeTo: classRangeTo != null ? Number(classRangeTo) : null,
       applicableClassIds: Array.isArray(applicableClassIds) ? applicableClassIds : [],
       // Lifecycle status
       templateStatus,
@@ -968,8 +1023,10 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
     });
 
     logger.info('[SuperAdmin] Template uploaded for school', {
-      schoolId, schoolCode: school.code,
-      templateId: template._id, templateName: template.name,
+      schoolId,
+      schoolCode: school.code,
+      templateId: template._id,
+      templateName: template.name,
       uploadedBy: req.superAdmin._id,
       extractedFieldCount: extraction.fields?.length || 0,
       marksFields: classified.marksFields,
@@ -986,25 +1043,25 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
         isDefault: template.isDefault,
         classGroupName: template.classGroupName,
         classRangeFrom: template.classRangeFrom,
-        classRangeTo:   template.classRangeTo,
+        classRangeTo: template.classRangeTo,
         extractedFields: extraction.fields,
         // NEW: classified schema for frontend awareness
         templateSchema: {
-          fields:      classified.fields,
+          fields: classified.fields,
           marksFields: classified.marksFields,
-          metaFields:  classified.metaFields,
+          metaFields: classified.metaFields,
         },
         summary: extraction.summary,
         fieldTypes: {
-          simple:  extraction.simple,
+          simple: extraction.simple,
           objects: extraction.objects,
-          arrays:  extraction.arrays,
+          arrays: extraction.arrays,
         },
         // Advisory validation — upload is NEVER blocked
         validation: {
-          status:        validation.status,
+          status: validation.status,
           unknownFields: validation.unknownFields,
-          warnings:      validation.warnings,
+          warnings: validation.warnings,
         },
         school: { _id: school._id, name: school.name, code: school.code },
       },
@@ -1043,7 +1100,9 @@ exports.getSchoolTemplates = async (req, res, next) => {
 
     const [templates, total] = await Promise.all([
       ReportTemplate.find(query)
-        .select('name description templateType isDefault isActive usageCount lastUsedAt createdAt extractedFields classGroupName classRangeFrom classRangeTo applicableClassIds templateStatus createdBySuperAdmin')
+        .select(
+          'name description templateType isDefault isActive usageCount lastUsedAt createdAt extractedFields classGroupName classRangeFrom classRangeTo applicableClassIds templateStatus createdBySuperAdmin'
+        )
         .sort({ isDefault: -1, createdAt: -1 })
         .skip(skip)
         .limit(Number(limit))
@@ -1080,19 +1139,26 @@ exports.deleteSchoolTemplate = async (req, res, next) => {
 
     const { id: schoolId, templateId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(schoolId) || !mongoose.Types.ObjectId.isValid(templateId)) {
+    if (
+      !mongoose.Types.ObjectId.isValid(schoolId) ||
+      !mongoose.Types.ObjectId.isValid(templateId)
+    ) {
       return res.status(400).json({ success: false, message: 'Invalid school or template ID' });
     }
 
     const template = await ReportTemplate.findOne({ _id: templateId, schoolId });
     if (!template) {
-      return res.status(404).json({ success: false, message: 'Template not found for this school' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'Template not found for this school' });
     }
 
     await ReportTemplate.findByIdAndDelete(templateId);
 
     logger.info('[SuperAdmin] Template deleted', {
-      schoolId, templateId, templateName: template.name,
+      schoolId,
+      templateId,
+      templateName: template.name,
       deletedBy: req.superAdmin._id,
     });
 
@@ -1117,19 +1183,30 @@ exports.updateSchoolTemplate = async (req, res, next) => {
 
     const { id: schoolId, templateId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(schoolId) || !mongoose.Types.ObjectId.isValid(templateId)) {
+    if (
+      !mongoose.Types.ObjectId.isValid(schoolId) ||
+      !mongoose.Types.ObjectId.isValid(templateId)
+    ) {
       return res.status(400).json({ success: false, message: 'Invalid school or template ID' });
     }
 
     const template = await ReportTemplate.findOne({ _id: templateId, schoolId });
     if (!template) {
-      return res.status(404).json({ success: false, message: 'Template not found for this school' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'Template not found for this school' });
     }
 
     const UPDATABLE = [
-      'templateStatus', 'isDefault', 'isActive',
-      'classGroupName', 'classRangeFrom', 'classRangeTo', 'applicableClassIds',
-      'name', 'description',
+      'templateStatus',
+      'isDefault',
+      'isActive',
+      'classGroupName',
+      'classRangeFrom',
+      'classRangeTo',
+      'applicableClassIds',
+      'name',
+      'description',
     ];
 
     UPDATABLE.forEach((field) => {
@@ -1146,12 +1223,12 @@ exports.updateSchoolTemplate = async (req, res, next) => {
     if (req.body.isDefault === true) {
       await ReportTemplate.updateMany(
         {
-          _id:          { $ne: templateId },
+          _id: { $ne: templateId },
           schoolId,
           templateType: template.templateType,
-          isDefault:    true,
+          isDefault: true,
           classRangeFrom: template.classRangeFrom,
-          classRangeTo:   template.classRangeTo,
+          classRangeTo: template.classRangeTo,
         },
         { $set: { isDefault: false } }
       );
@@ -1160,7 +1237,9 @@ exports.updateSchoolTemplate = async (req, res, next) => {
     await template.save();
 
     logger.info('[SuperAdmin] Template updated', {
-      schoolId, templateId, templateName: template.name,
+      schoolId,
+      templateId,
+      templateName: template.name,
       updatedFields: Object.keys(req.body),
       updatedBy: req.superAdmin._id,
     });
@@ -1169,14 +1248,14 @@ exports.updateSchoolTemplate = async (req, res, next) => {
       success: true,
       message: `Template "${template.name}" updated successfully`,
       data: {
-        _id:            template._id,
-        name:           template.name,
+        _id: template._id,
+        name: template.name,
         templateStatus: template.templateStatus,
-        isDefault:      template.isDefault,
-        isActive:       template.isActive,
+        isDefault: template.isDefault,
+        isActive: template.isActive,
         classGroupName: template.classGroupName,
         classRangeFrom: template.classRangeFrom,
-        classRangeTo:   template.classRangeTo,
+        classRangeTo: template.classRangeTo,
       },
     });
   } catch (error) {
@@ -1193,7 +1272,7 @@ exports.updateSchoolTemplate = async (req, res, next) => {
  */
 exports.uploadAdmissionTemplateForSchool = async (req, res, next) => {
   try {
-    const AdmissionTemplate      = require('../../admissions').AdmissionTemplate;
+    const AdmissionTemplate = require('../../admissions').AdmissionTemplate;
     const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
 
     const { id: schoolId } = req.params;
@@ -1204,16 +1283,19 @@ exports.uploadAdmissionTemplateForSchool = async (req, res, next) => {
 
     const school = await School.findById(schoolId).select('name code isActive');
     if (!school) return res.status(404).json({ success: false, message: 'School not found' });
-    if (!school.isActive) return res.status(403).json({ success: false, message: 'Cannot upload template for a suspended school' });
+    if (!school.isActive)
+      return res
+        .status(403)
+        .json({ success: false, message: 'Cannot upload template for a suspended school' });
 
     const {
       name,
       description = '',
       htmlContent,
-      cssContent   = '',
-      isDefault    = false,
+      cssContent = '',
+      isDefault = false,
       templateStatus = 'published',
-      config         = {},
+      config = {},
     } = req.body;
 
     if (!name || !htmlContent) {
@@ -1225,7 +1307,10 @@ exports.uploadAdmissionTemplateForSchool = async (req, res, next) => {
 
     // Unset existing default for this school if needed
     if (isDefault) {
-      await AdmissionTemplate.updateMany({ schoolId, isDefault: true }, { $set: { isDefault: false } });
+      await AdmissionTemplate.updateMany(
+        { schoolId, isDefault: true },
+        { $set: { isDefault: false } }
+      );
     }
 
     const template = await AdmissionTemplate.create({
@@ -1242,8 +1327,10 @@ exports.uploadAdmissionTemplateForSchool = async (req, res, next) => {
     });
 
     logger.info('[SuperAdmin] Admission template uploaded for school', {
-      schoolId, schoolCode: school.code,
-      templateId: template._id, templateName: template.name,
+      schoolId,
+      schoolCode: school.code,
+      templateId: template._id,
+      templateName: template.name,
       uploadedBy: req.superAdmin._id,
       fieldCount: extraction.fields?.length || 0,
     });
@@ -1262,12 +1349,12 @@ exports.uploadAdmissionTemplateForSchool = async (req, res, next) => {
       success: true,
       message: `Admission template "${name}" uploaded for ${school.name}`,
       data: {
-        templateId:      template._id,
-        name:            template.name,
-        templateStatus:  template.templateStatus,
-        isDefault:       template.isDefault,
+        templateId: template._id,
+        name: template.name,
+        templateStatus: template.templateStatus,
+        isDefault: template.isDefault,
         extractedFields: extraction.fields,
-        summary:         extraction.summary,
+        summary: extraction.summary,
         school: { _id: school._id, name: school.name, code: school.code },
       },
     });
@@ -1301,7 +1388,9 @@ exports.getSchoolAdmissionTemplates = async (req, res, next) => {
     const skip = (Number(page) - 1) * Number(limit);
     const [templates, total] = await Promise.all([
       AdmissionTemplate.find(query)
-        .select('name description isDefault isActive usageCount lastUsedAt createdAt extractedFields templateStatus createdBySuperAdmin config')
+        .select(
+          'name description isDefault isActive usageCount lastUsedAt createdAt extractedFields templateStatus createdBySuperAdmin config'
+        )
         .sort({ isDefault: -1, createdAt: -1 })
         .skip(skip)
         .limit(Number(limit))
@@ -1314,7 +1403,12 @@ exports.getSchoolAdmissionTemplates = async (req, res, next) => {
       data: {
         school: { _id: school._id, name: school.name, code: school.code },
         templates,
-        pagination: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
+        pagination: {
+          total,
+          page: Number(page),
+          limit: Number(limit),
+          totalPages: Math.ceil(total / Number(limit)),
+        },
       },
     });
   } catch (error) {
@@ -1332,24 +1426,37 @@ exports.deleteSchoolAdmissionTemplate = async (req, res, next) => {
 
     const { id: schoolId, templateId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(schoolId) || !mongoose.Types.ObjectId.isValid(templateId)) {
+    if (
+      !mongoose.Types.ObjectId.isValid(schoolId) ||
+      !mongoose.Types.ObjectId.isValid(templateId)
+    ) {
       return res.status(400).json({ success: false, message: 'Invalid school or template ID' });
     }
 
     const template = await AdmissionTemplate.findOne({ _id: templateId, schoolId });
-    if (!template) return res.status(404).json({ success: false, message: 'Admission template not found for this school' });
+    if (!template)
+      return res
+        .status(404)
+        .json({ success: false, message: 'Admission template not found for this school' });
 
     // Soft-delete
     template.isDeleted = true;
-    template.isActive  = false;
+    template.isActive = false;
     await template.save();
 
     logger.info('[SuperAdmin] Admission template deleted', {
-      schoolId, templateId, templateName: template.name,
+      schoolId,
+      templateId,
+      templateName: template.name,
       deletedBy: req.superAdmin._id,
     });
 
-    return res.status(200).json({ success: true, message: `Admission template "${template.name}" deleted successfully` });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: `Admission template "${template.name}" deleted successfully`,
+      });
   } catch (error) {
     logger.error('[SuperAdmin] deleteSchoolAdmissionTemplate error', { error: error.message });
     next(error);
@@ -1366,15 +1473,23 @@ exports.updateSchoolAdmissionTemplate = async (req, res, next) => {
 
     const { id: schoolId, templateId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(schoolId) || !mongoose.Types.ObjectId.isValid(templateId)) {
+    if (
+      !mongoose.Types.ObjectId.isValid(schoolId) ||
+      !mongoose.Types.ObjectId.isValid(templateId)
+    ) {
       return res.status(400).json({ success: false, message: 'Invalid school or template ID' });
     }
 
     const template = await AdmissionTemplate.findOne({ _id: templateId, schoolId });
-    if (!template) return res.status(404).json({ success: false, message: 'Admission template not found for this school' });
+    if (!template)
+      return res
+        .status(404)
+        .json({ success: false, message: 'Admission template not found for this school' });
 
     const UPDATABLE = ['templateStatus', 'isDefault', 'isActive', 'name', 'description'];
-    UPDATABLE.forEach((field) => { if (req.body[field] !== undefined) template[field] = req.body[field]; });
+    UPDATABLE.forEach((field) => {
+      if (req.body[field] !== undefined) template[field] = req.body[field];
+    });
 
     if (req.body.isDefault === true) {
       await AdmissionTemplate.updateMany(
@@ -1398,14 +1513,23 @@ exports.updateSchoolAdmissionTemplate = async (req, res, next) => {
     }
 
     logger.info('[SuperAdmin] Admission template updated', {
-      schoolId, templateId, templateName: template.name,
-      updatedFields: Object.keys(req.body), updatedBy: req.superAdmin._id,
+      schoolId,
+      templateId,
+      templateName: template.name,
+      updatedFields: Object.keys(req.body),
+      updatedBy: req.superAdmin._id,
     });
 
     return res.status(200).json({
       success: true,
       message: `Admission template "${template.name}" updated successfully`,
-      data: { _id: template._id, name: template.name, templateStatus: template.templateStatus, isDefault: template.isDefault, isActive: template.isActive },
+      data: {
+        _id: template._id,
+        name: template.name,
+        templateStatus: template.templateStatus,
+        isDefault: template.isDefault,
+        isActive: template.isActive,
+      },
     });
   } catch (error) {
     logger.error('[SuperAdmin] updateSchoolAdmissionTemplate error', { error: error.message });
@@ -1415,27 +1539,30 @@ exports.updateSchoolAdmissionTemplate = async (req, res, next) => {
 
 exports.getTemplateFields = async (req, res, next) => {
   try {
-    const ReportTemplate      = require('../../reportcards').ReportTemplate;
-    const ExamSubjectConfig   = require('../../../../src-old/models/ExamSubjectConfig');
-    const Exam                = require('../../../../src-old/models/Exam');
+    const ReportTemplate = require('../../reportcards').ReportTemplate;
+    const { ExamSubjectConfig } = require('../../examination');
     const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
 
     const { templateId } = req.params;
     const { examId, classId } = req.query;
-    const schoolId = req.schoolId;   // set by varifyToken middleware
+    const schoolId = req.schoolId; // set by varifyToken middleware
 
     // Resolve the template
     let template = null;
     if (templateId && mongoose.Types.ObjectId.isValid(templateId)) {
       template = await ReportTemplate.findOne({ _id: templateId, schoolId, isActive: true })
-        .select('name templateSchema htmlContent').lean();
+        .select('name templateSchema htmlContent')
+        .lean();
     }
     if (!template) {
       template = await ReportTemplate.findOne({ schoolId, isActive: true, isDefault: true })
-        .select('name templateSchema htmlContent').lean();
+        .select('name templateSchema htmlContent')
+        .lean();
     }
     if (!template) {
-      return res.status(404).json({ success: false, message: 'No active template found for this school' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'No active template found for this school' });
     }
 
     // Ensure templateSchema is populated (re-extract if old template)
@@ -1445,15 +1572,23 @@ exports.getTemplateFields = async (req, res, next) => {
     }
 
     // Fetch max marks from ExamSubjectConfig (FULLY DYNAMIC — no hardcoded types)
-    let maxMarksMap = {};  // subjectSlug → { componentType → maxMarks }
-    if (examId && classId && mongoose.Types.ObjectId.isValid(examId) && mongoose.Types.ObjectId.isValid(classId)) {
+    let maxMarksMap = {}; // subjectSlug → { componentType → maxMarks }
+    if (
+      examId &&
+      classId &&
+      mongoose.Types.ObjectId.isValid(examId) &&
+      mongoose.Types.ObjectId.isValid(classId)
+    ) {
       const configs = await ExamSubjectConfig.find({ examId, classId, schoolId })
-        .populate('subjectId', 'name').lean();
-      configs.forEach(cfg => {
+        .populate('subjectId', 'name')
+        .lean();
+      configs.forEach((cfg) => {
         const subName = (cfg.subjectId?.name || '').toLowerCase().replace(/[\s\-]/g, '_');
         const compMap = {};
         if (Array.isArray(cfg.marksDistribution) && cfg.marksDistribution.length > 0) {
-          cfg.marksDistribution.forEach(d => { compMap[d.type] = d.maxMarks; });
+          cfg.marksDistribution.forEach((d) => {
+            compMap[d.type] = d.maxMarks;
+          });
         }
         // Fallback: if marksDistribution is empty, store maxMarks under 'total'
         if (Object.keys(compMap).length === 0 && cfg.maxMarks) {
@@ -1467,27 +1602,27 @@ exports.getTemplateFields = async (req, res, next) => {
     const subjectMap = {};
     const otherFields = [];
 
-    (schema.fields || []).forEach(field => {
+    (schema.fields || []).forEach((field) => {
       if (field.category === 'marks' && field.subject) {
         if (!subjectMap[field.subject]) {
           subjectMap[field.subject] = {
             slug: field.subject,
-            name: field.subject.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+            name: field.subject.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
             fields: [],
           };
         }
         const subMaxMap = maxMarksMap[field.subject] || {};
         subjectMap[field.subject].fields.push({
-          key:      field.name,
-          label:    field.component
+          key: field.name,
+          label: field.component
             ? field.component.charAt(0).toUpperCase() + field.component.slice(1) + ' Marks'
             : field.label,
           component: field.component,
-          maxMarks:  subMaxMap[field.component] || subMaxMap['theory'] || 0,
+          maxMarks: subMaxMap[field.component] || subMaxMap['theory'] || 0,
         });
       } else if (!['meta', 'derived'].includes(field.category) && !field.isLoop) {
         otherFields.push({
-          key:   field.name,
+          key: field.name,
           label: field.label,
           category: field.category,
         });

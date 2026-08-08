@@ -1,9 +1,9 @@
 // OASES Controller — ExamConfig
 // Full CRUD + status change + soft delete
 // All actions scoped to req.schoolId (multi-tenant).
-const ExamConfig   = require('../models/ExamConfig');
-const Exam = require('../../../../src-old/models/Exam');
-const oasesAsync   = require('../../../core/http/asyncHandler');
+const ExamConfig = require('../models/ExamConfig');
+const { Exam } = require('../../examination');
+const oasesAsync = require('../../../core/http/asyncHandler');
 const { ok } = require('../../../core/http/ApiResponse');
 const { apiError } = require('../lib/respond');
 const auditService = require('../services/auditService');
@@ -11,7 +11,11 @@ const { examConfigStatusSchema } = require('../validators/examConfigValidator');
 
 // Create
 exports.createExamConfig = oasesAsync(async (req, res) => {
-  return apiError(res, 'Exams are managed from the Exams module. OASES exam creation is disabled.', 400);
+  return apiError(
+    res,
+    'Exams are managed from the Exams module. OASES exam creation is disabled.',
+    400
+  );
 });
 
 const mapExamForOases = (exam) => ({
@@ -42,13 +46,13 @@ const buildExamFilter = ({ schoolId, session, classId, status }) => {
 };
 
 const getFallbackSessionId = async (schoolId) => {
-  const AcademicSession = require('../../../../src-old/models/AcademicSession');
+  const { AcademicSession } = require('../../academics');
   const active = await AcademicSession.findOne({ schoolId, isActive: true }).select('_id').lean();
   return active?._id || null;
 };
 
 const getFallbackClassIds = async (schoolId, sessionId) => {
-  const ClassModel = require('../../../../src-old/models/ClassModel');
+  const { ClassModel } = require('../../academics');
   const filter = { schoolId };
   if (sessionId) filter.session = sessionId;
   const classes = await ClassModel.find(filter).select('_id').lean();
@@ -89,12 +93,16 @@ exports.listExamConfigs = oasesAsync(async (req, res) => {
     Exam.countDocuments(examFilter),
   ]);
 
-  return ok(res, {
-    configs: configs.map(mapExamForOases),
-    total,
-    page: Number(page),
-    limit: Number(limit),
-  }, 'Exams retrieved');
+  return ok(
+    res,
+    {
+      configs: configs.map(mapExamForOases),
+      total,
+      page: Number(page),
+      limit: Number(limit),
+    },
+    'Exams retrieved'
+  );
 });
 
 // Single get
@@ -106,7 +114,7 @@ exports.getExamConfig = oasesAsync(async (req, res) => {
   if (exam) return ok(res, mapExamForOases(exam), 'Exam retrieved');
 
   const config = await ExamConfig.findOne({
-    _id:      req.params.id,
+    _id: req.params.id,
     schoolId: req.schoolId,
   });
   if (!config) return apiError(res, 'Exam config not found', 404);
@@ -115,7 +123,11 @@ exports.getExamConfig = oasesAsync(async (req, res) => {
 
 // Update (block if not in draft)
 exports.updateExamConfig = oasesAsync(async (req, res) => {
-  return apiError(res, 'Exams are managed from the Exams module. OASES exam update is disabled.', 400);
+  return apiError(
+    res,
+    'Exams are managed from the Exams module. OASES exam update is disabled.',
+    400
+  );
 });
 
 // Change status
@@ -124,7 +136,7 @@ exports.changeStatus = oasesAsync(async (req, res) => {
   if (!parsed.success) return apiError(res, 'Validation failed', 400, parsed.error.errors);
 
   const config = await ExamConfig.findOne({
-    _id:      req.params.id,
+    _id: req.params.id,
     schoolId: req.schoolId,
   });
   if (!config) return apiError(res, 'Exam config not found', 404);
@@ -133,11 +145,11 @@ exports.changeStatus = oasesAsync(async (req, res) => {
 
   // Valid transitions
   const allowed = {
-    draft:       ['active'],
-    active:      ['evaluation', 'closed'],
-    evaluation:  ['closed'],
-    closed:      [],
-    archived:    [],
+    draft: ['active'],
+    active: ['evaluation', 'closed'],
+    evaluation: ['closed'],
+    closed: [],
+    archived: [],
   };
 
   if (!allowed[config.status]?.includes(status)) {
@@ -145,18 +157,18 @@ exports.changeStatus = oasesAsync(async (req, res) => {
   }
 
   const prevStatus = config.status;
-  config.status    = status;
+  config.status = status;
   await config.save();
 
   auditService.log({
-    schoolId:   req.schoolId,
+    schoolId: req.schoolId,
     entityType: 'OasesExamConfig',
-    entityId:   config._id,
-    actorId:    req.userid,
-    actorRole:  req.user?.oasesRole || req.user?.role,
-    action:     'exam_config_status_changed',
-    details:    { from: prevStatus, to: status },
-    ipAddress:  req.ip,
+    entityId: config._id,
+    actorId: req.userid,
+    actorRole: req.user?.oasesRole || req.user?.role,
+    action: 'exam_config_status_changed',
+    details: { from: prevStatus, to: status },
+    ipAddress: req.ip,
   });
 
   return ok(res, config, `Status updated to '${status}'`);
@@ -164,5 +176,9 @@ exports.changeStatus = oasesAsync(async (req, res) => {
 
 // Soft delete (archive)
 exports.deleteExamConfig = oasesAsync(async (req, res) => {
-  return apiError(res, 'Exams are managed from the Exams module. OASES exam delete is disabled.', 400);
+  return apiError(
+    res,
+    'Exams are managed from the Exams module. OASES exam delete is disabled.',
+    400
+  );
 });

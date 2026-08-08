@@ -1,5 +1,3 @@
-
-
 // OASES Controller — Upload
 // POST /upload/:examConfigId  — multi-file, duplicate check, queue
 // GET  /upload/:examConfigId  — list with aggregate counts
@@ -23,8 +21,7 @@ const { uploadPdfToCloud } = require('../../../core/config/storage.js');
 const logger = require('../../../core/logging/logger.js');
 
 // Helpers
-const generateAnonymousCode = () =>
-  `ANON-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+const generateAnonymousCode = () => `ANON-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
 /**
  * Extract rollNo from filename.
@@ -33,9 +30,7 @@ const generateAnonymousCode = () =>
 const extractRollNo = (filename) => {
   const base = filename.replace(/\.[^.]+$/, ''); // strip extension
   const m =
-    base.match(/rollno[_-]?(\w+)/i) ||
-    base.match(/^(\d{4,12})/) ||
-    base.match(/[_-](\d{4,12})$/);
+    base.match(/rollno[_-]?(\w+)/i) || base.match(/^(\d{4,12})/) || base.match(/[_-](\d{4,12})$/);
   return m ? m[1] : null;
 };
 
@@ -44,7 +39,7 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
   const { examConfigId } = req.params;
 
   // Look up from the main Exam model (single source of truth)
-  const Exam = require('../../../../src-old/models/Exam');
+  const { Exam } = require('../../examination');
   const config = await Exam.findOne({
     _id: examConfigId,
     schoolId: req.schoolId,
@@ -66,7 +61,9 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
 
   const effectiveConfig = config || legacyConfig;
 
-  const settings = await SchoolSettings.findOne({ schoolId: req.schoolId }).select('isOasesEnabled').lean();
+  const settings = await SchoolSettings.findOne({ schoolId: req.schoolId })
+    .select('isOasesEnabled')
+    .lean();
   if (!settings?.isOasesEnabled) {
     return apiError(res, 'OASES upload is disabled by the school admin.', 403);
   }
@@ -105,7 +102,9 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
         schoolId: req.schoolId,
         rollNo,
         processingStatus: { $ne: PROCESSING_STATUS.FAILED }, // allow reupload of failed
-      }).select('_id anonymousCode').lean();
+      })
+        .select('_id anonymousCode')
+        .lean();
 
       if (exists) {
         skipped.push({ filename: origName, rollNo, reason: 'Duplicate roll number' });
@@ -122,9 +121,9 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
       schoolId: req.schoolId,
       examConfigId,
       anonymousCode,
-      rollNo,               // stored pre-anonymisation (scrubbed by pdfService)
+      rollNo, // stored pre-anonymisation (scrubbed by pdfService)
       originalFilePath: fileKey,
-      s3Keys: [fileKey],   // backwards compat
+      s3Keys: [fileKey], // backwards compat
       totalPages: 1,
       processingStatus: PROCESSING_STATUS.PENDING,
       status: SHEET_STATUS.UPLOADED,
@@ -139,7 +138,10 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
     });
 
     // Queue for PDF processing via Bull/Redis
-    const year = effectiveConfig.academicYear || effectiveConfig.session?.toString() || new Date().getFullYear().toString();
+    const year =
+      effectiveConfig.academicYear ||
+      effectiveConfig.session?.toString() ||
+      new Date().getFullYear().toString();
     const jobMeta = {
       sheetId: sheet._id.toString(),
       schoolId: req.schoolId.toString(),
@@ -198,8 +200,8 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
   if (results.length > 0) {
     setImmediate(async () => {
       try {
-        const TeacherSubjectAssignment = require('../../../../src-old/models/TeacherSubjectAssignment');
-        const ClassTeacherAssignment = require('../../../../src-old/models/ClassTeacherAssignment');
+        const { TeacherSubjectAssignment } = require('../../academics');
+        const { ClassTeacherAssignment } = require('../../academics');
         const { User } = require('../../identity');
         const EvaluatorAssignment = require('../models/EvaluatorAssignment');
         const OasesNotification = require('../models/Notification');
@@ -211,7 +213,9 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
           schoolId: req.schoolId,
           eval1AssignedTo: null,
           status: { $nin: [SHEET_STATUS.REJECTED] },
-        }).select('classId sectionId subjectId').lean();
+        })
+          .select('classId sectionId subjectId')
+          .lean();
 
         if (!sampleSheet) return;
 
@@ -244,7 +248,9 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
         }
 
         if (!teacherId) {
-          logger.debug(`[uploadController] Auto-assign skipped: no teacher found for examConfigId=${examConfigId}`);
+          logger.debug(
+            `[uploadController] Auto-assign skipped: no teacher found for examConfigId=${examConfigId}`
+          );
           return;
         }
 
@@ -254,7 +260,9 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
           examConfigId,
           eval1AssignedTo: null,
           status: { $nin: [SHEET_STATUS.REJECTED, SHEET_STATUS.UFM_FLAGGED] },
-        }).select('_id').lean();
+        })
+          .select('_id')
+          .lean();
 
         if (unassigned.length === 0) return;
 
@@ -267,7 +275,12 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
         );
 
         await EvaluatorAssignment.findOneAndUpdate(
-          { examConfigId, evaluatorId: teacherId, round: EVAL_ROUNDS.ROUND_1, schoolId: req.schoolId },
+          {
+            examConfigId,
+            evaluatorId: teacherId,
+            round: EVAL_ROUNDS.ROUND_1,
+            schoolId: req.schoolId,
+          },
           {
             $addToSet: { sheetIds: { $each: sheetIds } },
             $inc: { totalAssigned: sheetIds.length },
@@ -284,17 +297,28 @@ exports.uploadSheets = oasesAsync(async (req, res) => {
           title: 'New Answer Sheets Assigned',
           message: `${sheetIds.length} sheet(s) assigned for evaluation.`,
           entityType: 'AnswerSheet',
-        }).catch(() => { });
+        }).catch(() => {});
 
-        emitToAll('oases:assignment:new', { evaluatorId: teacherId, examConfigId, count: sheetIds.length, round: 1 });
-        logger.debug(`[uploadController] Auto-assigned ${sheetIds.length} sheets to teacher ${teacherId}`);
+        emitToAll('oases:assignment:new', {
+          evaluatorId: teacherId,
+          examConfigId,
+          count: sheetIds.length,
+          round: 1,
+        });
+        logger.debug(
+          `[uploadController] Auto-assigned ${sheetIds.length} sheets to teacher ${teacherId}`
+        );
       } catch (autoErr) {
         logger.error('[uploadController] Auto-assign failed (non-fatal):', autoErr.message);
       }
     });
   }
 
-  return created(res, { sheets: results, skipped, total: results.length, totalSkipped: skipped.length }, `${results.length} sheet(s) uploaded. ${skipped.length} skipped.`);
+  return created(
+    res,
+    { sheets: results, skipped, total: results.length, totalSkipped: skipped.length },
+    `${results.length} sheet(s) uploaded. ${skipped.length} skipped.`
+  );
 });
 
 // GET /upload/:examConfigId
@@ -317,7 +341,12 @@ exports.listSheets = oasesAsync(async (req, res) => {
       .lean(),
     AnswerSheet.countDocuments(filter),
     AnswerSheet.aggregate([
-      { $match: { schoolId: req.schoolId, examConfigId: new (require('mongoose').Types.ObjectId)(examConfigId) } },
+      {
+        $match: {
+          schoolId: req.schoolId,
+          examConfigId: new (require('mongoose').Types.ObjectId)(examConfigId),
+        },
+      },
       {
         $group: {
           _id: null,
@@ -333,15 +362,27 @@ exports.listSheets = oasesAsync(async (req, res) => {
     ]),
   ]);
 
-  const counts = aggregate[0] || { total: 0, pending: 0, processing: 0, done: 0, failed: 0, assigned: 0, uploaded: 0 };
+  const counts = aggregate[0] || {
+    total: 0,
+    pending: 0,
+    processing: 0,
+    done: 0,
+    failed: 0,
+    assigned: 0,
+    uploaded: 0,
+  };
 
-  return ok(res, {
-    sheets,
-    total,
-    page: Number(page),
-    limit: Number(limit),
-    counts,
-  }, 'Sheets fetched.');
+  return ok(
+    res,
+    {
+      sheets,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      counts,
+    },
+    'Sheets fetched.'
+  );
 });
 
 // GET /upload/all — cross-exam sheet list (admin)
@@ -368,12 +409,16 @@ exports.listAllSheets = oasesAsync(async (req, res) => {
     AnswerSheet.countDocuments(filter),
   ]);
 
-  return ok(res, {
-    sheets,
-    total,
-    page: Number(page),
-    limit: Number(limit),
-  }, 'All sheets fetched.');
+  return ok(
+    res,
+    {
+      sheets,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+    },
+    'All sheets fetched.'
+  );
 });
 
 // GET /upload/checked — admin "Checked Copies" view
@@ -383,9 +428,7 @@ exports.listCheckedSheets = oasesAsync(async (req, res) => {
   const { examId, classId, subjectId, limit = 50, page = 1 } = req.query;
 
   // "Checked" = sheets that have passed teacher evaluation
-  const CHECKED_STATUSES = [
-    'eval1_done', 'eval2_done', 'submitted', 'approved', 'locked',
-  ];
+  const CHECKED_STATUSES = ['eval1_done', 'eval2_done', 'submitted', 'approved', 'locked'];
 
   const filter = {
     schoolId: req.schoolId,
@@ -398,9 +441,10 @@ exports.listCheckedSheets = oasesAsync(async (req, res) => {
   const skip = (Number(page) - 1) * Number(limit);
 
   // Ensure these models are registered before populate runs
-  require('../../../../src-old/models/ClassModel');
-  require('../../../../src-old/models/SectionModel');
-  require('../../../../src-old/models/SubjectMaster');
+  const academics = require('../../academics');
+  void academics.ClassModel;
+  void academics.SectionModel;
+  void academics.SubjectMaster;
 
   const sheets = await AnswerSheet.find(filter)
     .select('-s3Keys -rollNo -rollNoEncrypted -pageImages')
@@ -417,42 +461,48 @@ exports.listCheckedSheets = oasesAsync(async (req, res) => {
 
   // Attach the latest EvaluationMark (grandTotal / marks) to each sheet
   const EvaluationMark = require('../models/EvaluationMark');
-  const Exam = require('../../../../src-old/models/Exam');
+  const { Exam } = require('../../examination');
 
-  const enriched = await Promise.all(sheets.map(async (sheet) => {
-    // Latest submitted mark for this sheet
-    const evalMark = await EvaluationMark.findOne(
-      { sheetId: sheet._id, isDraft: false },
-      null,
-      { sort: { submittedAt: -1 } }
-    ).select('grandTotal sectionTotals submittedAt evaluatorId remarks').lean();
+  const enriched = await Promise.all(
+    sheets.map(async (sheet) => {
+      // Latest submitted mark for this sheet
+      const evalMark = await EvaluationMark.findOne({ sheetId: sheet._id, isDraft: false }, null, {
+        sort: { submittedAt: -1 },
+      })
+        .select('grandTotal sectionTotals submittedAt evaluatorId remarks')
+        .lean();
 
-    // Exam name
-    let examName = sheet.examConfigId?.toString() || '—';
-    try {
-      const exam = await Exam.findById(sheet.examConfigId).select('name').lean();
-      if (exam) examName = exam.name;
-    } catch (_) { }
+      // Exam name
+      let examName = sheet.examConfigId?.toString() || '—';
+      try {
+        const exam = await Exam.findById(sheet.examConfigId).select('name').lean();
+        if (exam) examName = exam.name;
+      } catch (_) {}
 
-    return {
-      ...sheet,
-      examName,
-      marks: evalMark?.grandTotal ?? null,
-      sectionTotals: evalMark?.sectionTotals ?? {},
-      submittedAt: evalMark?.submittedAt ?? null,
-      remarks: evalMark?.remarks ?? '',
-      teacherName: sheet.eval1AssignedTo
-        ? `${sheet.eval1AssignedTo.firstName || ''} ${sheet.eval1AssignedTo.lastName || ''}`.trim()
-        : '—',
-    };
-  }));
+      return {
+        ...sheet,
+        examName,
+        marks: evalMark?.grandTotal ?? null,
+        sectionTotals: evalMark?.sectionTotals ?? {},
+        submittedAt: evalMark?.submittedAt ?? null,
+        remarks: evalMark?.remarks ?? '',
+        teacherName: sheet.eval1AssignedTo
+          ? `${sheet.eval1AssignedTo.firstName || ''} ${sheet.eval1AssignedTo.lastName || ''}`.trim()
+          : '—',
+      };
+    })
+  );
 
-  return ok(res, {
-    sheets: enriched,
-    total,
-    page: Number(page),
-    limit: Number(limit),
-  }, 'Checked sheets fetched.');
+  return ok(
+    res,
+    {
+      sheets: enriched,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+    },
+    'Checked sheets fetched.'
+  );
 });
 
 // GET /upload/:sheetId/reprocess
@@ -471,9 +521,13 @@ exports.reprocessSheet = oasesAsync(async (req, res) => {
   sheet.processingError = null;
   await sheet.save();
 
-  const config = (await ExamConfig.findById(sheet.examConfigId).select('academicYear subjectCode').lean())
-    || (await (require('../../../../src-old/models/Exam')).findById(sheet.examConfigId).select('academicYear subjectCode').lean())
-    || {};
+  const config =
+    (await ExamConfig.findById(sheet.examConfigId).select('academicYear subjectCode').lean()) ||
+    (await require('../../examination')
+      .Exam.findById(sheet.examConfigId)
+      .select('academicYear subjectCode')
+      .lean()) ||
+    {};
   await addPdfJob({
     sheetId: sheet._id.toString(),
     schoolId: req.schoolId.toString(),
@@ -505,7 +559,9 @@ exports.getPageUrl = oasesAsync(async (req, res) => {
   const sheet = await AnswerSheet.findOne({
     _id: sheetId,
     schoolId: req.schoolId,
-  }).select('pageImages anonymousCode eval1AssignedTo eval2AssignedTo headAssignedTo processingStatus');
+  }).select(
+    'pageImages anonymousCode eval1AssignedTo eval2AssignedTo headAssignedTo processingStatus'
+  );
 
   if (!sheet) return apiError(res, 'Sheet not found.', 404);
   if (sheet.processingStatus !== PROCESSING_STATUS.DONE) {
@@ -545,7 +601,11 @@ exports.rejectSheet = oasesAsync(async (req, res) => {
   );
   if (!sheet) return apiError(res, 'Sheet not found.', 404);
 
-  emitToAll('oases:sheet:status', { sheetId: sheet._id, examConfigId: sheet.examConfigId, status: SHEET_STATUS.REJECTED });
+  emitToAll('oases:sheet:status', {
+    sheetId: sheet._id,
+    examConfigId: sheet.examConfigId,
+    status: SHEET_STATUS.REJECTED,
+  });
   auditService.log({
     schoolId: req.schoolId,
     entityType: 'AnswerSheet',
@@ -569,7 +629,11 @@ exports.flagUfm = oasesAsync(async (req, res) => {
   );
   if (!sheet) return apiError(res, 'Sheet not found.', 404);
 
-  emitToAll('oases:sheet:status', { sheetId: sheet._id, examConfigId: sheet.examConfigId, status: SHEET_STATUS.UFM_FLAGGED });
+  emitToAll('oases:sheet:status', {
+    sheetId: sheet._id,
+    examConfigId: sheet.examConfigId,
+    status: SHEET_STATUS.UFM_FLAGGED,
+  });
   auditService.log({
     schoolId: req.schoolId,
     entityType: 'AnswerSheet',

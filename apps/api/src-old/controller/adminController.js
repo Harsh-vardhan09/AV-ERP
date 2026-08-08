@@ -1,14 +1,18 @@
-const AcademicSession = require('../models/AcademicSession');
-const ClassModel = require('../models/ClassModel');
-const SectionModel = require('../models/SectionModel');
-const SubjectMaster = require('../models/SubjectMaster');
-const ClassSubjectMap = require('../models/ClassSubjectMap');
-const TeacherSubjectAssignment = require('../models/TeacherSubjectAssignment');
-const ClassTeacherAssignment = require('../models/ClassTeacherAssignment');
-const Exam = require('../models/Exam');
-const ExamSubjectConfig = require('../models/ExamSubjectConfig');
-const Marks = require('../models/MarksModel');
-const MarksAuditLog = require('../models/MarksAuditLog');
+const {
+  AcademicSession,
+  ClassModel,
+  SectionModel,
+  SubjectMaster,
+  ClassSubjectMap,
+  TeacherSubjectAssignment,
+  ClassTeacherAssignment,
+} = require('../../src/modules/academics');
+const {
+  Exam,
+  ExamSubjectConfig,
+  MarksModel: Marks,
+  MarksAuditLog,
+} = require('../../src/modules/examination');
 const StudentProfile = require('../../src/modules/people/models/StudentProfile');
 const TeacherProfile = require('../../src/modules/people/models/TeacherProfile');
 const { User } = require('../../src/modules/identity');
@@ -1119,7 +1123,7 @@ exports.createExam = async (req, res) => {
           reminderDate.setDate(reminderDate.getDate() - 2); // 2 days before
 
           // Find all teachers assigned to subjects for these classes
-          const assignments = await require('../models/TeacherSubjectAssignment').find({
+          const assignments = await TeacherSubjectAssignment.find({
             schoolId:  req.schoolId,
             classId:   { $in: uniqueClassIds },
             session:   exam.session,
@@ -1130,7 +1134,7 @@ exports.createExam = async (req, res) => {
             if (!teacher?.email) return;
 
             // Find subject name for this assignment
-            const subjectDoc = await require('../models/SubjectMaster')
+            const subjectDoc = await SubjectMaster
               .findById(tsa.subjectId).select('name').lean();
             const subjectName = subjectDoc?.name || 'your subject';
 
@@ -1678,7 +1682,7 @@ exports.getKnowledgeCenterMaterials = async (req, res, next) => {
 // ADMIN: STUDENT DIRECTORY
 // ========================
 const Attendance = require('../../src/modules/attendance/models/attendance');
-const Assignment = require('../models/assignment');
+const { Assignment } = require('../../src/modules/academics');
 
 exports.getAdminStudents = async (req, res, next) => {
   try {
@@ -1863,7 +1867,6 @@ exports.getAdminTeacherDetail = async (req, res) => {
       assignmentsByClass[key].items.push(a);
     });
 
-    const Exam = require('../models/Exam');
     const examFilter = {
       createdBy: teacher.userId,
       schoolId: req.schoolId,

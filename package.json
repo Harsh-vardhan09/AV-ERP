@@ -8,18 +8,35 @@
     "dev:api": "cd apps/api && npm run dev",
     "dev:web": "cd apps/web && npm run dev",
     "build:web": "cd apps/web && npm install && npm run build",
-    "smoke": "node scripts/smoke.js"
+    "smoke": "node scripts/smoke.js",
+    "lint": "eslint apps/api scripts packages --ext .js",
+    "lint:fix": "eslint apps/api scripts packages --ext .js --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "boot:check": "node scripts/boot-check.js",
+    "test": "npm run test --workspace=apps/api",
+    "prepare": "husky"
   },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "devDependencies": {
+    "dotenv": "^17.4.2",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-import": "^2.32.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2",
     "prettier": "^3.9.6"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   }
 }

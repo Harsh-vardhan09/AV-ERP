@@ -14,17 +14,17 @@ const logger = require('../../../core/logging/logger.js');
 
 // Lazy-require real models (avoid circular deps at module load time)
 const getModels = () => ({
-  ClassModel:       require('../../../../src-old/models/ClassModel'),  // TEMP: moves to modules/academics
-  SectionModel:     require('../../../../src-old/models/SectionModel'),  // TEMP: moves to modules/academics
-  AcademicSession:  require('../../../../src-old/models/AcademicSession'),  // TEMP: moves to modules/academics
+  ClassModel: require('../../academics').ClassModel,
+  SectionModel: require('../../academics').SectionModel,
+  AcademicSession: require('../../academics').AcademicSession,
 });
 
 class ReferenceResolver {
   constructor(services = {}, config = {}) {
     // services kept for backward compat but we use models directly
-    this.services     = services;
-    this.config       = config;
-    this.cache        = {};
+    this.services = services;
+    this.config = config;
+    this.cache = {};
     this.cacheEnabled = config.cacheEnabled !== false;
   }
 
@@ -38,12 +38,15 @@ class ReferenceResolver {
     const result = { resolved: {}, missing: {}, cacheHits: 0, cacheMisses: 0 };
 
     for (const [refName, refConfig] of Object.entries(referenceConfigs)) {
-      const values = [...new Set(rows.map(r => r[refConfig.sourceField]).filter(Boolean))];
-      if (values.length === 0) { result.resolved[refName] = {}; continue; }
+      const values = [...new Set(rows.map((r) => r[refConfig.sourceField]).filter(Boolean))];
+      if (values.length === 0) {
+        result.resolved[refName] = {};
+        continue;
+      }
 
       const resolved = await this.batchResolveReferences(refName, values, refConfig, schoolId);
       result.resolved[refName] = resolved;
-      result.missing[refName]  = values.filter(v => !resolved[v]);
+      result.missing[refName] = values.filter((v) => !resolved[v]);
     }
 
     return result;
@@ -55,8 +58,8 @@ class ReferenceResolver {
    */
   async batchResolveReferences(refName, values, refConfig, schoolId) {
     const cacheKey = `${refName}:${schoolId}`;
-    const result   = {};
-    const toFetch  = [];
+    const result = {};
+    const toFetch = [];
 
     if (this.cacheEnabled && this.cache[cacheKey]) {
       for (const v of values) {
@@ -125,7 +128,7 @@ class ReferenceResolver {
     const { AcademicSession } = getModels();
     try {
       // Case-insensitive match — schools sometimes write "2025-26" vs "2025 - 26"
-      const normalized = names.map(n => n.trim());
+      const normalized = names.map((n) => n.trim());
       const docs = await AcademicSession.find({
         schoolId,
         name: { $in: normalized },
@@ -146,7 +149,7 @@ class ReferenceResolver {
     try {
       const query = {
         schoolId,
-        name: { $in: names.map(n => n.trim()) },
+        name: { $in: names.map((n) => n.trim()) },
       };
       // If a specific sessionId is provided in config (from engine context), scope it
       if (config.sessionId) query.session = config.sessionId;
@@ -167,17 +170,15 @@ class ReferenceResolver {
     try {
       const query = {
         schoolId,
-        name: { $in: names.map(n => n.trim()) },
+        name: { $in: names.map((n) => n.trim()) },
       };
-      if (config.classId)   query.classId = config.classId;
-      if (config.sessionId) query.session  = config.sessionId;
+      if (config.classId) query.classId = config.classId;
+      if (config.sessionId) query.session = config.sessionId;
 
-      const docs = await SectionModel.find(query)
-        .populate('classId', 'name')
-        .lean();
+      const docs = await SectionModel.find(query).populate('classId', 'name').lean();
 
       // Attach _className for composite-key lookups
-      return docs.map(d => ({ ...d, _className: d.classId?.name || null }));
+      return docs.map((d) => ({ ...d, _className: d.classId?.name || null }));
     } catch (err) {
       logger.error('[ReferenceResolver] resolveSections error:', err.message);
       return [];
@@ -225,7 +226,7 @@ class ReferenceResolver {
     if (this.cacheEnabled && this.cache[cacheKey]) return this.cache[cacheKey];
 
     const doc = await SectionModel.findOne({
-      name:    name.trim(),
+      name: name.trim(),
       classId,
       session: sessionId,
       schoolId,
@@ -261,7 +262,9 @@ class ReferenceResolver {
 
   clearCache(pattern) {
     if (pattern) {
-      Object.keys(this.cache).filter(k => k.includes(pattern)).forEach(k => delete this.cache[k]);
+      Object.keys(this.cache)
+        .filter((k) => k.includes(pattern))
+        .forEach((k) => delete this.cache[k]);
     } else {
       this.cache = {};
     }
@@ -270,7 +273,7 @@ class ReferenceResolver {
   getCacheStats() {
     return {
       totalEntries: Object.keys(this.cache).length,
-      memory:       JSON.stringify(this.cache).length,
+      memory: JSON.stringify(this.cache).length,
       cacheEnabled: this.cacheEnabled,
     };
   }

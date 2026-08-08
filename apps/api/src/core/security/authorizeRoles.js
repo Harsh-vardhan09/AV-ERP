@@ -28,23 +28,28 @@ exports.guardSelfAccess = async (req, res, next) => {
 
     // SECURITY: scoped to the current school to prevent cross-tenant lookup
 
+    // TODO: core -> module, and it reaches past people/index.js. Route through the
+    // TODO: barrel first, then move this role check into the people module
+    // eslint-disable-next-line import/no-restricted-paths
     const StudentProfile = require('../../../src/modules/people/models/StudentProfile');
     const profile = await StudentProfile.findOne({
       _id: paramId,
-      schoolId: req.schoolId
-    }).select('userId').lean();
+      schoolId: req.schoolId,
+    })
+      .select('userId')
+      .lean();
 
     if (!profile) {
       return res.status(404).json({
         success: false,
-        message: 'Student profile not found'
+        message: 'Student profile not found',
       });
     }
 
     if (String(profile.userId) !== String(req.user._id)) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. You can only access your own data.'
+        message: 'Access denied. You can only access your own data.',
       });
     }
 
@@ -52,7 +57,7 @@ exports.guardSelfAccess = async (req, res, next) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Authorization check failed'
+      message: 'Authorization check failed',
     });
   }
 };

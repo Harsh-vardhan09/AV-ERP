@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      # Not secrets: nothing here reaches a real service. The tests run against a
+      # mongodb-memory-server instance they start themselves.
+      JWT_SECRET: ci-jwt-secret
+      SUPER_ADMIN_JWT_SECRET: ci-super-admin-secret
+      PLATFORM_SECRET: ci-platform-secret
+      # Bull's factory returns a no-op stub when Redis is absent
+      REDIS_DISABLED: 'true'
+      # Chromium is only needed to render a PDF; the report card test skips
+      # itself when it is missing
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # Resolves every require and mounts every module route. app.js, not main.js:
+      # main.js opens a DB connection and then listens forever.
+      - name: Boot check
+        run: npm run boot:check
+
+      - name: Test
+        run: npm test
+
+      - name: Web build
+        run: npm run build --workspace=apps/web

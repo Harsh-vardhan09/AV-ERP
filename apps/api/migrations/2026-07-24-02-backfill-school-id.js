@@ -14,7 +14,9 @@ const args = process.argv.slice(2).reduce((acc, arg) => {
 const { schoolId, collection: collectionName, dry } = args;
 
 if (!schoolId || !collectionName) {
-  console.error('\n❌  Usage: node scripts/backfillSchoolId.js --schoolId=<id> --collection=<name> [--dry]\n');
+  console.error(
+    '\n❌  Usage: node scripts/backfillSchoolId.js --schoolId=<id> --collection=<name> [--dry]\n'
+  );
   process.exit(1);
 }
 
@@ -26,15 +28,17 @@ if (!mongoose.Types.ObjectId.isValid(schoolId)) {
 // Collection → Model mapping
 // Add models here as needed
 const MODEL_MAP = {
-  sessions:         () => require('../src/modules/fees/models/Session'),
-  billingperiods:   () => require('../src/modules/fees/models/BillingPeriod'),
-  assignments:      () => require('../src-old/models/assignment'),
+  sessions: () => require('../src/modules/fees/models/Session'),
+  billingperiods: () => require('../src/modules/fees/models/BillingPeriod'),
+  assignments: () => require('../src/modules/academics').Assignment,
   knowledgecenters: () => require('../src/modules/communication').Knowledgecenter,
 };
 
 const loaderFn = MODEL_MAP[collectionName.toLowerCase()];
 if (!loaderFn) {
-  console.error(`\n❌  Unknown collection "${collectionName}". Known: ${Object.keys(MODEL_MAP).join(', ')}\n`);
+  console.error(
+    `\n❌  Unknown collection "${collectionName}". Known: ${Object.keys(MODEL_MAP).join(', ')}\n`
+  );
   process.exit(1);
 }
 
@@ -44,9 +48,9 @@ if (!loaderFn) {
     await mongoose.connect(process.env.MONGO_URI);
     console.log(`✅  Connected to MongoDB`);
 
-    const Model   = loaderFn();
-    const filter  = { schoolId: { $exists: false } };
-    const update  = { $set: { schoolId: new mongoose.Types.ObjectId(schoolId) } };
+    const Model = loaderFn();
+    const filter = { schoolId: { $exists: false } };
+    const update = { $set: { schoolId: new mongoose.Types.ObjectId(schoolId) } };
 
     const beforeCount = await Model.countDocuments(filter);
     console.log(`\n📊  Found ${beforeCount} document(s) in "${Model.modelName}" missing schoolId`);
@@ -69,9 +73,10 @@ if (!loaderFn) {
     if (afterCount === 0) {
       console.log('🎉  All documents now have schoolId. Migration complete.\n');
     } else {
-      console.warn(`⚠️   ${afterCount} document(s) still missing schoolId (check for write errors)\n`);
+      console.warn(
+        `⚠️   ${afterCount} document(s) still missing schoolId (check for write errors)\n`
+      );
     }
-
   } catch (err) {
     console.error('\n❌  Migration failed:', err.message, '\n');
     process.exit(1);

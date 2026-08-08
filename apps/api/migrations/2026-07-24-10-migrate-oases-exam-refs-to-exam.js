@@ -4,24 +4,30 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const connect = require('../src/core/config/database.js');
-const Exam = require('../src-old/models/Exam');
+const Exam = require('../src/modules/examination').Exam;
 const ExamConfig = require('../src/modules/oases/models/ExamConfig');
 const AnswerSheet = require('../src/modules/oases/models/AnswerSheet');
 const EvaluatorAssignment = require('../src/modules/oases/models/EvaluatorAssignment');
 const EvaluationMark = require('../src/modules/oases/models/EvaluationMark');
 const QuestionScheme = require('../src/modules/oases/models/QuestionScheme');
 const ResultSheet = require('../src/modules/oases/models/ResultSheet');
-const AcademicSession = require('../src-old/models/AcademicSession');
-const ClassModel = require('../src-old/models/ClassModel');
+const AcademicSession = require('../src/modules/academics').AcademicSession;
+const ClassModel = require('../src/modules/academics').ClassModel;
 
-const normalize = (v) => String(v || '').trim().toLowerCase().replace(/\s+/g, ' ');
+const normalize = (v) =>
+  String(v || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
 
 const pickSessionIdFromYear = async (schoolId, academicYear) => {
   if (!academicYear) return null;
   const candidate = await AcademicSession.findOne({
     schoolId,
     name: { $regex: String(academicYear).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' },
-  }).select('_id').lean();
+  })
+    .select('_id')
+    .lean();
   return candidate?._id || null;
 };
 
@@ -37,11 +43,16 @@ const pickClassIdFromLevel = async (schoolId, classLevel, sessionId) => {
 
 const updateCollection = async (Model, map) => {
   let modified = 0;
-  const docs = await Model.find({ examConfigId: { $in: [...map.keys()] } }).select('_id examConfigId');
+  const docs = await Model.find({ examConfigId: { $in: [...map.keys()] } }).select(
+    '_id examConfigId'
+  );
   for (const d of docs) {
     const nextId = map.get(String(d.examConfigId));
     if (!nextId) continue;
-    const res = await Model.updateOne({ _id: d._id }, { $set: { examConfigId: nextId, examId: nextId } });
+    const res = await Model.updateOne(
+      { _id: d._id },
+      { $set: { examConfigId: nextId, examId: nextId } }
+    );
     modified += res.modifiedCount || 0;
   }
   return modified;
@@ -85,18 +96,24 @@ const run = async () => {
     updateCollection(ResultSheet, examMap),
   ]);
 
-  console.log(JSON.stringify({
-    legacyConfigs: legacyConfigs.length,
-    matched,
-    unmatched,
-    updated: {
-      answerSheets: a,
-      evaluatorAssignments: b,
-      evaluationMarks: c,
-      questionSchemes: d,
-      resultSheets: e,
-    },
-  }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        legacyConfigs: legacyConfigs.length,
+        matched,
+        unmatched,
+        updated: {
+          answerSheets: a,
+          evaluatorAssignments: b,
+          evaluationMarks: c,
+          questionSchemes: d,
+          resultSheets: e,
+        },
+      },
+      null,
+      2
+    )
+  );
 
   await mongoose.disconnect();
   process.exit(0);
@@ -107,4 +124,3 @@ run().catch(async (err) => {
   await mongoose.disconnect();
   process.exit(1);
 });
-

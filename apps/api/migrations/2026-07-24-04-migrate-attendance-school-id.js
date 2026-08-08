@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 const Attendance = require('../src/modules/attendance/models/attendance');
-const AcademicSession = require('../src-old/models/AcademicSession');
+const AcademicSession = require('../src/modules/academics').AcademicSession;
 require('dotenv').config();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/erp';
@@ -15,7 +15,7 @@ async function migrateAttendanceSchoolId() {
 
     console.log('Finding Attendance records without schoolId...');
     const attendancesWithoutSchoolId = await Attendance.find({ schoolId: { $exists: false } });
-    
+
     console.log(`Found ${attendancesWithoutSchoolId.length} records without schoolId`);
 
     if (attendancesWithoutSchoolId.length === 0) {
@@ -37,7 +37,9 @@ async function migrateAttendanceSchoolId() {
         }
 
         // Update the attendance record
-        await Attendance.findByIdAndUpdate(attendance._id, { $set: { schoolId: session.schoolId } });
+        await Attendance.findByIdAndUpdate(attendance._id, {
+          $set: { schoolId: session.schoolId },
+        });
         console.log(`Updated attendance ${attendance._id} with schoolId ${session.schoolId}`);
         updatedCount++;
       } catch (error) {
@@ -50,7 +52,7 @@ async function migrateAttendanceSchoolId() {
     console.log(`Total records found: ${attendancesWithoutSchoolId.length}`);
     console.log(`Successfully updated: ${updatedCount}`);
     console.log(`Errors/Skipped: ${errorCount}`);
-    
+
     if (errorCount > 0) {
       console.log('\n⚠️  Some records could not be migrated. Please check the logs above.');
     }

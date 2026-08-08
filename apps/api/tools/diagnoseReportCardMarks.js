@@ -13,13 +13,13 @@ if (!MONGO_URI) {
 }
 
 // Models (inline require — no need for full app boot)
-const Exam             = require('../src-old/models/Exam');
-const Marks            = require('../src-old/models/MarksModel');
-const ReportCard       = require('../src/modules/reportcards').ReportCard;
-const ReportCardMark   = require('../src/modules/reportcards').ReportCardMark;
-const StudentProfile   = require('../src/modules/people/models/StudentProfile');
-const AcademicSession  = require('../src-old/models/AcademicSession');
-const ExamSubjectConfig = require('../src-old/models/ExamSubjectConfig');
+const Exam = require('../src/modules/examination').Exam;
+const Marks = require('../src/modules/examination').MarksModel;
+const ReportCard = require('../src/modules/reportcards').ReportCard;
+const ReportCardMark = require('../src/modules/reportcards').ReportCardMark;
+const StudentProfile = require('../src/modules/people/models/StudentProfile');
+const AcademicSession = require('../src/modules/academics').AcademicSession;
+const ExamSubjectConfig = require('../src/modules/examination').ExamSubjectConfig;
 
 const sep = () => console.log('\n' + '─'.repeat(72));
 
@@ -28,7 +28,7 @@ async function run() {
   console.log('✅ Connected to MongoDB');
 
   const studentUserIdArg = process.argv[2] || process.env.STUDENT_USER_ID;
-  const sessionIdArg     = process.argv[3] || process.env.SESSION_ID;
+  const sessionIdArg = process.argv[3] || process.env.SESSION_ID;
 
   if (!studentUserIdArg) {
     console.error('❌ Usage: node diagnoseReportCardMarks.js <studentUserId> [sessionId]');
@@ -55,16 +55,14 @@ async function run() {
   console.log('   Session :', student.session?.name, '(', String(student.session?._id), ')');
   console.log('   SchoolId:', String(student.schoolId || '(not set)'));
 
-  const classId  = student.classId?._id;
+  const classId = student.classId?._id;
   const schoolId = student.schoolId;
-  const userId   = student.userId?._id;
+  const userId = student.userId?._id;
 
   // 2. Resolve session
   sep();
   console.log('🔍 STEP 2: Resolving session');
-  let sessionId = sessionIdArg
-    ? new mongoose.Types.ObjectId(sessionIdArg)
-    : (student.session?._id);
+  let sessionId = sessionIdArg ? new mongoose.Types.ObjectId(sessionIdArg) : student.session?._id;
 
   if (!sessionId) {
     const active = await AcademicSession.findOne({ isActive: true, schoolId }).select('_id name');
@@ -81,7 +79,12 @@ async function run() {
 
   // 3. Fetch ALL exams for this class + session
   sep();
-  console.log('🔍 STEP 3: Fetching ALL exams for classId:', String(classId), 'session:', String(sessionId));
+  console.log(
+    '🔍 STEP 3: Fetching ALL exams for classId:',
+    String(classId),
+    'session:',
+    String(sessionId)
+  );
   const classExams = await Exam.find({
     classIds: classId,
     session: sessionId,
@@ -94,7 +97,9 @@ async function run() {
   } else {
     console.log(`✅ ${classExams.length} exam(s) found:`);
     classExams.forEach((e, i) => {
-      console.log(`   [${i + 1}] ${e.name} | type: ${e.type} | _id: ${e._id} | startDate: ${e.startDate || 'N/A'}`);
+      console.log(
+        `   [${i + 1}] ${e.name} | type: ${e.type} | _id: ${e._id} | startDate: ${e.startDate || 'N/A'}`
+      );
     });
   }
 
@@ -102,20 +107,33 @@ async function run() {
   sep();
   console.log('🔍 STEP 4: Checking ExamSubjectConfig for each exam');
   for (const exam of classExams) {
-    const configs = await ExamSubjectConfig.find({ examId: exam._id, classId, schoolId })
-      .populate('subjectId', 'name');
+    const configs = await ExamSubjectConfig.find({ examId: exam._id, classId, schoolId }).populate(
+      'subjectId',
+      'name'
+    );
     if (configs.length === 0) {
-      console.warn(`   ⚠️  [${exam.name}] — NO subject configs found (maxMarks will default to 100)`);
+      console.warn(
+        `   ⚠️  [${exam.name}] — NO subject configs found (maxMarks will default to 100)`
+      );
     } else {
       console.log(`   ✅ [${exam.name}] — ${configs.length} subject(s) configured:`);
-      configs.forEach(c => console.log(`      • ${c.subjectId?.name || c.subjectId} — maxMarks: ${c.maxMarks}`));
+      configs.forEach((c) =>
+        console.log(`      • ${c.subjectId?.name || c.subjectId} — maxMarks: ${c.maxMarks}`)
+      );
     }
   }
 
   // 5. Fetch marks for this student
   sep();
   console.log('🔍 STEP 5: Fetching ALL marks for this student from Marks collection');
-  console.log('   studentUserId:', String(userId), '| classId:', String(classId), '| session:', String(sessionId));
+  console.log(
+    '   studentUserId:',
+    String(userId),
+    '| classId:',
+    String(classId),
+    '| session:',
+    String(sessionId)
+  );
 
   const marks = await Marks.find({
     studentId: userId,
@@ -130,7 +148,7 @@ async function run() {
     console.warn('    → Upload marks first via the Marks Entry module.');
   } else {
     console.log(`✅ ${marks.length} mark record(s) found:`);
-    marks.forEach(m => {
+    marks.forEach((m) => {
       console.log(
         `   Exam: "${m.examId?.name || m.examId}" (${m.examId?._id})`,
         `| Subject: "${m.subjectId?.name || m.subjectId}"`,
@@ -143,12 +161,12 @@ async function run() {
   // 6. Cross-check: exams with marks vs. class exams
   sep();
   console.log('🔍 STEP 6: Cross-checking exam IDs in marks vs. class exam IDs');
-  const classExamIdSet = new Set(classExams.map(e => String(e._id)));
-  const marksExamIds   = [...new Set(marks.map(m => String(m.examId?._id || m.examId)))];
+  const classExamIdSet = new Set(classExams.map((e) => String(e._id)));
+  const marksExamIds = [...new Set(marks.map((m) => String(m.examId?._id || m.examId)))];
 
-  marksExamIds.forEach(eid => {
+  marksExamIds.forEach((eid) => {
     if (classExamIdSet.has(eid)) {
-      const exam = classExams.find(e => String(e._id) === eid);
+      const exam = classExams.find((e) => String(e._id) === eid);
       console.log(`   ✅ Exam "${exam?.name}" (${eid}) — marks exist AND exam is in class list`);
     } else {
       console.warn(`   ❌ Exam ID ${eid} — HAS marks but NOT in class exam list!`);
@@ -156,7 +174,7 @@ async function run() {
     }
   });
 
-  classExams.forEach(e => {
+  classExams.forEach((e) => {
     if (!marksExamIds.includes(String(e._id))) {
       console.warn(`   ⚠️  Exam "${e.name}" (${e._id}) — in class list but NO marks uploaded yet`);
     }
@@ -172,7 +190,9 @@ async function run() {
   });
 
   if (!reportCard) {
-    console.warn('⚠️  No ReportCard exists yet for this student+session. It will be created on first GET.');
+    console.warn(
+      '⚠️  No ReportCard exists yet for this student+session. It will be created on first GET.'
+    );
   } else {
     console.log('✅ ReportCard found:', String(reportCard._id));
     console.log('   isFinalized  :', reportCard.isFinalized);
@@ -180,10 +200,11 @@ async function run() {
 
     const rcMarks = await ReportCardMark.find({ reportCardId: reportCard._id, schoolId });
     console.log(`\n   ${rcMarks.length} ReportCardMark row(s):`);
-    rcMarks.forEach(row => {
-      const dm = row.dynamicMarks instanceof Map
-        ? Object.fromEntries(row.dynamicMarks)
-        : (row.dynamicMarks || {});
+    rcMarks.forEach((row) => {
+      const dm =
+        row.dynamicMarks instanceof Map
+          ? Object.fromEntries(row.dynamicMarks)
+          : row.dynamicMarks || {};
       const dmKeys = Object.keys(dm);
       console.log(
         `   • Subject: "${row.subject}"`,
@@ -192,8 +213,8 @@ async function run() {
         `| dynamicTotal: ${row.dynamicTotal}`
       );
       if (dmKeys.length > 0) {
-        dmKeys.forEach(eid => {
-          const exam = classExams.find(e => String(e._id) === eid);
+        dmKeys.forEach((eid) => {
+          const exam = classExams.find((e) => String(e._id) === eid);
           const label = exam ? `"${exam.name}"` : `UNKNOWN EXAM (${eid})`;
           console.log(`     → ${label}: ${dm[eid]}`);
         });
@@ -201,19 +222,24 @@ async function run() {
     });
 
     // Check if isEdited is blocking any rows
-    const blockedRows = rcMarks.filter(row => {
-      const dm = row.dynamicMarks instanceof Map
-        ? Object.fromEntries(row.dynamicMarks)
-        : (row.dynamicMarks || {});
+    const blockedRows = rcMarks.filter((row) => {
+      const dm =
+        row.dynamicMarks instanceof Map
+          ? Object.fromEntries(row.dynamicMarks)
+          : row.dynamicMarks || {};
       return row.isEdited && Object.keys(dm).length > 0;
     });
 
     if (blockedRows.length > 0) {
       sep();
       console.warn(`\n⚠️  PREVIOUSLY BLOCKED ROWS (isEdited=true + has dynamicMarks):`);
-      console.warn(`   These rows were SKIPPED by old sync logic but will now be MERGED correctly.`);
-      blockedRows.forEach(row => {
-        console.warn(`   • "${row.subject}" — was blocked, will be fixed on next report card fetch`);
+      console.warn(
+        `   These rows were SKIPPED by old sync logic but will now be MERGED correctly.`
+      );
+      blockedRows.forEach((row) => {
+        console.warn(
+          `   • "${row.subject}" — was blocked, will be fixed on next report card fetch`
+        );
       });
       console.log('\n✅ The merge fix in reportCardController.js will resolve this automatically.');
       console.log('   Just open the report card in the browser to trigger re-sync.');
@@ -238,7 +264,7 @@ async function run() {
   await mongoose.disconnect();
 }
 
-run().catch(err => {
+run().catch((err) => {
   console.error('Script error:', err);
   mongoose.disconnect().finally(() => process.exit(1));
 });

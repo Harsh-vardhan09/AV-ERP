@@ -11,17 +11,17 @@ async function main() {
   // Load models
   require('../src/modules/tenancy').School;
   require('../src/modules/identity');
-  require('../src-old/models/AcademicSession');
-  require('../src-old/models/ClassModel');
-  require('../src-old/models/SectionModel');
-  require('../src-old/models/SubjectMaster');
-  require('../src-old/models/ClassSubjectMap');
-  require('../src-old/models/ClassTeacherAssignment');
-  require('../src-old/models/TeacherSubjectAssignment');
-  require('../src-old/models/Exam');
-  require('../src-old/models/ExamSubjectConfig');
-  require('../src-old/models/MarksModel');
-  require('../src-old/models/MarksAuditLog');
+  require('../src/modules/academics').AcademicSession;
+  require('../src/modules/academics').ClassModel;
+  require('../src/modules/academics').SectionModel;
+  require('../src/modules/academics').SubjectMaster;
+  require('../src/modules/academics').ClassSubjectMap;
+  require('../src/modules/academics').ClassTeacherAssignment;
+  require('../src/modules/academics').TeacherSubjectAssignment;
+  require('../src/modules/examination').Exam;
+  require('../src/modules/examination').ExamSubjectConfig;
+  require('../src/modules/examination').MarksModel;
+  require('../src/modules/examination').MarksAuditLog;
   require('../src/modules/people/models/StudentProfile');
   require('../src/modules/people/models/TeacherProfile');
   require('../src/modules/tenancy').SchoolSettings;
@@ -77,7 +77,7 @@ async function main() {
 
   for (const col of collections) {
     const result = await mongoose.connection.collection(col).updateMany(
-      { schoolId: { $exists: false } },        // only docs without schoolId
+      { schoolId: { $exists: false } }, // only docs without schoolId
       { $set: { schoolId } }
     );
     if (result.modifiedCount > 0) {
@@ -102,7 +102,7 @@ async function main() {
   await mongoose.disconnect();
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Migration failed:', err);
   process.exit(1);
 });

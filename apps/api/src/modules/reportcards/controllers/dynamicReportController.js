@@ -1,6 +1,6 @@
 /**
  * Dynamic Report Controller
- * 
+ *
  * Handles report generation, preview, and download using dynamic templates.
  */
 
@@ -10,20 +10,19 @@ const uuidv4 = async () => {
   return v4();
 };
 
+const ReportTemplate = require('../models/ReportTemplate');
+const GeneratedReport = require('../models/GeneratedReport');
+const StudentProfile = require('../../people').StudentProfile;
+const { AcademicSession } = require('../../academics');
+const { Exam } = require('../../examination');
+const ReportCard = require('../models/ReportCard');
 
-const ReportTemplate      = require('../models/ReportTemplate');
-const GeneratedReport     = require('../models/GeneratedReport');
-const StudentProfile      = require('../../people').StudentProfile;
-const AcademicSession     = require('../../../../src-old/models/AcademicSession');  // TEMP: moves to modules/academics
-const Exam                = require('../../../../src-old/models/Exam');  // TEMP: moves to modules/examination
-const ReportCard          = require('../models/ReportCard');
-
-const DataAggregatorService   = require('../services/dataAggregatorService');
-const TemplateParserService   = require('../services/templateParserService');
-const PDFService              = require('../../../core/pdf/htmlToPdf.js');
+const DataAggregatorService = require('../services/dataAggregatorService');
+const TemplateParserService = require('../services/templateParserService');
+const PDFService = require('../../../core/pdf/htmlToPdf.js');
 const { resolveTemplateForStudent } = require('../services/templateResolver');
-const { getExamReadiness }    = require('../../../../src-old/services/marksReadinessService');  // TEMP: moves to modules/examination
-const logger                  = require('../../../core/logging/logger.js');
+const { getExamReadiness } = require('../../examination').marksReadinessService;
+const logger = require('../../../core/logging/logger.js');
 const { serviceError } = require('../lib/respond');
 
 const OUTPUT_DIR = path.join(__dirname, '../../../../output/reports');
@@ -44,17 +43,17 @@ const toSafeNumber = (v) => {
  * All Number-typed sub-fields are sanitized via toSafeNumber().
  */
 const sanitizeSnapshot = (data) => ({
-  subjects: (data.subjects || []).map(s => ({
-    name:    s.name    || '',
-    theory:  toSafeNumber(s.obt_theory    ?? s.theory),
+  subjects: (data.subjects || []).map((s) => ({
+    name: s.name || '',
+    theory: toSafeNumber(s.obt_theory ?? s.theory),
     project: toSafeNumber(s.obt_practical ?? s.project),
-    total:   toSafeNumber(s.total),
-    grade:   s.grade   || '',
+    total: toSafeNumber(s.total),
+    grade: s.grade || '',
   })),
-  grandTotal:      toSafeNumber(data.grandTotal),
+  grandTotal: toSafeNumber(data.grandTotal),
   totalPercentage: toSafeNumber(data.totalPercentage),
-  totalGrade:      data.totalGrade || '',
-  rank:            toSafeNumber(data.rank),
+  totalGrade: data.totalGrade || '',
+  rank: toSafeNumber(data.rank),
 });
 
 /**
@@ -65,12 +64,7 @@ exports.generateReport = async (req, res) => {
   const startTime = Date.now();
 
   try {
-    const {
-      studentId,
-      templateId,
-      academicYear,
-      examType = 'annual',
-    } = req.body;
+    const { studentId, templateId, academicYear, examType = 'annual' } = req.body;
 
     if (!studentId || !academicYear) {
       return res.status(400).json({
@@ -83,10 +77,7 @@ exports.generateReport = async (req, res) => {
     const userId = req.user._id;
 
     const session = await AcademicSession.findOne({
-      $or: [
-        { year: academicYear },
-        { name: academicYear },
-      ],
+      $or: [{ year: academicYear }, { name: academicYear }],
       schoolId,
     });
 
@@ -108,7 +99,8 @@ exports.generateReport = async (req, res) => {
     if (!template) {
       return res.status(404).json({
         success: false,
-        message: 'No template found for this student\'s class. Please create a template for the class group.',
+        message:
+          "No template found for this student's class. Please create a template for the class group.",
       });
     }
 
@@ -208,11 +200,11 @@ exports.generateReport = async (req, res) => {
       },
     };
 
-    const savedReport = await GeneratedReport.findOneAndUpdate(
-      upsertFilter,
-      upsertDoc,
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    const savedReport = await GeneratedReport.findOneAndUpdate(upsertFilter, upsertDoc, {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    });
 
     // Use the persisted reportId (may differ from generated one if record already existed)
     const persistedReportId = savedReport.reportId || reportId;
@@ -240,7 +232,6 @@ exports.generateReport = async (req, res) => {
         fileSize: pdfResult.size,
       },
     });
-
   } catch (error) {
     return serviceError(res, '[DynamicReport] Generate error:', error);
   }
@@ -252,12 +243,7 @@ exports.generateReport = async (req, res) => {
  */
 exports.generateBulkReports = async (req, res) => {
   try {
-    const {
-      studentIds,
-      templateId,
-      academicYear,
-      examType = 'annual',
-    } = req.body;
+    const { studentIds, templateId, academicYear, examType = 'annual' } = req.body;
 
     if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
       return res.status(400).json({
@@ -278,10 +264,7 @@ exports.generateBulkReports = async (req, res) => {
     const userId = req.user._id;
 
     const session = await AcademicSession.findOne({
-      $or: [
-        { year: academicYear },
-        { name: academicYear },
-      ],
+      $or: [{ year: academicYear }, { name: academicYear }],
       schoolId,
     });
 
@@ -305,12 +288,14 @@ exports.generateBulkReports = async (req, res) => {
           studentId,
           schoolId,
           examType,
-        
-
         });
 
         if (!template) {
-          errors.push({ studentId, status: 'error', error: 'No template matched for this student\'s class' });
+          errors.push({
+            studentId,
+            status: 'error',
+            error: "No template matched for this student's class",
+          });
           continue;
         }
         // Aggregate ALL exams — rank computed inside aggregator
@@ -413,7 +398,6 @@ exports.generateBulkReports = async (req, res) => {
         errors,
       },
     });
-
   } catch (error) {
     return serviceError(res, '[DynamicReport] Bulk generate error:', error);
   }
@@ -442,10 +426,7 @@ exports.previewReport = async (req, res) => {
     }
 
     const session = await AcademicSession.findOne({
-      $or: [
-        { year: academicYear },
-        { name: academicYear },
-      ],
+      $or: [{ year: academicYear }, { name: academicYear }],
       schoolId,
     });
 
@@ -469,7 +450,7 @@ exports.previewReport = async (req, res) => {
     if (!template) {
       return res.status(404).json({
         success: false,
-        message: 'No template found for this student\'s class.',
+        message: "No template found for this student's class.",
       });
     }
 
@@ -482,15 +463,12 @@ exports.previewReport = async (req, res) => {
     });
 
     // Render: single shared pipeline (Preview ≡ PDF)
-    const previewHtml = TemplateParserService.preview(
-      template.htmlContent,
-      data,
-      { css: template.cssContent || '' }
-    );
+    const previewHtml = TemplateParserService.preview(template.htmlContent, data, {
+      css: template.cssContent || '',
+    });
 
     res.setHeader('Content-Type', 'text/html');
     return res.send(previewHtml);
-
   } catch (error) {
     return serviceError(res, '[DynamicReport] Preview error:', error);
   }
@@ -538,7 +516,6 @@ exports.downloadReport = async (req, res) => {
         }
       }
     });
-
   } catch (error) {
     return serviceError(res, '[DynamicReport] Download error:', error);
   }
@@ -550,13 +527,7 @@ exports.downloadReport = async (req, res) => {
  */
 exports.getReports = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 20,
-      studentId,
-      academicYear,
-      examType,
-    } = req.query;
+    const { page = 1, limit = 20, studentId, academicYear, examType } = req.query;
 
     const schoolId = req.schoolId;
 
@@ -595,7 +566,6 @@ exports.getReports = async (req, res) => {
         pages: Math.ceil(total / Number(limit)),
       },
     });
-
   } catch (error) {
     return serviceError(res, '[DynamicReport] Get reports error:', error);
   }
@@ -633,7 +603,6 @@ exports.deleteReport = async (req, res) => {
       success: true,
       message: 'Report deleted successfully',
     });
-
   } catch (error) {
     return serviceError(res, '[DynamicReport] Delete error:', error);
   }
@@ -714,7 +683,6 @@ exports.getStats = async (req, res) => {
         byAcademicYear,
       },
     });
-
   } catch (error) {
     return serviceError(res, '[DynamicReport] Stats error:', error);
   }
@@ -738,14 +706,19 @@ exports.validateTemplate = async (req, res) => {
     const schoolId = req.schoolId;
 
     if (!studentId || !academicYear) {
-      return res.status(400).json({ success: false, message: 'studentId and academicYear are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'studentId and academicYear are required' });
     }
 
     const session = await AcademicSession.findOne({
       $or: [{ year: academicYear }, { name: academicYear }],
       schoolId,
     });
-    if (!session) return res.status(404).json({ success: false, message: `Session not found: ${academicYear}` });
+    if (!session)
+      return res
+        .status(404)
+        .json({ success: false, message: `Session not found: ${academicYear}` });
 
     // Resolve template
     let template;
@@ -754,11 +727,15 @@ exports.validateTemplate = async (req, res) => {
     } else {
       template = await ReportTemplate.findOne({ schoolId, isActive: true, isDefault: true });
     }
-    if (!template) return res.status(404).json({ success: false, message: 'No active template found' });
+    if (!template)
+      return res.status(404).json({ success: false, message: 'No active template found' });
 
     // Aggregate data
     const data = await DataAggregatorService.getStudentSnapshot({
-      studentId, schoolId, sessionId: session._id, examType,
+      studentId,
+      schoolId,
+      sessionId: session._id,
+      examType,
     });
 
     // Dry render — use render() not preview() so we get JSON back (not HTML)
@@ -767,43 +744,44 @@ exports.validateTemplate = async (req, res) => {
 
     // Extract all template fields for comparison
     const extracted = TemplateFieldExtractor.extractFields(template.htmlContent);
-    const allTemplateFields = extracted.fields.map(f => f.name);
+    const allTemplateFields = extracted.fields.map((f) => f.name);
 
     const missingSet = new Set(renderResult.missingFields);
-    const availableFields = allTemplateFields.filter(f => !missingSet.has(f));
+    const availableFields = allTemplateFields.filter((f) => !missingSet.has(f));
 
     const totalFields = allTemplateFields.length;
     const resolvedCount = availableFields.length;
     const coveragePct = totalFields > 0 ? Math.round((resolvedCount / totalFields) * 100) : 100;
 
     // Subject-level field audit
-    const subjectAudit = (data.subjects || []).map(s => ({
-      name:       s.name,
-      idSlug:     s.idSlug || '',
+    const subjectAudit = (data.subjects || []).map((s) => ({
+      name: s.name,
+      idSlug: s.idSlug || '',
       components: s._components || [],
-      total:      s.total,
-      grandMax:   s.grandMax,
+      total: s.total,
+      grandMax: s.grandMax,
     }));
 
-    logger.debug(`[Validate] Template "${template.name}" | Fields: ${totalFields} | Resolved: ${resolvedCount} | Missing: ${renderResult.missingFields.length}`);
+    logger.debug(
+      `[Validate] Template "${template.name}" | Fields: ${totalFields} | Resolved: ${resolvedCount} | Missing: ${renderResult.missingFields.length}`
+    );
 
     return res.status(200).json({
       success: true,
       data: {
-        templateName:    template.name,
-        missingFields:   renderResult.missingFields,
+        templateName: template.name,
+        missingFields: renderResult.missingFields,
         availableFields,
         coveragePct,
         debug: {
           ...renderResult.debug,
-          subjectCount:    (data.subjects || []).length,
-          templateFields:  totalFields,
+          subjectCount: (data.subjects || []).length,
+          templateFields: totalFields,
           resolvedCount,
         },
         subjectAudit,
       },
     });
-
   } catch (error) {
     logger.error('[DynamicReport] Validate error:', error);
     return res.status(500).json({ success: false, message: error.message });
@@ -819,10 +797,11 @@ exports.validateTemplate = async (req, res) => {
 // req.schoolId.
 
 /** Filesystem-safe filename segment. */
-const _slug = (s) => String(s || '')
-  .trim()
-  .replace(/\s+/g, '_')
-  .replace(/[^a-zA-Z0-9_-]/g, '');
+const _slug = (s) =>
+  String(s || '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '');
 
 /**
  * Resolve, gate and render the logged-in student's own report card.
@@ -837,14 +816,18 @@ async function _buildOwnReportCard(req) {
 
   // 1. Student identity — from the auth token ONLY
   const student = await StudentProfile.findOne({ userId: req.user._id, schoolId })
-    .populate('userId',    'firstName lastName email')
-    .populate('classId',   'name numericOrder')
+    .populate('userId', 'firstName lastName email')
+    .populate('classId', 'name numericOrder')
     .populate('sectionId', 'name')
-    .populate('session',   'name isActive')
+    .populate('session', 'name isActive')
     .lean();
 
   if (!student) {
-    return { status: 404, published: false, reason: 'No student profile is linked to your account.' };
+    return {
+      status: 404,
+      published: false,
+      reason: 'No student profile is linked to your account.',
+    };
   }
 
   // 2. Session — client may choose, but only within their own school
@@ -855,8 +838,11 @@ async function _buildOwnReportCard(req) {
       return { status: 404, published: false, reason: 'Academic session not found.' };
     }
   } else {
-    session = await AcademicSession.findOne({ _id: student.session?._id || student.session, schoolId }).lean()
-      || await AcademicSession.findOne({ isActive: true, schoolId }).lean();
+    session =
+      (await AcademicSession.findOne({
+        _id: student.session?._id || student.session,
+        schoolId,
+      }).lean()) || (await AcademicSession.findOne({ isActive: true, schoolId }).lean());
   }
   if (!session) {
     return { status: 400, published: false, reason: 'No active academic session.' };
@@ -883,7 +869,8 @@ async function _buildOwnReportCard(req) {
       reason: req.query.examId
         ? 'That exam is not available for your class.'
         : 'No exams have been scheduled for your class yet.',
-      student, session,
+      student,
+      session,
     };
   }
 
@@ -891,8 +878,12 @@ async function _buildOwnReportCard(req) {
   // A finalized report card is an explicit admin sign-off, which outranks the
   // computed readiness check.
   const reportCard = await ReportCard.findOne({
-    studentId: student._id, session: session._id, schoolId,
-  }).select('isFinalized').lean();
+    studentId: student._id,
+    session: session._id,
+    schoolId,
+  })
+    .select('isFinalized')
+    .lean();
 
   if (!reportCard?.isFinalized) {
     const readiness = await Promise.all(
@@ -910,30 +901,31 @@ async function _buildOwnReportCard(req) {
 
     // Exams with no configured subjects can't be assessed — ignore them rather
     // than letting an unconfigured exam block the student forever.
-    const pending = readiness.filter(r => r.totalSubjects > 0 && !r.ready);
+    const pending = readiness.filter((r) => r.totalSubjects > 0 && !r.ready);
 
     if (pending.length) {
-      const totalSubjects  = readiness.reduce((n, r) => n + r.totalSubjects, 0);
+      const totalSubjects = readiness.reduce((n, r) => n + r.totalSubjects, 0);
       const submittedCount = readiness.reduce((n, r) => n + r.submittedCount, 0);
       return {
         status: 200,
         published: false,
         reason: 'Your report card has not been published yet. Marks entry is still in progress.',
-        student, session,
+        student,
+        session,
         progress: {
           totalSubjects,
           submittedCount,
           percentComplete: totalSubjects ? Math.round((submittedCount / totalSubjects) * 100) : 0,
           // Exam names only — never the specific subjects or teachers still
           // outstanding, which is staff-facing information.
-          pendingExams: pending.map(r => r.examName),
+          pendingExams: pending.map((r) => r.examName),
         },
       };
     }
   }
 
   // 5. Resolve the template (honours the school's selected template)
-  const examType = exams.length === 1 ? (exams[0].type || 'annual') : 'annual';
+  const examType = exams.length === 1 ? exams[0].type || 'annual' : 'annual';
   const template = await resolveTemplateForStudent({
     studentId: student._id,
     schoolId,
@@ -942,7 +934,10 @@ async function _buildOwnReportCard(req) {
 
   if (!template) {
     return {
-      status: 404, published: false, student, session,
+      status: 404,
+      published: false,
+      student,
+      session,
       reason: 'Your school has not set up a report card template yet.',
     };
   }
@@ -966,7 +961,7 @@ async function _buildOwnReportCard(req) {
   }
 
   const studentName = [student.firstName, student.lastName].filter(Boolean).join(' ');
-  const examLabel   = req.query.examId ? exams[0].name : (session.name || 'Report_Card');
+  const examLabel = req.query.examId ? exams[0].name : session.name || 'Report_Card';
 
   return {
     status: 200,
@@ -994,12 +989,14 @@ exports.getMyReportCard = async (req, res) => {
   try {
     const result = await _buildOwnReportCard(req);
 
-    const studentSummary = result.student ? {
-      name:      [result.student.firstName, result.student.lastName].filter(Boolean).join(' '),
-      rollNo:    result.student.rollNo,
-      className: result.student.classId?.name   || '',
-      section:   result.student.sectionId?.name || '',
-    } : null;
+    const studentSummary = result.student
+      ? {
+          name: [result.student.firstName, result.student.lastName].filter(Boolean).join(' '),
+          rollNo: result.student.rollNo,
+          className: result.student.classId?.name || '',
+          section: result.student.sectionId?.name || '',
+        }
+      : null;
 
     if (!result.published) {
       return res.status(result.status).json({
@@ -1007,10 +1004,10 @@ exports.getMyReportCard = async (req, res) => {
         message: result.reason,
         data: {
           published: false,
-          reason:    result.reason,
-          progress:  result.progress || null,
-          student:   studentSummary,
-          session:   result.session ? { _id: result.session._id, name: result.session.name } : null,
+          reason: result.reason,
+          progress: result.progress || null,
+          student: studentSummary,
+          session: result.session ? { _id: result.session._id, name: result.session.name } : null,
         },
       });
     }
@@ -1019,14 +1016,14 @@ exports.getMyReportCard = async (req, res) => {
       success: true,
       data: {
         published: true,
-        html:      result.html,
-        css:       result.css,
-        template:  { _id: result.template._id, name: result.template.name },
-        student:   studentSummary,
-        session:   { _id: result.session._id, name: result.session.name },
-        exams:     result.exams.map(e => ({ _id: e._id, name: e.name, type: e.type })),
+        html: result.html,
+        css: result.css,
+        template: { _id: result.template._id, name: result.template.name },
+        student: studentSummary,
+        session: { _id: result.session._id, name: result.session.name },
+        exams: result.exams.map((e) => ({ _id: e._id, name: e.name, type: e.type })),
         examLabel: result.examLabel,
-        fileName:  result.fileName,
+        fileName: result.fileName,
       },
     });
   } catch (error) {
@@ -1057,15 +1054,15 @@ exports.downloadMyReportCard = async (req, res) => {
 
     const cfg = result.template.config || {};
     const pdf = await PDFService.generatePDF({
-      html: result.html,          // identical markup to the on-screen version
-      css:  result.css,
+      html: result.html, // identical markup to the on-screen version
+      css: result.css,
       options: {
         format: cfg.pageSize || 'A4',
         margin: {
-          top:    `${cfg.marginTop    ?? 10}mm`,
-          right:  `${cfg.marginRight  ?? 10}mm`,
+          top: `${cfg.marginTop ?? 10}mm`,
+          right: `${cfg.marginRight ?? 10}mm`,
           bottom: `${cfg.marginBottom ?? 10}mm`,
-          left:   `${cfg.marginLeft   ?? 10}mm`,
+          left: `${cfg.marginLeft ?? 10}mm`,
         },
       },
     });

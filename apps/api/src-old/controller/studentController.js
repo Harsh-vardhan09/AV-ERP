@@ -1,22 +1,26 @@
 const StudentProfile = require('../../src/modules/people/models/StudentProfile');
 const Attendance = require('../../src/modules/attendance/models/attendance');
-const Assignment = require('../models/assignment');
-const Assignmentupload = require('../models/uploadassignment');
+const {
+  Assignment,
+  Assignmentupload,
+  ClassSubjectMap,
+  AcademicSession,
+  ClassTeacherAssignment,
+} = require('../../src/modules/academics');
+const {
+  MarksModel: Marks,
+  ExamSubjectConfig,
+  Exam,
+} = require('../../src/modules/examination');
 const Leave = require('../../src/modules/communication').Leave;
 const ComplainBox = require('../../src/modules/communication').ComplainBox;
 const Knowledgecenter = require('../../src/modules/communication').Knowledgecenter;
 const Notice = require('../../src/modules/communication').Notice;
-const Marks = require('../models/MarksModel');
-const ExamSubjectConfig = require('../models/ExamSubjectConfig');
-const Exam = require('../models/Exam');
-const ClassSubjectMap = require('../models/ClassSubjectMap');
-const AcademicSession = require('../models/AcademicSession');
 const { uploadoncloud } = require('../../src/core/config/storage.js');
 const logger = require('../../src/core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
 const { createInAppNotification } = require('../../src/modules/notifications').notificationService;
-const ClassTeacherAssignment = require('../models/ClassTeacherAssignment');
 const { User } = require('../../src/modules/identity');
 
 const studentProfileService = require('../../src/modules/people/services/studentProfileService');

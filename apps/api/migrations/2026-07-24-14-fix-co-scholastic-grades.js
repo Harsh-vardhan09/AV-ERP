@@ -1,7 +1,7 @@
 // Clears grade 'E' where both term marks are null — that E came from an old model default, not a teacher
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const mongoose = require('mongoose');
-const CoScholasticMark = require('../src-old/models/CoScholasticMark');
+const CoScholasticMark = require('../src/modules/examination').CoScholasticMark;
 
 async function run() {
   await mongoose.connect(process.env.MONGO_URL || process.env.MONGO_URI);
@@ -17,4 +17,7 @@ async function run() {
   console.log('Done.');
 }
 
-run().catch(err => { console.error(err); process.exit(1); });
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

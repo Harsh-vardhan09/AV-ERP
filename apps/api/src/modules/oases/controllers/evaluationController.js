@@ -1,23 +1,23 @@
 // OASES Controller — Evaluation
 // Full evaluation data APIs for the split-screen evaluator panel.
 // CRITICAL: rollNo, studentId, studentName NEVER returned.
-const fs                = require('fs');
-const AnswerSheet       = require('../models/AnswerSheet');
-const EvaluationMark    = require('../models/EvaluationMark');
-const QuestionScheme    = require('../models/QuestionScheme');
-const ExamConfig        = require('../models/ExamConfig');
-const Exam              = require('../../../../src-old/models/Exam');
-const AuditLog          = require('../models/AuditLog');
-const oasesAsync        = require('../../../core/http/asyncHandler');
+const fs = require('fs');
+const AnswerSheet = require('../models/AnswerSheet');
+const EvaluationMark = require('../models/EvaluationMark');
+const QuestionScheme = require('../models/QuestionScheme');
+const ExamConfig = require('../models/ExamConfig');
+const { Exam } = require('../../examination');
+const AuditLog = require('../models/AuditLog');
+const oasesAsync = require('../../../core/http/asyncHandler');
 const { ok } = require('../../../core/http/ApiResponse');
 const { apiError } = require('../lib/respond');
 const { SHEET_STATUS, EVAL_ROUNDS } = require('../lib/constants');
 const { getSignedPageUrl, processAnswerSheet } = require('../services/pdfService');
-const auditService      = require('../services/auditService');
-const { emitToAll }     = require('../../../../src-old/socket');
+const auditService = require('../services/auditService');
+const { emitToAll } = require('../../../../src-old/socket');
 const { validateMarks, calculateTotals } = require('../services/marksValidation.service');
 const { checkConflict } = require('../services/conflict.service');
-const { lockSheet }     = require('../services/result.service');
+const { lockSheet } = require('../services/result.service');
 const { safeRedisOperation } = require('../lib/redis');
 const { validateMCQMark } = require('../services/mcq.service');
 const logger = require('../../../core/logging/logger.js');
@@ -28,12 +28,11 @@ const canEvaluatorControlExamLifecycle = (user = {}) => {
   return role === 'teacher' || ['EVALUATOR', 'HEAD_EXAMINER'].includes(oasesRole);
 };
 
-
 // Helper: determine eval round from sheet state
 const getRoundForUser = (sheet, userId) => {
   const uid = userId.toString();
-  if (sheet.headAssignedTo?.toString() === uid)  return EVAL_ROUNDS.HEAD;
-  if (sheet.eval2AssignedTo?.toString() === uid)  return EVAL_ROUNDS.ROUND_2;
+  if (sheet.headAssignedTo?.toString() === uid) return EVAL_ROUNDS.HEAD;
+  if (sheet.eval2AssignedTo?.toString() === uid) return EVAL_ROUNDS.ROUND_2;
   return EVAL_ROUNDS.ROUND_1;
 };
 
@@ -43,15 +42,17 @@ const recalcTotals = (marks, questions) => {
   let grandTotal = 0;
 
   const qMap = {};
-  (questions || []).forEach((q) => { qMap[q.questionNo] = q; });
+  (questions || []).forEach((q) => {
+    qMap[q.questionNo] = q;
+  });
 
   (marks || []).forEach((m) => {
     if (m.isNA) return;
     const q = qMap[m.questionNo];
     const section = q?.section || 'A';
     if (!sectionTotals[section]) sectionTotals[section] = 0;
-    sectionTotals[section] += (m.marksGiven || 0);
-    grandTotal += (m.marksGiven || 0);
+    sectionTotals[section] += m.marksGiven || 0;
+    grandTotal += m.marksGiven || 0;
   });
 
   return { sectionTotals, grandTotal };
@@ -61,7 +62,7 @@ const recalcTotals = (marks, questions) => {
 exports.getEvalQueue = oasesAsync(async (req, res) => {
   const { page = 1, limit = 30 } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
-  const uid  = req.userid;
+  const uid = req.userid;
 
   // Find sheets assigned to this user
   // IMPORTANT: After auto-assign, status may still be 'uploaded' (not yet 'assigned').
@@ -71,16 +72,14 @@ exports.getEvalQueue = oasesAsync(async (req, res) => {
   const filter = {
     schoolId: req.schoolId,
     status: { $nin: TERMINAL_STATUSES },
-    $or: [
-      { eval1AssignedTo: uid },
-      { eval2AssignedTo: uid },
-      { headAssignedTo:  uid },
-    ],
+    $or: [{ eval1AssignedTo: uid }, { eval2AssignedTo: uid }, { headAssignedTo: uid }],
   };
 
   const [sheets, total] = await Promise.all([
     AnswerSheet.find(filter)
-      .select('anonymousCode status examConfigId set totalPages processingStatus createdAt eval1AssignedTo eval2AssignedTo headAssignedTo')
+      .select(
+        'anonymousCode status examConfigId set totalPages processingStatus createdAt eval1AssignedTo eval2AssignedTo headAssignedTo'
+      )
       .populate('examConfigId', 'examName subjectCode subjectName totalMarks dailyEvalLimit name')
       .sort({ createdAt: 1 })
       .skip(skip)
@@ -94,16 +93,22 @@ exports.getEvalQueue = oasesAsync(async (req, res) => {
     sheets.map(async (sheet) => {
       const round = getRoundForUser(sheet, uid);
       const draft = await EvaluationMark.findOne({
-        sheetId: sheet._id, evaluatorId: uid, round,
-      }).select('marks savedAt grandTotal').lean();
+        sheetId: sheet._id,
+        evaluatorId: uid,
+        round,
+      })
+        .select('marks savedAt grandTotal')
+        .lean();
 
       // Get scheme question count for progress calc
       const scheme = await QuestionScheme.findOne({
         examConfigId: sheet.examConfigId?._id || sheet.examConfigId,
-      }).select('questions').lean();
+      })
+        .select('questions')
+        .lean();
 
       const totalQuestions = scheme?.questions?.length || 0;
-      const answeredCount  = draft?.marks?.filter((m) => m.marksGiven > 0 || m.isNA).length || 0;
+      const answeredCount = draft?.marks?.filter((m) => m.marksGiven > 0 || m.isNA).length || 0;
 
       // Sheets already past eval1 are 100% done from the teacher's perspective
       const DONE_STATUSES = ['eval1_done', 'eval2_done', 'locked', 'submitted', 'approved'];
@@ -118,17 +123,19 @@ exports.getEvalQueue = oasesAsync(async (req, res) => {
 
       // Resolve exam name — populate targets OasesExamConfig; new uploads use Exam._id
       // so populate may return null. Fall back to a direct Exam model lookup.
-      let examName    = sheet.examConfigId?.examName    || sheet.examConfigId?.name || '';
+      let examName = sheet.examConfigId?.examName || sheet.examConfigId?.name || '';
       let subjectName = sheet.examConfigId?.subjectName || '';
-      let dailyLimit  = sheet.examConfigId?.dailyEvalLimit || 20;
+      let dailyLimit = sheet.examConfigId?.dailyEvalLimit || 20;
 
       if (!examName && sheet.examConfigId) {
         try {
-          const examDoc = await Exam.findById(
-            sheet.examConfigId?._id || sheet.examConfigId
-          ).select('name').lean();
+          const examDoc = await Exam.findById(sheet.examConfigId?._id || sheet.examConfigId)
+            .select('name')
+            .lean();
           if (examDoc) examName = examDoc.name;
-        } catch (_) { /* non-fatal — name stays empty */ }
+        } catch (_) {
+          /* non-fatal — name stays empty */
+        }
       }
 
       return {
@@ -138,30 +145,39 @@ exports.getEvalQueue = oasesAsync(async (req, res) => {
         dailyLimit,
         progressPercent,
         draftSavedAt: draft?.savedAt || null,
-        draftTotal:   draft?.grandTotal || 0,
+        draftTotal: draft?.grandTotal || 0,
       };
     })
   );
 
   // Today's completed count
-  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
   const dailyCount = await EvaluationMark.countDocuments({
-    evaluatorId: uid, schoolId: req.schoolId,
-    isDraft: false, submittedAt: { $gte: todayStart },
+    evaluatorId: uid,
+    schoolId: req.schoolId,
+    isDraft: false,
+    submittedAt: { $gte: todayStart },
   });
 
-  return ok(res, {
-    sheets: enriched, total,
-    page: Number(page), limit: Number(limit),
-    dailyCount,
-  }, 'Eval queue fetched.');
+  return ok(
+    res,
+    {
+      sheets: enriched,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      dailyCount,
+    },
+    'Eval queue fetched.'
+  );
 });
 
 // GET /evaluation/sheet/:sheetId — Combined payload for evaluation
 // Returns: { sheet, scheme, draft, pageUrls }
 // CRITICAL: No student identity ever returned
 exports.getSheetForEval = oasesAsync(async (req, res) => {
-  const uid      = req.userid;
+  const uid = req.userid;
   const userRole = req.user?.oasesRole;
   const isAdminRole = ['SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(userRole);
 
@@ -171,15 +187,12 @@ exports.getSheetForEval = oasesAsync(async (req, res) => {
     : {
         _id: req.params.sheetId,
         schoolId: req.schoolId,
-        $or: [
-          { eval1AssignedTo: uid },
-          { eval2AssignedTo: uid },
-          { headAssignedTo:  uid },
-        ],
+        $or: [{ eval1AssignedTo: uid }, { eval2AssignedTo: uid }, { headAssignedTo: uid }],
       };
 
   const sheet = await AnswerSheet.findOne(sheetQuery)
-    .select('-rollNo -rollNoEncrypted -uploadedBy -studentId').lean();
+    .select('-rollNo -rollNoEncrypted -uploadedBy -studentId')
+    .lean();
 
   if (!sheet) return apiError(res, 'Sheet not found or not assigned to you.', 404);
 
@@ -195,14 +208,15 @@ exports.getSheetForEval = oasesAsync(async (req, res) => {
     logger.debug(`[evalController] Auto-healing unprocessed sheet ${sheet._id}...`);
     try {
       await processAnswerSheet(sheet._id.toString(), {
-        schoolId:    req.schoolId.toString(),
-        filePath:    sheet.originalFilePath,
+        schoolId: req.schoolId.toString(),
+        filePath: sheet.originalFilePath,
         subjectCode: 'AUTO-HEAL',
-        year:        new Date().getFullYear().toString(),
+        year: new Date().getFullYear().toString(),
       });
       // Re-read the sheet with updated pageImages + totalPages
       const updated = await AnswerSheet.findById(sheet._id)
-        .select('-rollNo -rollNoEncrypted -uploadedBy -studentId').lean();
+        .select('-rollNo -rollNoEncrypted -uploadedBy -studentId')
+        .lean();
       if (updated) Object.assign(sheet, updated);
       logger.debug(`[evalController] Auto-heal complete: ${sheet.totalPages} pages.`);
     } catch (healErr) {
@@ -215,7 +229,7 @@ exports.getSheetForEval = oasesAsync(async (req, res) => {
   // Fetch scheme — Redis cache (TTL 3600s)
   let scheme = null;
   const schemeCacheKey = `oases:scheme:${sheet.examConfigId}`;
-  
+
   const cached = await safeRedisOperation(async (redis) => {
     const data = await redis.get(schemeCacheKey);
     return data ? JSON.parse(data) : null;
@@ -225,8 +239,10 @@ exports.getSheetForEval = oasesAsync(async (req, res) => {
   if (!scheme) {
     scheme = await QuestionScheme.findOne({
       examConfigId: sheet.examConfigId,
-      schoolId:     req.schoolId,
-    }).select('-createdBy -updatedBy -correctOption').lean();
+      schoolId: req.schoolId,
+    })
+      .select('-createdBy -updatedBy -correctOption')
+      .lean();
     if (scheme) {
       await safeRedisOperation(async (redis) => {
         await redis.set(schemeCacheKey, JSON.stringify(scheme), 'EX', 3600);
@@ -244,13 +260,17 @@ exports.getSheetForEval = oasesAsync(async (req, res) => {
     });
     // Sort questions within sections
     Object.values(sections).forEach((sec) =>
-      sec.questions.sort((a, b) => (a.displayOrder || a.questionNo) - (b.displayOrder || b.questionNo))
+      sec.questions.sort(
+        (a, b) => (a.displayOrder || a.questionNo) - (b.displayOrder || b.questionNo)
+      )
     );
   }
 
   // Fetch existing draft for this evaluator
   const draft = await EvaluationMark.findOne({
-    sheetId: sheet._id, evaluatorId: uid, round,
+    sheetId: sheet._id,
+    evaluatorId: uid,
+    round,
   }).lean();
 
   // For round 2: do NOT return round 1 draft
@@ -292,7 +312,7 @@ exports.getSheetForEval = oasesAsync(async (req, res) => {
   // Fetch exam config — Redis cache (TTL 1800s)
   let examConfig = null;
   const configCacheKey = `oases:examconfig:${sheet.examConfigId}`;
-  
+
   const cachedConfig = await safeRedisOperation(async (redis) => {
     const data = await redis.get(configCacheKey);
     return data ? JSON.parse(data) : null;
@@ -302,30 +322,34 @@ exports.getSheetForEval = oasesAsync(async (req, res) => {
   if (!examConfig) {
     // Try legacy OasesExamConfig first (for pre-unification exams)
     examConfig = await ExamConfig.findById(sheet.examConfigId)
-      .select('examName subjectCode subjectName totalMarks passingMarks doubleEval conflictThreshold')
+      .select(
+        'examName subjectCode subjectName totalMarks passingMarks doubleEval conflictThreshold'
+      )
       .lean();
 
     // Fallback: examConfigId points to the unified Exam model (post-unification uploads)
     if (!examConfig) {
-      const ExamSubjectConfig = require('../../../../src-old/models/ExamSubjectConfig');
+      const { ExamSubjectConfig } = require('../../examination');
 
       const examDoc = await Exam.findById(sheet.examConfigId).select('name').lean();
 
       if (examDoc) {
         // Look up per-subject marks from ExamSubjectConfig using the sheet's routing metadata
-        let totalMarks   = 0;
+        let totalMarks = 0;
         let passingMarks = 0;
 
         if (sheet.subjectId && sheet.classId) {
           const subjectCfg = await ExamSubjectConfig.findOne({
-            examId:    sheet.examConfigId,
-            classId:   sheet.classId,
+            examId: sheet.examConfigId,
+            classId: sheet.classId,
             subjectId: sheet.subjectId,
-            schoolId:  req.schoolId,
-          }).select('maxMarks passingMarks').lean();
+            schoolId: req.schoolId,
+          })
+            .select('maxMarks passingMarks')
+            .lean();
 
           if (subjectCfg) {
-            totalMarks   = subjectCfg.maxMarks   || 0;
+            totalMarks = subjectCfg.maxMarks || 0;
             passingMarks = subjectCfg.passingMarks || 0;
           }
         }
@@ -336,12 +360,12 @@ exports.getSheetForEval = oasesAsync(async (req, res) => {
         }
 
         examConfig = {
-          examName:          examDoc.name || '',
-          subjectCode:       '',
-          subjectName:       '',
+          examName: examDoc.name || '',
+          subjectCode: '',
+          subjectName: '',
           totalMarks,
-          passingMarks:      passingMarks || Math.round(totalMarks * 0.33),
-          doubleEval:        false,
+          passingMarks: passingMarks || Math.round(totalMarks * 0.33),
+          doubleEval: false,
           conflictThreshold: 5,
         };
       }
@@ -354,56 +378,61 @@ exports.getSheetForEval = oasesAsync(async (req, res) => {
     }
   }
 
-
-  return ok(res, {
-    sheet: {
-      _id:           sheet._id,
-      anonymousCode: sheet.anonymousCode,
-      totalPages:    actualTotalPages,   // ← always accurate: pageImages count
-      status:        sheet.status,
-      set:           sheet.set,
+  return ok(
+    res,
+    {
+      sheet: {
+        _id: sheet._id,
+        anonymousCode: sheet.anonymousCode,
+        totalPages: actualTotalPages, // ← always accurate: pageImages count
+        status: sheet.status,
+        set: sheet.set,
+      },
+      examConfig,
+      scheme: {
+        sections: Object.values(sections).sort((a, b) => a.name.localeCompare(b.name)),
+        totalQuestions: scheme?.questions?.length || 0,
+      },
+      draft: draft
+        ? {
+            marks: draft.marks || [],
+            sectionTotals: draft.sectionTotals || {},
+            grandTotal: draft.grandTotal || 0,
+            pagesReviewed: draft.pagesReviewed || [],
+            annotations: draft.annotations || [],
+            clickMarks: draft.clickMarks || [],
+            markingMode: draft.markingMode || 'panel',
+            savedAt: draft.savedAt || draft.updatedAt,
+          }
+        : null,
+      pageUrls,
+      markingSchemeUrl,
+      round,
     },
-    examConfig,
-    scheme: {
-      sections: Object.values(sections).sort((a, b) => a.name.localeCompare(b.name)),
-      totalQuestions: scheme?.questions?.length || 0,
-    },
-    draft: draft ? {
-      marks:          draft.marks || [],
-      sectionTotals:  draft.sectionTotals || {},
-      grandTotal:     draft.grandTotal || 0,
-      pagesReviewed:  draft.pagesReviewed || [],
-      annotations:    draft.annotations || [],
-      clickMarks:     draft.clickMarks || [],
-      markingMode:    draft.markingMode || 'panel',
-      savedAt:        draft.savedAt || draft.updatedAt,
-    } : null,
-    pageUrls,
-    markingSchemeUrl,
-    round,
-  }, 'Sheet data fetched for evaluation.');
+    'Sheet data fetched for evaluation.'
+  );
 });
 
 // GET /evaluation/page/:sheetId/:pageNo — Signed page URL
 exports.getPageUrl = oasesAsync(async (req, res) => {
   const { sheetId, pageNo } = req.params;
-  const pageIdx  = Number(pageNo) - 1;
+  const pageIdx = Number(pageNo) - 1;
   const userRole = req.user?.oasesRole;
   const isAdminRole = ['SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(userRole);
 
   const sheetQuery = isAdminRole
     ? { _id: sheetId, schoolId: req.schoolId }
     : {
-        _id: sheetId, schoolId: req.schoolId,
+        _id: sheetId,
+        schoolId: req.schoolId,
         $or: [
           { eval1AssignedTo: req.userid },
           { eval2AssignedTo: req.userid },
-          { headAssignedTo:  req.userid },
+          { headAssignedTo: req.userid },
         ],
       };
 
-  const sheet = await AnswerSheet.findOne(sheetQuery)
-    .select('pageImages s3Keys totalPages').lean();
+  const sheet = await AnswerSheet.findOne(sheetQuery).select('pageImages s3Keys totalPages').lean();
 
   if (!sheet) return apiError(res, 'Sheet not found or not assigned to you.', 404);
 
@@ -418,19 +447,23 @@ exports.getPageUrl = oasesAsync(async (req, res) => {
   }
 
   const baseUrl = await getSignedPageUrl(images[pageIdx] || images[0]);
-  const isPdf   = (images[pageIdx] || images[0] || '').toLowerCase().endsWith('.pdf');
+  const isPdf = (images[pageIdx] || images[0] || '').toLowerCase().endsWith('.pdf');
 
   // For Sprint 2: all pages point to the same PDF file, use #page=N to navigate
   // For Sprint 3 (pdf2pic): each page will be a separate image, no fragment needed
   const url = isPdf ? `${baseUrl}#page=${pageNo}&toolbar=1&navpanes=0` : baseUrl;
 
-  return ok(res, {
-    url,
-    pageNo:     Number(pageNo),
-    totalPages: actualTotalPages,   // ← accurate count
-    isPdf,
-    expiresAt:  new Date(Date.now() + 15 * 60 * 1000),
-  }, 'Page URL generated.');
+  return ok(
+    res,
+    {
+      url,
+      pageNo: Number(pageNo),
+      totalPages: actualTotalPages, // ← accurate count
+      isPdf,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    },
+    'Page URL generated.'
+  );
 });
 
 // POST /evaluation/mark — Save single question mark (optimistic)
@@ -441,11 +474,12 @@ exports.saveMark = oasesAsync(async (req, res) => {
 
   // Verify assignment
   const sheet = await AnswerSheet.findOne({
-    _id: sheetId, schoolId: req.schoolId,
+    _id: sheetId,
+    schoolId: req.schoolId,
     $or: [
       { eval1AssignedTo: req.userid },
       { eval2AssignedTo: req.userid },
-      { headAssignedTo:  req.userid },
+      { headAssignedTo: req.userid },
     ],
   }).select('_id examConfigId status eval1AssignedTo eval2AssignedTo headAssignedTo');
 
@@ -457,11 +491,17 @@ exports.saveMark = oasesAsync(async (req, res) => {
   // Validate marks against scheme
   const scheme = await QuestionScheme.findOne({
     examConfigId: sheet.examConfigId,
-  }).select('questions').lean();
+  })
+    .select('questions')
+    .lean();
 
   const question = scheme?.questions?.find((q) => q.questionNo === questionNo);
   if (question && !isNA && marksGiven > question.maxMarks) {
-    return apiError(res, `Marks (${marksGiven}) exceed max (${question.maxMarks}) for Q${questionNo}.`, 400);
+    return apiError(
+      res,
+      `Marks (${marksGiven}) exceed max (${question.maxMarks}) for Q${questionNo}.`,
+      400
+    );
   }
 
   // MCQ validation — server recomputes score from answer key
@@ -476,7 +516,11 @@ exports.saveMark = oasesAsync(async (req, res) => {
         marksGiven
       );
       if (!valid) {
-        return apiError(res, `MCQ mark tampered: expected ${expected} for Q${questionNo}, got ${marksGiven}.`, 400);
+        return apiError(
+          res,
+          `MCQ mark tampered: expected ${expected} for Q${questionNo}, got ${marksGiven}.`,
+          400
+        );
       }
     }
   }
@@ -484,19 +528,24 @@ exports.saveMark = oasesAsync(async (req, res) => {
   // Upsert mark in EvaluationMark.marks[]
   const markEntry = {
     questionNo,
-    marksGiven: isNA ? 0 : (marksGiven || 0),
+    marksGiven: isNA ? 0 : marksGiven || 0,
     isNA: !!isNA,
     stepMarks: stepMarks || [],
     savedAt: new Date(),
   };
 
   let evalMark = await EvaluationMark.findOne({
-    sheetId, evaluatorId: req.userid, round, schoolId: req.schoolId,
+    sheetId,
+    evaluatorId: req.userid,
+    round,
+    schoolId: req.schoolId,
   });
 
   if (!evalMark) {
     evalMark = await EvaluationMark.create({
-      sheetId, evaluatorId: req.userid, round,
+      sheetId,
+      evaluatorId: req.userid,
+      round,
       schoolId: req.schoolId,
       examConfigId: sheet.examConfigId,
       marks: [markEntry],
@@ -513,10 +562,10 @@ exports.saveMark = oasesAsync(async (req, res) => {
 
   // Recalculate totals
   const { sectionTotals, grandTotal } = recalcTotals(evalMark.marks, scheme?.questions);
-  evalMark.sectionTotals     = sectionTotals;
-  evalMark.grandTotal        = grandTotal;
+  evalMark.sectionTotals = sectionTotals;
+  evalMark.grandTotal = grandTotal;
   evalMark.totalMarksAwarded = grandTotal; // BC
-  evalMark.savedAt           = new Date();
+  evalMark.savedAt = new Date();
   await evalMark.save();
 
   // Update sheet status to in_progress if was assigned
@@ -526,23 +575,27 @@ exports.saveMark = oasesAsync(async (req, res) => {
 
   // Audit log (fire-and-forget)
   auditService.log({
-    schoolId:   req.schoolId,
+    schoolId: req.schoolId,
     entityType: 'EvaluationMark',
-    entityId:   evalMark._id,
-    actorId:    req.userid,
-    actorRole:  req.user?.oasesRole,
-    action:     'MARK_ENTERED',
-    details:    { questionNo, marksGiven: markEntry.marksGiven, isNA: markEntry.isNA },
-    ipAddress:  req.ip,
+    entityId: evalMark._id,
+    actorId: req.userid,
+    actorRole: req.user?.oasesRole,
+    action: 'MARK_ENTERED',
+    details: { questionNo, marksGiven: markEntry.marksGiven, isNA: markEntry.isNA },
+    ipAddress: req.ip,
   });
 
-  return ok(res, {
-    questionNo,
-    marksGiven: markEntry.marksGiven,
-    isNA: markEntry.isNA,
-    sectionTotals,
-    grandTotal,
-  }, 'Mark saved.');
+  return ok(
+    res,
+    {
+      questionNo,
+      marksGiven: markEntry.marksGiven,
+      isNA: markEntry.isNA,
+      sectionTotals,
+      grandTotal,
+    },
+    'Mark saved.'
+  );
 });
 
 // POST /evaluation/draft/:sheetId — Bulk save draft (auto-save)
@@ -551,11 +604,12 @@ exports.saveDraft = oasesAsync(async (req, res) => {
   const sheetId = req.params.sheetId;
 
   const sheet = await AnswerSheet.findOne({
-    _id: sheetId, schoolId: req.schoolId,
+    _id: sheetId,
+    schoolId: req.schoolId,
     $or: [
       { eval1AssignedTo: req.userid },
       { eval2AssignedTo: req.userid },
-      { headAssignedTo:  req.userid },
+      { headAssignedTo: req.userid },
     ],
   }).select('_id examConfigId status eval1AssignedTo eval2AssignedTo headAssignedTo');
 
@@ -566,7 +620,9 @@ exports.saveDraft = oasesAsync(async (req, res) => {
   // Get scheme for totals recalc
   const scheme = await QuestionScheme.findOne({
     examConfigId: sheet.examConfigId,
-  }).select('questions').lean();
+  })
+    .select('questions')
+    .lean();
 
   // Build marks array from object or array
   let marksArray = marks;
@@ -574,7 +630,7 @@ exports.saveDraft = oasesAsync(async (req, res) => {
     // Convert {questionNo: {marksGiven, isNA}} object to array
     marksArray = Object.entries(marks).map(([qno, val]) => ({
       questionNo: Number(qno),
-      marksGiven: val.isNA ? 0 : (val.marksGiven || 0),
+      marksGiven: val.isNA ? 0 : val.marksGiven || 0,
       isNA: !!val.isNA,
       stepMarks: val.stepMarks || [],
       savedAt: new Date(),
@@ -582,10 +638,13 @@ exports.saveDraft = oasesAsync(async (req, res) => {
   }
 
   // Schemaless TOTAL-only: frontend sends [{questionNo:'TOTAL', marksGiven:N}]
-  const isTotalOnly = marksArray && marksArray.length === 1 && String(marksArray[0] && marksArray[0].questionNo).toUpperCase() === 'TOTAL';
+  const isTotalOnly =
+    marksArray &&
+    marksArray.length === 1 &&
+    String(marksArray[0] && marksArray[0].questionNo).toUpperCase() === 'TOTAL';
   let sectionTotals, grandTotal;
   if (isTotalOnly) {
-    grandTotal    = (marksArray[0].marksGiven) || 0;
+    grandTotal = marksArray[0].marksGiven || 0;
     sectionTotals = {};
   } else {
     ({ sectionTotals, grandTotal } = recalcTotals(marksArray, scheme && scheme.questions));
@@ -598,17 +657,17 @@ exports.saveDraft = oasesAsync(async (req, res) => {
         // FIX: "TOTAL" is a frontend-only signal (questionNo is Number in schema).
         // Cast would throw CastError → error middleware returns "Invalid record ID".
         // For TOTAL-only mode, persist [] — grandTotal is stored in its own field.
-        marks:             isTotalOnly ? [] : (marksArray || []),
-        pagesReviewed:     pagesReviewed || [],
-        annotations:       annotations || [],
-        clickMarks:        Array.isArray(clickMarks) ? clickMarks : [],
-        markingMode:       markingMode || 'panel',
+        marks: isTotalOnly ? [] : marksArray || [],
+        pagesReviewed: pagesReviewed || [],
+        annotations: annotations || [],
+        clickMarks: Array.isArray(clickMarks) ? clickMarks : [],
+        markingMode: markingMode || 'panel',
         sectionTotals,
         grandTotal,
         totalMarksAwarded: grandTotal,
-        isDraft:           true,
-        savedAt:           new Date(),
-        examConfigId:      sheet.examConfigId,
+        isDraft: true,
+        savedAt: new Date(),
+        examConfigId: sheet.examConfigId,
       },
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -619,33 +678,33 @@ exports.saveDraft = oasesAsync(async (req, res) => {
 
 // GET /evaluation/draft/:sheetId — Get current draft
 exports.getDraft = oasesAsync(async (req, res) => {
-  const userRole    = req.user?.oasesRole;
+  const userRole = req.user?.oasesRole;
   const isAdminRole = ['SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(userRole);
 
   const sheetQuery = isAdminRole
     ? { _id: req.params.sheetId, schoolId: req.schoolId }
     : {
-        _id: req.params.sheetId, schoolId: req.schoolId,
+        _id: req.params.sheetId,
+        schoolId: req.schoolId,
         $or: [
           { eval1AssignedTo: req.userid },
           { eval2AssignedTo: req.userid },
-          { headAssignedTo:  req.userid },
+          { headAssignedTo: req.userid },
         ],
       };
 
-  const sheet = await AnswerSheet.findOne(sheetQuery)
-    .select('_id eval1AssignedTo eval2AssignedTo headAssignedTo status');
+  const sheet = await AnswerSheet.findOne(sheetQuery).select(
+    '_id eval1AssignedTo eval2AssignedTo headAssignedTo status'
+  );
 
   if (!sheet) return apiError(res, 'Sheet not found.', 404);
 
   // Admin: return the most recent submitted/approved draft for any evaluator
   let draft;
   if (isAdminRole) {
-    draft = await EvaluationMark.findOne(
-      { sheetId: req.params.sheetId },
-      null,
-      { sort: { updatedAt: -1 } }
-    ).lean();
+    draft = await EvaluationMark.findOne({ sheetId: req.params.sheetId }, null, {
+      sort: { updatedAt: -1 },
+    }).lean();
   } else {
     const round = getRoundForUser(sheet, req.userid);
     draft = await EvaluationMark.findOne({
@@ -661,7 +720,7 @@ exports.getDraft = oasesAsync(async (req, res) => {
 // POST /evaluation/page-reviewed/:sheetId/:pageNo
 exports.markPageReviewed = oasesAsync(async (req, res) => {
   const { sheetId, pageNo } = req.params;
-  const userRole    = req.user?.oasesRole;
+  const userRole = req.user?.oasesRole;
   const isAdminRole = ['SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(userRole);
 
   // Admin: read-only, no page-review tracking needed
@@ -670,11 +729,12 @@ exports.markPageReviewed = oasesAsync(async (req, res) => {
   }
 
   const sheet = await AnswerSheet.findOne({
-    _id: sheetId, schoolId: req.schoolId,
+    _id: sheetId,
+    schoolId: req.schoolId,
     $or: [
       { eval1AssignedTo: req.userid },
       { eval2AssignedTo: req.userid },
-      { headAssignedTo:  req.userid },
+      { headAssignedTo: req.userid },
     ],
   }).select('_id eval1AssignedTo eval2AssignedTo headAssignedTo');
 
@@ -696,11 +756,12 @@ exports.flagUfm = oasesAsync(async (req, res) => {
   const { note } = req.body;
   const sheet = await AnswerSheet.findOneAndUpdate(
     {
-      _id: req.params.sheetId, schoolId: req.schoolId,
+      _id: req.params.sheetId,
+      schoolId: req.schoolId,
       $or: [
         { eval1AssignedTo: req.userid },
         { eval2AssignedTo: req.userid },
-        { headAssignedTo:  req.userid },
+        { headAssignedTo: req.userid },
       ],
     },
     { status: SHEET_STATUS.UFM_FLAGGED, isUfmFlagged: true, ufmNote: note || '' },
@@ -708,16 +769,20 @@ exports.flagUfm = oasesAsync(async (req, res) => {
   );
   if (!sheet) return apiError(res, 'Sheet not found.', 404);
 
-  emitToAll('oases:sheet:status', { sheetId: sheet._id, examConfigId: sheet.examConfigId, status: SHEET_STATUS.UFM_FLAGGED });
+  emitToAll('oases:sheet:status', {
+    sheetId: sheet._id,
+    examConfigId: sheet.examConfigId,
+    status: SHEET_STATUS.UFM_FLAGGED,
+  });
   auditService.log({
-    schoolId:   req.schoolId,
+    schoolId: req.schoolId,
     entityType: 'AnswerSheet',
-    entityId:   sheet._id,
-    actorId:    req.userid,
-    actorRole:  req.user?.oasesRole,
-    action:     'EVAL_UFM_FLAGGED',
-    details:    { note },
-    ipAddress:  req.ip,
+    entityId: sheet._id,
+    actorId: req.userid,
+    actorRole: req.user?.oasesRole,
+    action: 'EVAL_UFM_FLAGGED',
+    details: { note },
+    ipAddress: req.ip,
   });
   return ok(res, null, 'Sheet flagged for UFM.');
 });
@@ -727,11 +792,12 @@ exports.rejectSheet = oasesAsync(async (req, res) => {
   const { reason } = req.body;
   const sheet = await AnswerSheet.findOneAndUpdate(
     {
-      _id: req.params.sheetId, schoolId: req.schoolId,
+      _id: req.params.sheetId,
+      schoolId: req.schoolId,
       $or: [
         { eval1AssignedTo: req.userid },
         { eval2AssignedTo: req.userid },
-        { headAssignedTo:  req.userid },
+        { headAssignedTo: req.userid },
       ],
     },
     { status: SHEET_STATUS.REJECTED, isRejected: true, rejectionNote: reason || '' },
@@ -739,16 +805,20 @@ exports.rejectSheet = oasesAsync(async (req, res) => {
   );
   if (!sheet) return apiError(res, 'Sheet not found.', 404);
 
-  emitToAll('oases:sheet:status', { sheetId: sheet._id, examConfigId: sheet.examConfigId, status: SHEET_STATUS.REJECTED });
+  emitToAll('oases:sheet:status', {
+    sheetId: sheet._id,
+    examConfigId: sheet.examConfigId,
+    status: SHEET_STATUS.REJECTED,
+  });
   auditService.log({
-    schoolId:   req.schoolId,
+    schoolId: req.schoolId,
     entityType: 'AnswerSheet',
-    entityId:   sheet._id,
-    actorId:    req.userid,
-    actorRole:  req.user?.oasesRole,
-    action:     'EVAL_SHEET_REJECTED',
-    details:    { reason },
-    ipAddress:  req.ip,
+    entityId: sheet._id,
+    actorId: req.userid,
+    actorRole: req.user?.oasesRole,
+    action: 'EVAL_SHEET_REJECTED',
+    details: { reason },
+    ipAddress: req.ip,
   });
   return ok(res, null, 'Sheet rejected.');
 });
@@ -759,11 +829,12 @@ exports.submitMarks = oasesAsync(async (req, res) => {
   const sheetId = req.params.sheetId;
 
   const sheet = await AnswerSheet.findOne({
-    _id: sheetId, schoolId: req.schoolId,
+    _id: sheetId,
+    schoolId: req.schoolId,
     $or: [
       { eval1AssignedTo: req.userid },
       { eval2AssignedTo: req.userid },
-      { headAssignedTo:  req.userid },
+      { headAssignedTo: req.userid },
     ],
   });
   if (!sheet) return apiError(res, 'Sheet not found.', 404);
@@ -776,13 +847,16 @@ exports.submitMarks = oasesAsync(async (req, res) => {
   // We try legacy OasesExamConfig first (for backwards compat), then fall back to Exam.
   const [scheme, legacyExamConfig] = await Promise.all([
     QuestionScheme.findOne({ examConfigId: sheet.examConfigId }).select('questions').lean(),
-    ExamConfig.findById(sheet.examConfigId).select('totalMarks passingMarks conflictThreshold doubleEval dailyEvalLimit').lean(),
+    ExamConfig.findById(sheet.examConfigId)
+      .select('totalMarks passingMarks conflictThreshold doubleEval dailyEvalLimit')
+      .lean(),
   ]);
   let examConfig = legacyExamConfig;
   if (!examConfig) {
     // Fall back to unified Exam model
     const examDoc = await Exam.findOne({ _id: sheet.examConfigId, schoolId: req.schoolId })
-      .select('totalMarks passingMarks conflictThreshold doubleEval dailyEvalLimit').lean();
+      .select('totalMarks passingMarks conflictThreshold doubleEval dailyEvalLimit')
+      .lean();
     if (examDoc) examConfig = examDoc;
   }
 
@@ -791,7 +865,7 @@ exports.submitMarks = oasesAsync(async (req, res) => {
   if (marks && !Array.isArray(marks)) {
     marksArray = Object.entries(marks).map(([qno, val]) => ({
       questionNo: Number(qno),
-      marksGiven: val.isNA ? 0 : (val.marksGiven || 0),
+      marksGiven: val.isNA ? 0 : val.marksGiven || 0,
       isNA: !!val.isNA,
       stepMarks: val.stepMarks || [],
       savedAt: new Date(),
@@ -799,10 +873,13 @@ exports.submitMarks = oasesAsync(async (req, res) => {
   }
 
   // Schemaless TOTAL-only: frontend sends [{questionNo:'TOTAL', marksGiven:N}]
-  const isTotalOnly = marksArray && marksArray.length === 1 && String(marksArray[0] && marksArray[0].questionNo).toUpperCase() === 'TOTAL';
+  const isTotalOnly =
+    marksArray &&
+    marksArray.length === 1 &&
+    String(marksArray[0] && marksArray[0].questionNo).toUpperCase() === 'TOTAL';
   let sectionTotals, grandTotal;
   if (isTotalOnly) {
-    grandTotal    = (marksArray[0].marksGiven) || 0;
+    grandTotal = marksArray[0].marksGiven || 0;
     sectionTotals = {};
   } else {
     ({ sectionTotals, grandTotal } = recalcTotals(marksArray, scheme && scheme.questions));
@@ -815,7 +892,7 @@ exports.submitMarks = oasesAsync(async (req, res) => {
   // Passing a mismatched grandTotal would cause a false "Total mismatch" 400 error.
   // The mismatch guard in validateMarks only fires when grandTotal !== undefined.
   const evalMarkForValidation = {
-    marks:         marksArray || [],
+    marks: marksArray || [],
     pagesReviewed: req.body.pagesReviewed || [],
   };
   const validation = validateMarks(evalMarkForValidation, scheme, {
@@ -824,8 +901,18 @@ exports.submitMarks = oasesAsync(async (req, res) => {
   });
   if (!validation.isValid) {
     // DIAGNOSTIC: log actual errors so we can see what's failing
-    logger.error('[submitMarks] Validation failed for sheet', sheetId, '\nErrors:', JSON.stringify(validation.errors, null, 2));
-    return apiError(res, 'Validation failed. Please fix errors before submitting.', 400, validation.errors);
+    logger.error(
+      '[submitMarks] Validation failed for sheet',
+      sheetId,
+      '\nErrors:',
+      JSON.stringify(validation.errors, null, 2)
+    );
+    return apiError(
+      res,
+      'Validation failed. Please fix errors before submitting.',
+      400,
+      validation.errors
+    );
   }
 
   const evalMark = await EvaluationMark.findOneAndUpdate(
@@ -835,15 +922,15 @@ exports.submitMarks = oasesAsync(async (req, res) => {
         // FIX: "TOTAL" string cannot be cast to Number (QuestionMarkSchema type).
         // Storing it causes a Mongoose CastError → "Invalid record ID" 400 response.
         // For TOTAL-only (schemaless) mode, persist marks:[] and rely on grandTotal field.
-        marks:             isTotalOnly ? [] : (marksArray || []),
+        marks: isTotalOnly ? [] : marksArray || [],
         sectionTotals,
         grandTotal,
         totalMarksAwarded: grandTotal,
-        isDraft:           false,
-        submittedAt:       new Date(),
-        savedAt:           new Date(),
-        remarks:           remarks || '',
-        examConfigId:      sheet.examConfigId,
+        isDraft: false,
+        submittedAt: new Date(),
+        savedAt: new Date(),
+        remarks: remarks || '',
+        examConfigId: sheet.examConfigId,
       },
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -880,7 +967,7 @@ exports.submitMarks = oasesAsync(async (req, res) => {
   let dailyCount = 1;
   const today = new Date().toISOString().slice(0, 10);
   const key = `oases:daily:${req.userid}:${today}`;
-  
+
   const result = await safeRedisOperation(async (redis) => {
     const count = await redis.incr(key);
     await redis.expire(key, 86400);
@@ -890,20 +977,22 @@ exports.submitMarks = oasesAsync(async (req, res) => {
 
   // Socket emit
   emitToAll('oases:sheet:status', {
-    sheetId: sheet._id, examConfigId: sheet.examConfigId, status: nextStatus,
+    sheetId: sheet._id,
+    examConfigId: sheet.examConfigId,
+    status: nextStatus,
   });
 
   // Audit
   await AuditLog.create({
-    schoolId:   req.schoolId,
+    schoolId: req.schoolId,
     entityType: 'EvaluationMark',
-    entityId:   evalMark._id,
-    actorId:    req.userid,
-    actorRole:  req.user?.oasesRole,
-    action:     'EVAL_SUBMITTED',
-    details:    { sheetId, round, grandTotal, sectionTotals },
-    ipAddress:  req.ip,
-    userAgent:  req.headers['user-agent'] || '',
+    entityId: evalMark._id,
+    actorId: req.userid,
+    actorRole: req.user?.oasesRole,
+    action: 'EVAL_SUBMITTED',
+    details: { sheetId, round, grandTotal, sectionTotals },
+    ipAddress: req.ip,
+    userAgent: req.headers['user-agent'] || '',
   });
 
   // Post-submit pipeline (fire-and-forget)
@@ -917,29 +1006,36 @@ exports.submitMarks = oasesAsync(async (req, res) => {
         await lockSheet(sheetId, req.schoolId, grandTotal, { lockedBy: req.userid });
       } else if (round === EVAL_ROUNDS.HEAD) {
         // HE round: lock with HE's marks
-        await lockSheet(sheetId, req.schoolId, grandTotal, { hadConflict: true, lockedBy: req.userid });
+        await lockSheet(sheetId, req.schoolId, grandTotal, {
+          hadConflict: true,
+          lockedBy: req.userid,
+        });
       }
     } catch (err) {
       logger.error('[evaluationController] post-submit pipeline error:', err.message);
     }
   });
 
-  return ok(res, {
-    _id:          evalMark._id,
-    sectionTotals,
-    grandTotal,
-    submittedAt:  evalMark.submittedAt,
-    status:       nextStatus,
-    dailyCount,
-    dailyLimit:   examConfig?.dailyEvalLimit || 20,
-    warnings:     validation.warnings,
-  }, 'Marks submitted successfully.');
+  return ok(
+    res,
+    {
+      _id: evalMark._id,
+      sectionTotals,
+      grandTotal,
+      submittedAt: evalMark.submittedAt,
+      status: nextStatus,
+      dailyCount,
+      dailyLimit: examConfig?.dailyEvalLimit || 20,
+      warnings: validation.warnings,
+    },
+    'Marks submitted successfully.'
+  );
 });
 
 // POST /evaluation/approve/:sheetId — Admin approves a submitted sheet
 exports.approveSheet = oasesAsync(async (req, res) => {
   const { sheetId } = req.params;
-  const userRole    = req.user?.oasesRole;
+  const userRole = req.user?.oasesRole;
   const isAdminRole = ['SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(userRole);
   if (!isAdminRole) return apiError(res, 'Only admin can approve sheets.', 403);
 
@@ -958,15 +1054,15 @@ exports.approveSheet = oasesAsync(async (req, res) => {
   });
 
   auditService.log({
-    schoolId:   req.schoolId,
+    schoolId: req.schoolId,
     entityType: 'AnswerSheet',
-    entityId:   sheet._id,
-    actorId:    req.userid,
-    actorRole:  userRole,
-    action:     'SHEET_APPROVED',
-    details:    { anonymousCode: sheet.anonymousCode },
-    ipAddress:  req.ip,
-    userAgent:  req.headers['user-agent'] || '',
+    entityId: sheet._id,
+    actorId: req.userid,
+    actorRole: userRole,
+    action: 'SHEET_APPROVED',
+    details: { anonymousCode: sheet.anonymousCode },
+    ipAddress: req.ip,
+    userAgent: req.headers['user-agent'] || '',
   });
 
   return ok(res, { sheetId: sheet._id, status: SHEET_STATUS.APPROVED }, 'Sheet approved.');
@@ -975,24 +1071,26 @@ exports.approveSheet = oasesAsync(async (req, res) => {
 // POST /evaluation/override/:sheetId — Admin overrides teacher marks
 exports.overrideMarks = oasesAsync(async (req, res) => {
   const { sheetId } = req.params;
-  const userRole    = req.user?.oasesRole;
+  const userRole = req.user?.oasesRole;
   const isAdminRole = ['SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(userRole);
   if (!isAdminRole) return apiError(res, 'Only admin can override marks.', 403);
 
   const { marks, annotations } = req.body;
 
-  const sheet = await AnswerSheet.findOne({ _id: sheetId, schoolId: req.schoolId })
-    .select('_id examConfigId eval1AssignedTo status');
+  const sheet = await AnswerSheet.findOne({ _id: sheetId, schoolId: req.schoolId }).select(
+    '_id examConfigId eval1AssignedTo status'
+  );
   if (!sheet) return apiError(res, 'Sheet not found.', 404);
 
   const scheme = await QuestionScheme.findOne({ examConfigId: sheet.examConfigId })
-    .select('questions').lean();
+    .select('questions')
+    .lean();
 
   let marksArray = marks;
   if (marks && !Array.isArray(marks)) {
     marksArray = Object.entries(marks).map(([qno, val]) => ({
       questionNo: Number(qno),
-      marksGiven: val.isNA ? 0 : (val.marksGiven || 0),
+      marksGiven: val.isNA ? 0 : val.marksGiven || 0,
       isNA: !!val.isNA,
       stepMarks: val.stepMarks || [],
       savedAt: new Date(),
@@ -1007,15 +1105,15 @@ exports.overrideMarks = oasesAsync(async (req, res) => {
     { sheetId, evaluatorId: req.userid, round: ADMIN_ROUND, schoolId: req.schoolId },
     {
       $set: {
-        marks:             marksArray || [],
-        annotations:       annotations || [],
+        marks: marksArray || [],
+        annotations: annotations || [],
         sectionTotals,
         grandTotal,
         totalMarksAwarded: grandTotal,
-        isDraft:           false,
-        submittedAt:       new Date(),
-        savedAt:           new Date(),
-        examConfigId:      sheet.examConfigId,
+        isDraft: false,
+        submittedAt: new Date(),
+        savedAt: new Date(),
+        examConfigId: sheet.examConfigId,
       },
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -1025,20 +1123,24 @@ exports.overrideMarks = oasesAsync(async (req, res) => {
   await AnswerSheet.findByIdAndUpdate(sheet._id, { status: SHEET_STATUS.APPROVED });
 
   auditService.log({
-    schoolId:   req.schoolId,
+    schoolId: req.schoolId,
     entityType: 'EvaluationMark',
-    entityId:   evalMark._id,
-    actorId:    req.userid,
-    actorRole:  userRole,
-    action:     'ADMIN_MARKS_OVERRIDE',
-    details:    { sheetId, grandTotal, sectionTotals },
-    ipAddress:  req.ip,
-    userAgent:  req.headers['user-agent'] || '',
+    entityId: evalMark._id,
+    actorId: req.userid,
+    actorRole: userRole,
+    action: 'ADMIN_MARKS_OVERRIDE',
+    details: { sheetId, grandTotal, sectionTotals },
+    ipAddress: req.ip,
+    userAgent: req.headers['user-agent'] || '',
   });
 
-  return ok(res, {
-    sectionTotals,
-    grandTotal,
-    savedAt: evalMark.savedAt,
-  }, 'Marks overridden by admin.');
+  return ok(
+    res,
+    {
+      sectionTotals,
+      grandTotal,
+      savedAt: evalMark.savedAt,
+    },
+    'Marks overridden by admin.'
+  );
 });

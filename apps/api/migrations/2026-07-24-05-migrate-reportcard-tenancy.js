@@ -5,10 +5,10 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 
-const Exam = require('../src-old/models/Exam');
-const ExamSubjectConfig = require('../src-old/models/ExamSubjectConfig');
+const Exam = require('../src/modules/examination').Exam;
+const ExamSubjectConfig = require('../src/modules/examination').ExamSubjectConfig;
 const { User } = require('../src/modules/identity');
-const Marks = require('../src-old/models/MarksModel');
+const Marks = require('../src/modules/examination').MarksModel;
 
 async function main() {
   const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
@@ -19,7 +19,9 @@ async function main() {
   await mongoose.connect(uri);
 
   // 1) Backfill Exam.schoolId from createdBy user's schoolId
-  const examsMissingSchool = await Exam.find({ $or: [{ schoolId: { $exists: false } }, { schoolId: null }] })
+  const examsMissingSchool = await Exam.find({
+    $or: [{ schoolId: { $exists: false } }, { schoolId: null }],
+  })
     .select('_id createdBy')
     .lean();
 
@@ -49,7 +51,9 @@ async function main() {
   }
 
   // 3) Backfill Marks.schoolId if missing (derive from uploadedBy user's schoolId)
-  const marksMissingSchool = await Marks.find({ $or: [{ schoolId: { $exists: false } }, { schoolId: null }] })
+  const marksMissingSchool = await Marks.find({
+    $or: [{ schoolId: { $exists: false } }, { schoolId: null }],
+  })
     .select('_id uploadedBy')
     .lean();
   let marksUpdated = 0;
@@ -72,4 +76,3 @@ main()
     console.error('[migrate-reportcard-tenancy] Failed:', err);
     process.exit(1);
   });
-

@@ -1,14 +1,14 @@
 /**
  * Report Template Controller
- * 
+ *
  * Handles CRUD operations for report templates and field extraction.
  */
 
 const ReportTemplate = require('../models/ReportTemplate');
 const TemplateFieldExtractor = require('../services/templateFieldExtractor');
-const { resolveTemplate }     = require('../services/templateResolver');
-const Class                   = require('../../../../src-old/models/ClassModel');  // TEMP: moves to modules/academics
-const SchoolSettings          = require('../../tenancy').SchoolSettings;
+const { resolveTemplate } = require('../services/templateResolver');
+const { ClassModel: Class } = require('../../academics');
+const SchoolSettings = require('../../tenancy').SchoolSettings;
 const logger = require('../../../core/logging/logger.js');
 const { serviceError } = require('../lib/respond');
 
@@ -59,7 +59,7 @@ exports.createTemplate = async (req, res) => {
       config: config || {},
       classGroupName: classGroupName || '',
       classRangeFrom: classRangeFrom !== undefined ? Number(classRangeFrom) : null,
-      classRangeTo:   classRangeTo   !== undefined ? Number(classRangeTo)   : null,
+      classRangeTo: classRangeTo !== undefined ? Number(classRangeTo) : null,
       applicableClassIds: applicableClassIds || [],
       createdBy: userId,
       updatedBy: userId,
@@ -86,7 +86,6 @@ exports.createTemplate = async (req, res) => {
         },
       },
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Create error:', error);
   }
@@ -98,14 +97,7 @@ exports.createTemplate = async (req, res) => {
  */
 exports.getTemplates = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 20,
-      templateType,
-      isActive,
-      isDefault,
-      search,
-    } = req.query;
+    const { page = 1, limit = 20, templateType, isActive, isDefault, search } = req.query;
 
     const schoolId = req.schoolId;
 
@@ -148,7 +140,6 @@ exports.getTemplates = async (req, res) => {
         pages: Math.ceil(total / Number(limit)),
       },
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Get templates error:', error);
   }
@@ -193,7 +184,6 @@ exports.getTemplate = async (req, res) => {
         },
       },
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Get template error:', error);
   }
@@ -240,23 +230,26 @@ exports.updateTemplate = async (req, res) => {
     }
 
     // Update fields
-    if (name !== undefined)        template.name = name;
+    if (name !== undefined) template.name = name;
     if (description !== undefined) template.description = description;
     if (htmlContent !== undefined) {
       template.htmlContent = htmlContent;
       const extraction = TemplateFieldExtractor.extractFields(htmlContent);
       template.extractedFields = extraction.fields;
     }
-    if (cssContent !== undefined)       template.cssContent = cssContent;
-    if (templateType !== undefined)     template.templateType = templateType;
-    if (applicableExams !== undefined)  template.applicableExams = applicableExams;
-    if (isActive !== undefined)         template.isActive = isActive;
-    if (isDefault !== undefined)        template.isDefault = isDefault;
-    if (config !== undefined)           template.config = { ...template.config, ...config };
-    if (fieldMappings !== undefined)    template.fieldMappings = new Map(Object.entries(fieldMappings));
-    if (classGroupName !== undefined)    template.classGroupName = classGroupName;
-    if (classRangeFrom !== undefined)    template.classRangeFrom = classRangeFrom !== null ? Number(classRangeFrom) : null;
-    if (classRangeTo   !== undefined)    template.classRangeTo   = classRangeTo   !== null ? Number(classRangeTo)   : null;
+    if (cssContent !== undefined) template.cssContent = cssContent;
+    if (templateType !== undefined) template.templateType = templateType;
+    if (applicableExams !== undefined) template.applicableExams = applicableExams;
+    if (isActive !== undefined) template.isActive = isActive;
+    if (isDefault !== undefined) template.isDefault = isDefault;
+    if (config !== undefined) template.config = { ...template.config, ...config };
+    if (fieldMappings !== undefined)
+      template.fieldMappings = new Map(Object.entries(fieldMappings));
+    if (classGroupName !== undefined) template.classGroupName = classGroupName;
+    if (classRangeFrom !== undefined)
+      template.classRangeFrom = classRangeFrom !== null ? Number(classRangeFrom) : null;
+    if (classRangeTo !== undefined)
+      template.classRangeTo = classRangeTo !== null ? Number(classRangeTo) : null;
     if (applicableClassIds !== undefined) template.applicableClassIds = applicableClassIds;
 
     template.updatedBy = userId;
@@ -272,7 +265,6 @@ exports.updateTemplate = async (req, res) => {
         isDefault: template.isDefault,
       },
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Update error:', error);
   }
@@ -309,7 +301,6 @@ exports.deleteTemplate = async (req, res) => {
       success: true,
       message: 'Template deleted successfully',
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Delete error:', error);
   }
@@ -346,7 +337,6 @@ exports.extractFields = async (req, res) => {
         suggestedMappings: suggestions,
       },
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Extract fields error:', error);
   }
@@ -368,16 +358,11 @@ exports.validateTemplate = async (req, res) => {
     }
 
     const TemplateParserService = require('../services/templateParserService');
-    
-    const validation = TemplateParserService.validate(
-      htmlContent,
-      sampleData || {}
-    );
+
+    const validation = TemplateParserService.validate(htmlContent, sampleData || {});
 
     // Generate preview HTML
-    const preview = sampleData
-      ? TemplateParserService.preview(htmlContent, sampleData)
-      : null;
+    const preview = sampleData ? TemplateParserService.preview(htmlContent, sampleData) : null;
 
     return res.status(200).json({
       success: true,
@@ -387,7 +372,6 @@ exports.validateTemplate = async (req, res) => {
         isValid: validation.isValid,
       },
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Validate error:', error);
   }
@@ -410,15 +394,12 @@ exports.previewTemplate = async (req, res) => {
 
     const TemplateParserService = require('../services/templateParserService');
 
-    const previewHtml = TemplateParserService.preview(
-      htmlContent,
-      sampleData || {},
-      { css: cssContent || '' }
-    );
+    const previewHtml = TemplateParserService.preview(htmlContent, sampleData || {}, {
+      css: cssContent || '',
+    });
 
     res.setHeader('Content-Type', 'text/html');
     return res.send(previewHtml);
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Preview error:', error);
   }
@@ -458,7 +439,6 @@ exports.setDefault = async (req, res) => {
         isDefault: true,
       },
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Set default error:', error);
   }
@@ -500,9 +480,9 @@ exports.cloneTemplate = async (req, res) => {
       isDefault: false,
       config: sourceTemplate.config,
       // Carry class-group targeting from source
-      classGroupName:    sourceTemplate.classGroupName,
-      classRangeFrom:    sourceTemplate.classRangeFrom,
-      classRangeTo:      sourceTemplate.classRangeTo,
+      classGroupName: sourceTemplate.classGroupName,
+      classRangeFrom: sourceTemplate.classRangeFrom,
+      classRangeTo: sourceTemplate.classRangeTo,
       applicableClassIds: sourceTemplate.applicableClassIds,
       createdBy: userId,
       updatedBy: userId,
@@ -519,10 +499,9 @@ exports.cloneTemplate = async (req, res) => {
         name: newTemplate.name,
         classGroupName: newTemplate.classGroupName,
         classRangeFrom: newTemplate.classRangeFrom,
-        classRangeTo:   newTemplate.classRangeTo,
+        classRangeTo: newTemplate.classRangeTo,
       },
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Clone error:', error);
   }
@@ -563,21 +542,20 @@ exports.getTemplateForClass = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        _id:            template._id,
-        name:           template.name,
-        templateType:   template.templateType,
+        _id: template._id,
+        name: template.name,
+        templateType: template.templateType,
         classGroupName: template.classGroupName || '',
         classRangeFrom: template.classRangeFrom,
-        classRangeTo:   template.classRangeTo,
-        isDefault:      template.isDefault,
-        matchReason: (
-          template.applicableClassIds?.some(id => String(id) === String(classId))
-            ? 'exact_class'
-            : (template.classRangeFrom !== null ? 'class_range' : 'global_default')
-        ),
+        classRangeTo: template.classRangeTo,
+        isDefault: template.isDefault,
+        matchReason: template.applicableClassIds?.some((id) => String(id) === String(classId))
+          ? 'exact_class'
+          : template.classRangeFrom !== null
+            ? 'class_range'
+            : 'global_default',
       },
     });
-
   } catch (error) {
     logger.error('[ReportTemplate] getTemplateForClass error:', error);
     return res.status(500).json({ success: false, message: error.message });
@@ -646,7 +624,6 @@ exports.getStats = async (req, res) => {
         mostUsed,
       },
     });
-
   } catch (error) {
     return serviceError(res, '[ReportTemplate] Stats error:', error);
   }
@@ -669,7 +646,9 @@ exports.getSelection = async (req, res) => {
         isActive: true,
         isDeleted: { $ne: true },
       })
-        .select('name description templateType templateStatus isDefault isGlobal classGroupName classRangeFrom classRangeTo applicableClassIds updatedAt')
+        .select(
+          'name description templateType templateStatus isDefault isGlobal classGroupName classRangeFrom classRangeTo applicableClassIds updatedAt'
+        )
         .sort({ isGlobal: -1, isDefault: -1, name: 1 })
         .lean(),
       SchoolSettings.findOne({ schoolId }).select('selectedReportTemplateId').lean(),
@@ -683,7 +662,7 @@ exports.getSelection = async (req, res) => {
     // it so the UI can prompt the admin to re-pick instead of silently falling
     // back to the isDefault template.
     const isStale = Boolean(
-      selectedTemplateId && !templates.some(t => String(t._id) === selectedTemplateId)
+      selectedTemplateId && !templates.some((t) => String(t._id) === selectedTemplateId)
     );
 
     return res.status(200).json({
@@ -722,7 +701,9 @@ exports.setSelection = async (req, res) => {
         $or: [{ isGlobal: true }, { schoolId }],
         isActive: true,
         isDeleted: { $ne: true },
-      }).select('_id name').lean();
+      })
+        .select('_id name')
+        .lean();
 
       if (!template) {
         return res.status(404).json({
@@ -735,11 +716,15 @@ exports.setSelection = async (req, res) => {
     const settings = await SchoolSettings.findOneAndUpdate(
       { schoolId },
       { $set: { selectedReportTemplateId: templateId || null } },
-      { new: true, upsert: true, setDefaultsOnInsert: true },
-    ).select('selectedReportTemplateId').lean();
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    )
+      .select('selectedReportTemplateId')
+      .lean();
 
     logger.info('[ReportTemplate] School template selection updated', {
-      schoolId, templateId: templateId || null, by: req.user?._id,
+      schoolId,
+      templateId: templateId || null,
+      by: req.user?._id,
     });
 
     return res.status(200).json({

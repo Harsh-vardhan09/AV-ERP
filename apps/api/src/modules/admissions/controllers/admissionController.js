@@ -1,9 +1,9 @@
 const { User } = require('../../identity');
 const StudentProfile = require('../../people').StudentProfile;
 const TeacherProfile = require('../../people').TeacherProfile;
-const AcademicSession = require('../../../../src-old/models/AcademicSession');  // TEMP: moves to modules/academics
-const ClassModel = require('../../../../src-old/models/ClassModel');  // TEMP: moves to modules/academics
-const SectionModel = require('../../../../src-old/models/SectionModel');  // TEMP: moves to modules/academics
+const { AcademicSession } = require('../../academics');
+const { ClassModel } = require('../../academics');
+const { SectionModel } = require('../../academics');
 const SchoolSettings = require('../../tenancy').SchoolSettings;
 const validator = require('validator');
 const bcryptjs = require('bcryptjs');
@@ -12,11 +12,12 @@ const mongoose = require('mongoose');
 const { assignFeeToStudent } = require('../../fees').studentFeeService;
 const { uploadImageToCloud, deleteFromCloud } = require('../../../core/config/storage.js');
 
-const { createInAppNotification, sendEmailNotification } = require('../../notifications').notificationService;
-const { welcomeStudentTemplate, welcomeTeacherTemplate } = require('../../notifications').emailTemplates;
+const { createInAppNotification, sendEmailNotification } =
+  require('../../notifications').notificationService;
+const { welcomeStudentTemplate, welcomeTeacherTemplate } =
+  require('../../notifications').emailTemplates;
 const logger = require('../../../core/logging/logger.js');
 const { serviceError } = require('../lib/respond');
-
 
 // Get or create per-school settings
 const getSettings = async (schoolId) => {
@@ -57,10 +58,19 @@ const generateStudentId = (sessionCode) => {
 
 // Generate roll no: {session2}{classNum}{sectionLetter}{serial}
 // e.g. 265A1 → session 26, class 5, section A, 1st student
-const generateRollNo = async (sessionCode, classNumericOrder, sectionName, classId, sectionId, sessionId) => {
+const generateRollNo = async (
+  sessionCode,
+  classNumericOrder,
+  sectionName,
+  classId,
+  sectionId,
+  sessionId
+) => {
   // Count existing students in this class+section+session to get next serial
   const count = await StudentProfile.countDocuments({
-    classId, sectionId, session: sessionId
+    classId,
+    sectionId,
+    session: sessionId,
   });
   const serial = count + 1;
   return `${sessionCode}${classNumericOrder}${sectionName}${serial}`;
@@ -80,50 +90,132 @@ const generateEmployeeId = async (schoolId) => {
   return `EMP-${String(count + 1).padStart(5, '0')}`;
 };
 
-
 exports.registerStudent = async (req, res) => {
   try {
     const {
       // User fields
-      firstName, lastName, email, phone, password,
+      firstName,
+      lastName,
+      email,
+      phone,
+      password,
       // Student profile fields
-      admissionNumber, rollNo, studentId, middleName, gender, dateOfBirth,
-      placeOfBirth, nationality, religion, caste, category, motherTongue, bloodGroup,
-      classId, sectionId, session, admissionDate, previousSchool, previousClass,
-      aadharCard, ssmId, familyId, rte,
-      apaarId, bplStudent, bplCardNo,
+      admissionNumber,
+      rollNo,
+      studentId,
+      middleName,
+      gender,
+      dateOfBirth,
+      placeOfBirth,
+      nationality,
+      religion,
+      caste,
+      category,
+      motherTongue,
+      bloodGroup,
+      classId,
+      sectionId,
+      session,
+      admissionDate,
+      previousSchool,
+      previousClass,
+      aadharCard,
+      ssmId,
+      familyId,
+      rte,
+      apaarId,
+      bplStudent,
+      bplCardNo,
       // Caste certificate
-      casteApplicationNo, casteApplicationDate,
-      boardEnrollNo, ladliLaxmiNo, scholarshipId, domicileApplicationNo, rteApplicationNo, srnNo,
+      casteApplicationNo,
+      casteApplicationDate,
+      boardEnrollNo,
+      ladliLaxmiNo,
+      scholarshipId,
+      domicileApplicationNo,
+      rteApplicationNo,
+      srnNo,
       // PEN
-      pen, penNo,
-      address, addressLine2, city, state, pincode,
-      whatsappNo, alternateNumber,
-      emergencyContactName, emergencyContactPhone, emergencyContactRelation,
+      pen,
+      penNo,
+      address,
+      addressLine2,
+      city,
+      state,
+      pincode,
+      whatsappNo,
+      alternateNumber,
+      emergencyContactName,
+      emergencyContactPhone,
+      emergencyContactRelation,
       // Parent
-      fatherName, fatherOccupation, fatherPhone, fatherEmail, fatherIncome, fatherQualification, fatherAadharCard,
-      motherName, motherOccupation, motherPhone, motherEmail, motherQualification, motherAadharCard,
-      guardianName, guardianRelation, guardianPhone, guardianEmail, guardianQualification, guardianIncome, guardianAadharCard,
-      accountNumber, bankName, ifsc, branchName,
+      fatherName,
+      fatherOccupation,
+      fatherPhone,
+      fatherEmail,
+      fatherIncome,
+      fatherQualification,
+      fatherAadharCard,
+      motherName,
+      motherOccupation,
+      motherPhone,
+      motherEmail,
+      motherQualification,
+      motherAadharCard,
+      guardianName,
+      guardianRelation,
+      guardianPhone,
+      guardianEmail,
+      guardianQualification,
+      guardianIncome,
+      guardianAadharCard,
+      accountNumber,
+      bankName,
+      ifsc,
+      branchName,
       // Health
-      healthIssues, allergies, medications, disabilityType,
+      healthIssues,
+      allergies,
+      medications,
+      disabilityType,
       // Transport & hostel
-      transportRequired, pickupPoint, routeNo, hostelRequired, roomNo,
-      photoUrl, birthCertificateUrl, transferCertificateUrl, previousMarksheetsUrl,
-      medicalCertificateUrl, aadharCardDocUrl, addressProofUrl, casteProofUrl,
+      transportRequired,
+      pickupPoint,
+      routeNo,
+      hostelRequired,
+      roomNo,
+      photoUrl,
+      birthCertificateUrl,
+      transferCertificateUrl,
+      previousMarksheetsUrl,
+      medicalCertificateUrl,
+      aadharCardDocUrl,
+      addressProofUrl,
+      casteProofUrl,
       remarks,
       // Scholar
       scholarNo,
       // HMHSS00022 new fields
-      diseCode, previousResult
+      diseCode,
+      previousResult,
     } = req.body;
 
     // === Required fields check ===
     // Note: lastName is optional — physical admission forms may not always have separate last name
-    if (!firstName || !dateOfBirth || !fatherName || !fatherPhone || !classId || !sectionId || !session || !address) {
+    if (
+      !firstName ||
+      !dateOfBirth ||
+      !fatherName ||
+      !fatherPhone ||
+      !classId ||
+      !sectionId ||
+      !session ||
+      !address
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Name, DOB, Father\'s Name, Father\'s Phone, Class, Section, Session, and Address are required.'
+        message:
+          "Name, DOB, Father's Name, Father's Phone, Class, Section, Session, and Address are required.",
       });
     }
 
@@ -132,7 +224,9 @@ exports.registerStudent = async (req, res) => {
     const sectionDoc = await SectionModel.findById(sectionId);
     const sessionDoc = await AcademicSession.findById(session);
     if (!classDoc || !sectionDoc || !sessionDoc) {
-      return res.status(400).json({ success: false, message: 'Invalid class, section, or session' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid class, section, or session' });
     }
 
     const sessionCode = getSessionCode(sessionDoc.name);
@@ -147,13 +241,19 @@ exports.registerStudent = async (req, res) => {
       finalAdmissionNo = await generateAdmissionNo(sessionCode, req.schoolId); // ← pass schoolId
     }
     if (!finalAdmissionNo) {
-      return res.status(400).json({ success: false, message: 'Admission number is required (auto-gen is off)' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Admission number is required (auto-gen is off)' });
     }
 
     if (settings.autoGenerateRollNo && !rollNo) {
       finalRollNo = await generateRollNo(
-        sessionCode, classDoc.numericOrder, sectionDoc.name,
-        classId, sectionId, session
+        sessionCode,
+        classDoc.numericOrder,
+        sectionDoc.name,
+        classId,
+        sectionId,
+        session
       );
     }
 
@@ -167,24 +267,29 @@ exports.registerStudent = async (req, res) => {
     const rawEmail = email && typeof email === 'string' ? email.trim() : '';
     const normalizedEmail = rawEmail || undefined; // strictly undefined if empty
     if (normalizedEmail && !validator.isEmail(normalizedEmail)) {
-      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Please provide a valid email address' });
     }
     if (normalizedEmail) {
       const existingUser = await User.findOne({ email: normalizedEmail, schoolId: req.schoolId });
       if (existingUser) {
-        return res.status(400).json({ success: false, message: 'Email already registered in this school' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'Email already registered in this school' });
       }
     }
 
     // === Create User ===
     const hashPassword = await bcryptjs.hash(defaultPassword, 10);
     const userPayload = {
-      firstName, lastName,
+      firstName,
+      lastName,
       phone: phone || fatherPhone,
       password: hashPassword,
       role: 'student',
       isActive: true,
-      isVerified: true
+      isVerified: true,
     };
     // Only add email if it's a real non-empty string (sparse index requires field to be absent, not null)
     if (normalizedEmail) userPayload.email = normalizedEmail;
@@ -204,18 +309,32 @@ exports.registerStudent = async (req, res) => {
         studentId: finalStudentId,
         rollNo: finalRollNo,
         scholarNo: scholarNo || undefined,
-        firstName, middleName, lastName,
-        gender, placeOfBirth, nationality, religion, caste, category,
-        motherTongue, bloodGroup,
-        aadharCard, ssmId, familyId, rte: rte || false,
+        firstName,
+        middleName,
+        lastName,
+        gender,
+        placeOfBirth,
+        nationality,
+        religion,
+        caste,
+        category,
+        motherTongue,
+        bloodGroup,
+        aadharCard,
+        ssmId,
+        familyId,
+        rte: rte || false,
         apaarId,
         bplStudent: bplStudent || false,
         bplCardNo,
         // Caste certificate
         casteApplicationNo,
         casteApplicationDate: safeDate(casteApplicationDate),
-        boardEnrollNo, ladliLaxmiNo, scholarshipId,
-        domicileApplicationNo, rteApplicationNo,
+        boardEnrollNo,
+        ladliLaxmiNo,
+        scholarshipId,
+        domicileApplicationNo,
+        rteApplicationNo,
         srnNo,
         // PEN — store in both fields for alias compatibility
         pen: pen || penNo,
@@ -223,23 +342,53 @@ exports.registerStudent = async (req, res) => {
         // Contact extras
         whatsappNo,
         alternateNumber,
-        fatherAadharCard, motherAadharCard, guardianAadharCard,
-        classId, sectionId, session,
-        dateOfBirth:   safeDate(dateOfBirth),
+        fatherAadharCard,
+        motherAadharCard,
+        guardianAadharCard,
+        classId,
+        sectionId,
+        session,
+        dateOfBirth: safeDate(dateOfBirth),
         admissionDate: safeDate(admissionDate),
-        previousSchool, previousClass,
-        diseCode, previousResult,
+        previousSchool,
+        previousClass,
+        diseCode,
+        previousResult,
         phone: phone || fatherPhone,
-        address, addressLine2, city, state, pincode,
+        address,
+        addressLine2,
+        city,
+        state,
+        pincode,
         emergencyContact: {
           name: emergencyContactName,
           phone: emergencyContactPhone,
-          relation: emergencyContactRelation
+          relation: emergencyContactRelation,
         },
         parentDetails: {
-          father: { name: fatherName, occupation: fatherOccupation, phone: fatherPhone, email: fatherEmail, annualIncome: fatherIncome, qualification: fatherQualification },
-          mother: { name: motherName, occupation: motherOccupation, phone: motherPhone, email: motherEmail, qualification: motherQualification },
-          guardian: { name: guardianName, relation: guardianRelation, phone: guardianPhone, email: guardianEmail, qualification: guardianQualification, income: guardianIncome }
+          father: {
+            name: fatherName,
+            occupation: fatherOccupation,
+            phone: fatherPhone,
+            email: fatherEmail,
+            annualIncome: fatherIncome,
+            qualification: fatherQualification,
+          },
+          mother: {
+            name: motherName,
+            occupation: motherOccupation,
+            phone: motherPhone,
+            email: motherEmail,
+            qualification: motherQualification,
+          },
+          guardian: {
+            name: guardianName,
+            relation: guardianRelation,
+            phone: guardianPhone,
+            email: guardianEmail,
+            qualification: guardianQualification,
+            income: guardianIncome,
+          },
         },
         bankDetails: { accountNumber, bankName, ifsc, branchName },
         healthInfo: { healthIssues, allergies, medications, disabilityType },
@@ -253,7 +402,7 @@ exports.registerStudent = async (req, res) => {
           medicalCertificate: medicalCertificateUrl,
           aadharCardDoc: aadharCardDocUrl,
           addressProof: addressProofUrl,
-          casteProof: casteProofUrl
+          casteProof: casteProofUrl,
         },
         remarks,
         schoolId: req.schoolId,
@@ -288,37 +437,39 @@ exports.registerStudent = async (req, res) => {
           rollNo: finalRollNo,
           studentId: finalStudentId,
           password: defaultPassword,
-          loginEmail: normalizedEmail || 'Not provided (use Admission No / Student ID to login)'
-        }
-      }
+          loginEmail: normalizedEmail || 'Not provided (use Admission No / Student ID to login)',
+        },
+      },
     });
 
     // NOTIFICATION BLOCK — non-blocking
-    ;(async () => {
+    (async () => {
       try {
         const School = require('../../tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
-        const loginUrl   = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
+        const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
         const studentName = `${firstName} ${lastName}`;
 
         // In-app welcome notification
         await createInAppNotification({
-          userId:   user._id,
+          userId: user._id,
           schoolId: req.schoolId,
-          type:     'system',
-          title:    `Welcome to ${schoolName}!`,
-          message:  `Your account has been created. Admission No: ${finalAdmissionNo}${finalRollNo ? ', Roll No: ' + finalRollNo : ''}.`,
-          link:     '/student/dashboard',
+          type: 'system',
+          title: `Welcome to ${schoolName}!`,
+          message: `Your account has been created. Admission No: ${finalAdmissionNo}${finalRollNo ? ', Roll No: ' + finalRollNo : ''}.`,
+          link: '/student/dashboard',
           metadata: { admissionNumber: finalAdmissionNo, rollNo: finalRollNo },
         });
 
         // Welcome email (only when email provided)
         if (normalizedEmail) {
           const { subject, html } = welcomeStudentTemplate({
-            studentName, schoolName, loginUrl,
+            studentName,
+            schoolName,
+            loginUrl,
             admissionNumber: finalAdmissionNo,
-            rollNo:  finalRollNo  || 'N/A',
+            rollNo: finalRollNo || 'N/A',
             password: defaultPassword,
           });
           await sendEmailNotification({ to: normalizedEmail, subject, html });
@@ -329,20 +480,24 @@ exports.registerStudent = async (req, res) => {
           schoolId: req.schoolId,
           role: 'admin',
           isActive: true,
-        }).select('_id').lean();
+        })
+          .select('_id')
+          .lean();
         if (adminUser) {
           await createInAppNotification({
-            userId:   adminUser._id,
+            userId: adminUser._id,
             schoolId: req.schoolId,
-            type:     'admission',
-            title:    `New Student Admission — ${studentName}`,
-            message:  `${studentName} has been admitted to ${classDoc.name}. Admission No: ${finalAdmissionNo}.`,
-            link:     '/admin/students',
+            type: 'admission',
+            title: `New Student Admission — ${studentName}`,
+            message: `${studentName} has been admitted to ${classDoc.name}. Admission No: ${finalAdmissionNo}.`,
+            link: '/admin/students',
             metadata: { studentId: user._id, admissionNumber: finalAdmissionNo },
           });
         }
       } catch (notifErr) {
-        logger.warn('[Notif] Student registration notification failed', { error: notifErr.message });
+        logger.warn('[Notif] Student registration notification failed', {
+          error: notifErr.message,
+        });
       }
     })();
   } catch (error) {
@@ -353,9 +508,11 @@ exports.registerStudent = async (req, res) => {
 exports.checkDuplicateField = async (req, res) => {
   try {
     const { field, value, classId, sectionId } = req.query;
-    if (!field || !value) return res.status(400).json({ success: false, message: 'field and value required' });
+    if (!field || !value)
+      return res.status(400).json({ success: false, message: 'field and value required' });
     const allowed = ['rollNo', 'admissionNumber', 'scholarNo', 'studentId'];
-    if (!allowed.includes(field)) return res.status(400).json({ success: false, message: 'Invalid field' });
+    if (!allowed.includes(field))
+      return res.status(400).json({ success: false, message: 'Invalid field' });
 
     // Build query: rollNo is scoped to class+section; other IDs scoped to school
     const query = { [field]: value.trim(), schoolId: req.schoolId };
@@ -367,7 +524,9 @@ exports.checkDuplicateField = async (req, res) => {
     const existing = await StudentProfile.findOne(query)
       .populate('classId', 'name')
       .populate('sectionId', 'name')
-      .select('firstName middleName lastName rollNo admissionNumber scholarNo studentId classId sectionId');
+      .select(
+        'firstName middleName lastName rollNo admissionNumber scholarNo studentId classId sectionId'
+      );
 
     if (existing) {
       return res.status(200).json({ success: true, exists: true, data: existing });
@@ -378,45 +537,92 @@ exports.checkDuplicateField = async (req, res) => {
   }
 };
 
-
-
 exports.registerTeacher = async (req, res) => {
   try {
     const {
-      firstName, lastName, middleName, email, phone, password,
-      employeeId, gender, dateOfBirth, qualification, specialization,
-      experience, department, designation,
-      address, addressLine2, city, state, pincode,
-      alternatePhone, joiningDate,
-      aadharCard, panCard,
-      nationality, religion, caste, category, maritalStatus, bloodGroup, motherTongue,
+      firstName,
+      lastName,
+      middleName,
+      email,
+      phone,
+      password,
+      employeeId,
+      gender,
+      dateOfBirth,
+      qualification,
+      specialization,
+      experience,
+      department,
+      designation,
+      address,
+      addressLine2,
+      city,
+      state,
+      pincode,
+      alternatePhone,
+      joiningDate,
+      aadharCard,
+      panCard,
+      nationality,
+      religion,
+      caste,
+      category,
+      maritalStatus,
+      bloodGroup,
+      motherTongue,
       // Family
-      fatherName, fatherPhone, motherName, motherPhone, spouseName, spousePhone,
-      accountNumber, bankName, ifsc, branchName,
+      fatherName,
+      fatherPhone,
+      motherName,
+      motherPhone,
+      spouseName,
+      spousePhone,
+      accountNumber,
+      bankName,
+      ifsc,
+      branchName,
       // Salary
-      salaryBasic, salaryHra, salaryTransport, salaryTotal,
+      salaryBasic,
+      salaryHra,
+      salaryTransport,
+      salaryTotal,
       // Emergency
-      emergencyName, emergencyPhone, emergencyRelation,
-      photoUrl, resumeUrl, idProofUrl, qualificationCertUrl,
-      experienceLetterUrl, aadharCardDocUrl, panCardDocUrl,
-      remarks
+      emergencyName,
+      emergencyPhone,
+      emergencyRelation,
+      photoUrl,
+      resumeUrl,
+      idProofUrl,
+      qualificationCertUrl,
+      experienceLetterUrl,
+      aadharCardDocUrl,
+      panCardDocUrl,
+      remarks,
     } = req.body;
 
     if (!firstName || !lastName) {
-      return res.status(400).json({ success: false, message: 'First name and last name are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'First name and last name are required' });
     }
 
     // Email: REQUIRED for teacher
     const normalizedEmail = email && email.trim() ? email.trim() : undefined;
     if (!normalizedEmail) {
-      return res.status(400).json({ success: false, message: 'Email is required for teacher registration' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Email is required for teacher registration' });
     }
     if (!validator.isEmail(normalizedEmail)) {
-      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Please provide a valid email address' });
     }
     const existingUser = await User.findOne({ email: normalizedEmail, schoolId: req.schoolId });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Email already registered in this school' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Email already registered in this school' });
     }
 
     // Password: DOB if not provided
@@ -424,11 +630,12 @@ exports.registerTeacher = async (req, res) => {
 
     // Auto-gen IDs
     const finalTeacherId = await generateTeacherId(req.schoolId);
-    const finalEmployeeId = employeeId || await generateEmployeeId(req.schoolId);
+    const finalEmployeeId = employeeId || (await generateEmployeeId(req.schoolId));
 
     const hashPassword = await bcryptjs.hash(defaultPassword, 10);
     const user = await User.create({
-      firstName, lastName,
+      firstName,
+      lastName,
       email: normalizedEmail,
       phone,
       password: hashPassword,
@@ -443,7 +650,7 @@ exports.registerTeacher = async (req, res) => {
     // field. If that error is not caught, the User created above becomes orphaned
     // and the next attempt gets a false "Email already registered" error.
     const safeDate = (v) => (v && String(v).trim() !== '' ? v : undefined);
-    const safeNum  = (v) => (v !== '' && v !== null && v !== undefined ? Number(v) : undefined);
+    const safeNum = (v) => (v !== '' && v !== null && v !== undefined ? Number(v) : undefined);
 
     // Create teacher profile — if this fails, roll back the user to avoid
     // an orphaned User record that would block future re-registration.
@@ -453,32 +660,62 @@ exports.registerTeacher = async (req, res) => {
         userId: user._id,
         employeeId: finalEmployeeId,
         teacherId: finalTeacherId,
-        firstName, middleName, lastName,
-        gender, qualification, specialization,
-        department, designation,
-        phone, alternatePhone,
-        address, addressLine2, city, state, pincode,
-        aadharCard, panCard,
-        nationality, religion, caste, category, maritalStatus, bloodGroup, motherTongue,
-        dateOfBirth:  safeDate(dateOfBirth),
-        joiningDate:  safeDate(joiningDate),
+        firstName,
+        middleName,
+        lastName,
+        gender,
+        qualification,
+        specialization,
+        department,
+        designation,
+        phone,
+        alternatePhone,
+        address,
+        addressLine2,
+        city,
+        state,
+        pincode,
+        aadharCard,
+        panCard,
+        nationality,
+        religion,
+        caste,
+        category,
+        maritalStatus,
+        bloodGroup,
+        motherTongue,
+        dateOfBirth: safeDate(dateOfBirth),
+        joiningDate: safeDate(joiningDate),
         // Safe number fields
-        experience:   safeNum(experience),
+        experience: safeNum(experience),
         familyDetails: {
-          fatherName, fatherPhone, motherName, motherPhone, spouseName, spousePhone
+          fatherName,
+          fatherPhone,
+          motherName,
+          motherPhone,
+          spouseName,
+          spousePhone,
         },
         bankDetails: { accountNumber, bankName, ifsc, branchName },
         salary: {
-          basic:     safeNum(salaryBasic),
-          hra:       safeNum(salaryHra),
+          basic: safeNum(salaryBasic),
+          hra: safeNum(salaryHra),
           transport: safeNum(salaryTransport),
-          total:     safeNum(salaryTotal),
+          total: safeNum(salaryTotal),
         },
-        emergencyContact: { name: emergencyName, phone: emergencyPhone, relation: emergencyRelation },
+        emergencyContact: {
+          name: emergencyName,
+          phone: emergencyPhone,
+          relation: emergencyRelation,
+        },
         documents: {
-          photo: photoUrl, resume: resumeUrl, idProof: idProofUrl,
-          qualificationCert: qualificationCertUrl, experienceLetter: experienceLetterUrl,
-          aadharCardDoc: aadharCardDocUrl, panCardDoc: panCardDocUrl
+          photo: photoUrl,
+          resume: resumeUrl,
+          idProof: idProofUrl,
+          qualificationCert: qualificationCertUrl,
+          experienceLetter: experienceLetterUrl,
+          aadharCardDoc: aadharCardDocUrl,
+          panCardDoc: panCardDocUrl,
         },
         remarks,
         schoolId: req.schoolId,
@@ -500,34 +737,36 @@ exports.registerTeacher = async (req, res) => {
           employeeId: finalEmployeeId,
           teacherId: finalTeacherId,
           password: defaultPassword,
-          loginEmail: normalizedEmail
-        }
-      }
+          loginEmail: normalizedEmail,
+        },
+      },
     });
 
     // NOTIFICATION BLOCK — non-blocking
-    ;(async () => {
+    (async () => {
       try {
         const School = require('../../tenancy').School;
         const school = await School.findById(req.schoolId).select('name').lean();
         const schoolName = school?.name || 'School';
-        const loginUrl   = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
+        const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
         const teacherName = `${firstName} ${lastName}`;
 
         // In-app welcome
         await createInAppNotification({
-          userId:   user._id,
+          userId: user._id,
           schoolId: req.schoolId,
-          type:     'system',
-          title:    `Welcome to ${schoolName}!`,
-          message:  `Your teacher account has been created. Employee ID: ${finalEmployeeId}.`,
-          link:     '/teacher/dashboard',
+          type: 'system',
+          title: `Welcome to ${schoolName}!`,
+          message: `Your teacher account has been created. Employee ID: ${finalEmployeeId}.`,
+          link: '/teacher/dashboard',
           metadata: { employeeId: finalEmployeeId, teacherId: finalTeacherId },
         });
 
         // Welcome email
         const { subject, html } = welcomeTeacherTemplate({
-          teacherName, schoolName, loginUrl,
+          teacherName,
+          schoolName,
+          loginUrl,
           employeeId: finalEmployeeId,
           password: defaultPassword,
           loginEmail: normalizedEmail,
@@ -539,27 +778,30 @@ exports.registerTeacher = async (req, res) => {
           schoolId: req.schoolId,
           role: 'admin',
           isActive: true,
-        }).select('_id').lean();
+        })
+          .select('_id')
+          .lean();
         if (adminUser) {
           await createInAppNotification({
-            userId:   adminUser._id,
+            userId: adminUser._id,
             schoolId: req.schoolId,
-            type:     'admission',
-            title:    `New Teacher Registered — ${teacherName}`,
-            message:  `${teacherName} has been registered. Employee ID: ${finalEmployeeId}.`,
-            link:     '/admin/teachers',
+            type: 'admission',
+            title: `New Teacher Registered — ${teacherName}`,
+            message: `${teacherName} has been registered. Employee ID: ${finalEmployeeId}.`,
+            link: '/admin/teachers',
             metadata: { userId: user._id, employeeId: finalEmployeeId },
           });
         }
       } catch (notifErr) {
-        logger.warn('[Notif] Teacher registration notification failed', { error: notifErr.message });
+        logger.warn('[Notif] Teacher registration notification failed', {
+          error: notifErr.message,
+        });
       }
     })();
   } catch (error) {
     return serviceError(res, 'Teacher registration error:', error);
   }
 };
-
 
 exports.getStudentDetails = async (req, res) => {
   try {
@@ -650,7 +892,6 @@ exports.updateTeacherDetails = async (req, res) => {
   }
 };
 
-
 const toggleUserStatus = async (req, res, isActive, entityType) => {
   try {
     // ← school scoped: ensure the user belongs to this school before toggling
@@ -668,7 +909,9 @@ const toggleUserStatus = async (req, res, isActive, entityType) => {
     );
 
     const action = isActive ? 'activated' : 'deactivated';
-    res.status(200).json({ success: true, message: `${entityType} ${action} successfully`, data: user });
+    res
+      .status(200)
+      .json({ success: true, message: `${entityType} ${action} successfully`, data: user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -679,14 +922,12 @@ exports.deactivateStudent = (req, res) => toggleUserStatus(req, res, false, 'Stu
 exports.activateTeacher = (req, res) => toggleUserStatus(req, res, true, 'Teacher');
 exports.deactivateTeacher = (req, res) => toggleUserStatus(req, res, false, 'Teacher');
 
-
 exports.getAllStudents = async (req, res) => {
-
   try {
     const filter = {
-      schoolId: req.schoolId,   // ← data isolation
+      schoolId: req.schoolId, // ← data isolation
       isDeleted: { $ne: true }, // ← always hide soft-deleted students
-      status: { $nin: ['deleted'] } // ← extra guard: exclude status=deleted
+      status: { $nin: ['deleted'] }, // ← extra guard: exclude status=deleted
     };
     if (req.query.classId) filter.classId = req.query.classId;
     if (req.query.sectionId) filter.sectionId = req.query.sectionId;
@@ -697,17 +938,17 @@ exports.getAllStudents = async (req, res) => {
     // Text search: name, rollNo, scholarNo
     if (req.query.search) {
       const q = req.query.search.trim();
-      const words = q.split(" ");
+      const words = q.split(' ');
       const regex = new RegExp(q, 'i');
       if (words.length > 1) {
         filter.$or = [
           {
             $and: [
               { firstName: new RegExp(words[0], 'i') },
-              { lastName: new RegExp(words[1], 'i') }
-            ]
+              { lastName: new RegExp(words[1], 'i') },
+            ],
           },
-          { fullName: regex }
+          { fullName: regex },
         ];
       } else {
         filter.$or = [
@@ -733,7 +974,6 @@ exports.getAllStudents = async (req, res) => {
   }
 };
 
-
 /**
  * GET /api/v1/admission/students/export-excel
  * Downloads an Excel (.xlsx) file containing all (filtered) students.
@@ -748,88 +988,100 @@ exports.exportStudentsExcel = async (req, res) => {
       isDeleted: { $ne: true },
       status: { $nin: ['deleted'] },
     };
-    if (req.query.classId)   filter.classId   = req.query.classId;
+    if (req.query.classId) filter.classId = req.query.classId;
     if (req.query.sectionId) filter.sectionId = req.query.sectionId;
-    if (req.query.session)   filter.session   = req.query.session;
+    if (req.query.session) filter.session = req.query.session;
     if (req.query.status && req.query.status !== 'deleted') filter.status = req.query.status;
 
     if (req.query.search) {
-      const q     = req.query.search.trim();
+      const q = req.query.search.trim();
       const words = q.split(' ');
       const regex = new RegExp(q, 'i');
-      filter.$or  = words.length > 1
-        ? [
-            { $and: [{ firstName: new RegExp(words[0], 'i') }, { lastName: new RegExp(words[1], 'i') }] },
-            { fullName: regex },
-          ]
-        : [
-            { firstName: regex }, { lastName: regex }, { fullName: regex },
-            { rollNo: regex }, { scholarNo: regex }, { admissionNumber: regex },
-          ];
+      filter.$or =
+        words.length > 1
+          ? [
+              {
+                $and: [
+                  { firstName: new RegExp(words[0], 'i') },
+                  { lastName: new RegExp(words[1], 'i') },
+                ],
+              },
+              { fullName: regex },
+            ]
+          : [
+              { firstName: regex },
+              { lastName: regex },
+              { fullName: regex },
+              { rollNo: regex },
+              { scholarNo: regex },
+              { admissionNumber: regex },
+            ];
     }
 
     const students = await StudentProfile.find(filter)
-      .populate('classId',   'name')
+      .populate('classId', 'name')
       .populate('sectionId', 'name')
-      .populate('session',   'name')
-      .populate('userId',    'email phone isActive')
+      .populate('session', 'name')
+      .populate('userId', 'email phone isActive')
       .sort({ firstName: 1, lastName: 1 })
       .lean();
 
     // Build flat rows for Excel
     const rows = students.map((s, i) => ({
-      'S.No':               i + 1,
-      'Admission No':       s.admissionNumber || '',
-      'Scholar No':         s.scholarNo       || '',
-      'Roll No':            s.rollNo          || '',
-      'Student ID':         s.studentId       || '',
-      'First Name':         s.firstName       || '',
-      'Middle Name':        s.middleName      || '',
-      'Last Name':          s.lastName        || '',
-      'Gender':             s.gender          || '',
-      'Date of Birth':      s.dateOfBirth ? new Date(s.dateOfBirth).toLocaleDateString('en-IN') : '',
-      'Class':              s.classId?.name   || '',
-      'Section':            s.sectionId?.name || '',
-      'Session':            s.session?.name   || '',
-      'Admission Date':     s.admissionDate ? new Date(s.admissionDate).toLocaleDateString('en-IN') : '',
-      'Category':           s.category        || '',
-      'Caste':              s.caste           || '',
-      'Religion':           s.religion        || '',
-      'Blood Group':        s.bloodGroup      || '',
-      'Aadhar Card':        s.aadharCard      || '',
-      'APAAR ID':           s.apaarId         || '',
-      'Samagra ID':         s.ssmId           || '',
-      'Family ID':          s.familyId        || '',
-      'PEN No':             s.penNo || s.pen  || '',
-      'SRN No':             s.srnNo           || '',
-      'Board Enroll No':    s.boardEnrollNo   || '',
-      'Ladli Laxmi No':     s.ladliLaxmiNo    || '',
-      'RTE':                s.rte ? 'Yes' : 'No',
-      'BPL Student':        s.bplStudent ? 'Yes' : 'No',
-      'BPL Card No':        s.bplCardNo       || '',
-      'Phone':              s.phone || s.userId?.phone || '',
-      'WhatsApp No':        s.whatsappNo      || '',
-      'Alternate Number':   s.alternateNumber || '',
-      'Address':            s.address         || '',
-      'City':               s.city            || '',
-      'State':              s.state           || '',
-      'Pincode':            s.pincode         || '',
-      "Father's Name":      s.parentDetails?.father?.name        || '',
-      "Father's Phone":     s.parentDetails?.father?.phone       || '',
-      "Father's Occupation":s.parentDetails?.father?.occupation  || '',
-      "Father's Income":    s.parentDetails?.father?.annualIncome|| '',
-      "Father's Aadhar":    s.fatherAadharCard || '',
-      "Mother's Name":      s.parentDetails?.mother?.name        || '',
-      "Mother's Phone":     s.parentDetails?.mother?.phone       || '',
-      'Account Number':     s.bankDetails?.accountNumber || '',
-      'Bank Name':          s.bankDetails?.bankName      || '',
-      'IFSC Code':          s.bankDetails?.ifsc          || '',
-      'Previous School':    s.previousSchool  || '',
-      'Previous Class':     s.previousClass   || '',
-      'Dise Code':          s.diseCode        || '',
-      'Previous Result':    s.previousResult  || '',
-      'Status':             s.status          || '',
-      'Email':              s.userId?.email   || '',
+      'S.No': i + 1,
+      'Admission No': s.admissionNumber || '',
+      'Scholar No': s.scholarNo || '',
+      'Roll No': s.rollNo || '',
+      'Student ID': s.studentId || '',
+      'First Name': s.firstName || '',
+      'Middle Name': s.middleName || '',
+      'Last Name': s.lastName || '',
+      Gender: s.gender || '',
+      'Date of Birth': s.dateOfBirth ? new Date(s.dateOfBirth).toLocaleDateString('en-IN') : '',
+      Class: s.classId?.name || '',
+      Section: s.sectionId?.name || '',
+      Session: s.session?.name || '',
+      'Admission Date': s.admissionDate
+        ? new Date(s.admissionDate).toLocaleDateString('en-IN')
+        : '',
+      Category: s.category || '',
+      Caste: s.caste || '',
+      Religion: s.religion || '',
+      'Blood Group': s.bloodGroup || '',
+      'Aadhar Card': s.aadharCard || '',
+      'APAAR ID': s.apaarId || '',
+      'Samagra ID': s.ssmId || '',
+      'Family ID': s.familyId || '',
+      'PEN No': s.penNo || s.pen || '',
+      'SRN No': s.srnNo || '',
+      'Board Enroll No': s.boardEnrollNo || '',
+      'Ladli Laxmi No': s.ladliLaxmiNo || '',
+      RTE: s.rte ? 'Yes' : 'No',
+      'BPL Student': s.bplStudent ? 'Yes' : 'No',
+      'BPL Card No': s.bplCardNo || '',
+      Phone: s.phone || s.userId?.phone || '',
+      'WhatsApp No': s.whatsappNo || '',
+      'Alternate Number': s.alternateNumber || '',
+      Address: s.address || '',
+      City: s.city || '',
+      State: s.state || '',
+      Pincode: s.pincode || '',
+      "Father's Name": s.parentDetails?.father?.name || '',
+      "Father's Phone": s.parentDetails?.father?.phone || '',
+      "Father's Occupation": s.parentDetails?.father?.occupation || '',
+      "Father's Income": s.parentDetails?.father?.annualIncome || '',
+      "Father's Aadhar": s.fatherAadharCard || '',
+      "Mother's Name": s.parentDetails?.mother?.name || '',
+      "Mother's Phone": s.parentDetails?.mother?.phone || '',
+      'Account Number': s.bankDetails?.accountNumber || '',
+      'Bank Name': s.bankDetails?.bankName || '',
+      'IFSC Code': s.bankDetails?.ifsc || '',
+      'Previous School': s.previousSchool || '',
+      'Previous Class': s.previousClass || '',
+      'Dise Code': s.diseCode || '',
+      'Previous Result': s.previousResult || '',
+      Status: s.status || '',
+      Email: s.userId?.email || '',
     }));
 
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -837,14 +1089,17 @@ exports.exportStudentsExcel = async (req, res) => {
     XLSX.utils.book_append_sheet(wb, ws, 'Students');
 
     // Auto-width columns
-    const colWidths = Object.keys(rows[0] || {}).map(key => ({
-      wch: Math.max(key.length, ...rows.map(r => String(r[key] || '').length)) + 2,
+    const colWidths = Object.keys(rows[0] || {}).map((key) => ({
+      wch: Math.max(key.length, ...rows.map((r) => String(r[key] || '').length)) + 2,
     }));
     ws['!cols'] = colWidths;
 
     const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
     res.setHeader('Content-Disposition', `attachment; filename="students_${Date.now()}.xlsx"`);
     res.setHeader('Content-Length', buf.length);
     res.send(buf);
@@ -882,18 +1137,22 @@ exports.getSchoolSettings = async (req, res) => {
 exports.updateSchoolSettings = async (req, res) => {
   try {
     const {
-      autoGenerateAdmissionNo, autoGenerateRollNo, autoGenerateStudentId,
-      allowHallAttendance, isOasesEnabled,
+      autoGenerateAdmissionNo,
+      autoGenerateRollNo,
+      autoGenerateStudentId,
+      allowHallAttendance,
+      isOasesEnabled,
       schoolProfile, // ← new: school profile fields from redesigned Settings page
     } = req.body;
 
     const settings = await getSettings(req.schoolId); // ← scoped to current school
 
-    if (autoGenerateAdmissionNo !== undefined) settings.autoGenerateAdmissionNo = autoGenerateAdmissionNo;
-    if (autoGenerateRollNo      !== undefined) settings.autoGenerateRollNo      = autoGenerateRollNo;
-    if (autoGenerateStudentId   !== undefined) settings.autoGenerateStudentId   = autoGenerateStudentId;
-    if (allowHallAttendance     !== undefined) settings.allowHallAttendance     = allowHallAttendance;
-    if (isOasesEnabled          !== undefined) {
+    if (autoGenerateAdmissionNo !== undefined)
+      settings.autoGenerateAdmissionNo = autoGenerateAdmissionNo;
+    if (autoGenerateRollNo !== undefined) settings.autoGenerateRollNo = autoGenerateRollNo;
+    if (autoGenerateStudentId !== undefined) settings.autoGenerateStudentId = autoGenerateStudentId;
+    if (allowHallAttendance !== undefined) settings.allowHallAttendance = allowHallAttendance;
+    if (isOasesEnabled !== undefined) {
       settings.isOasesEnabled = isOasesEnabled;
       if (!settings.modules) settings.modules = {};
       settings.modules.oases = isOasesEnabled;
@@ -902,13 +1161,37 @@ exports.updateSchoolSettings = async (req, res) => {
     // Merge schoolProfile fields (whitelist approach for security)
     if (schoolProfile && typeof schoolProfile === 'object') {
       const ALLOWED_PROFILE_KEYS = [
-        'fullName', 'tagline', 'headerTagline', 'shortName', 'schoolCode',
-        'affiliatedTo', 'affiliatedToText', 'affiliationCode', 'udiseCode',
-        'contactPerson', 'mobileNumber', 'whatsappNumber', 'phoneNumber',
-        'emailId', 'website', 'pincode', 'city', 'state', 'address',
-        'schoolLogo', 'watermarkLogo', 'authoritySignature', 'marksheetQrCode',
-        'country', 'currency', 'language',
-        'weekOffDay', 'gstNo', 'fontForPdf', 'aboutSchool', 'admissionFormNote',
+        'fullName',
+        'tagline',
+        'headerTagline',
+        'shortName',
+        'schoolCode',
+        'affiliatedTo',
+        'affiliatedToText',
+        'affiliationCode',
+        'udiseCode',
+        'contactPerson',
+        'mobileNumber',
+        'whatsappNumber',
+        'phoneNumber',
+        'emailId',
+        'website',
+        'pincode',
+        'city',
+        'state',
+        'address',
+        'schoolLogo',
+        'watermarkLogo',
+        'authoritySignature',
+        'marksheetQrCode',
+        'country',
+        'currency',
+        'language',
+        'weekOffDay',
+        'gstNo',
+        'fontForPdf',
+        'aboutSchool',
+        'admissionFormNote',
       ];
       if (!settings.schoolProfile) settings.schoolProfile = {};
       ALLOWED_PROFILE_KEYS.forEach((key) => {
@@ -936,7 +1219,9 @@ exports.uploadSettingsLogo = async (req, res) => {
     const { type } = req.query;
 
     if (!ALLOWED_TYPES.includes(type)) {
-      return res.status(400).json({ success: false, message: `Invalid type. Use: ${ALLOWED_TYPES.join(', ')}` });
+      return res
+        .status(400)
+        .json({ success: false, message: `Invalid type. Use: ${ALLOWED_TYPES.join(', ')}` });
     }
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
@@ -955,7 +1240,9 @@ exports.uploadSettingsLogo = async (req, res) => {
         publicIdParts[publicIdParts.length - 1] = fileWithExt.replace(/\.[^.]+$/, '');
         const publicId = publicIdParts.join('/');
         await deleteFromCloud(publicId);
-      } catch (_) { /* ignore cleanup errors */ }
+      } catch (_) {
+        /* ignore cleanup errors */
+      }
     }
 
     // Upload new image
@@ -967,7 +1254,9 @@ exports.uploadSettingsLogo = async (req, res) => {
     settings.markModified('schoolProfile');
     await settings.save();
 
-    res.status(200).json({ success: true, message: 'Image uploaded', url: imageUrl, data: settings });
+    res
+      .status(200)
+      .json({ success: true, message: 'Image uploaded', url: imageUrl, data: settings });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -1002,7 +1291,7 @@ exports.uploadStudentPhoto = async (req, res) => {
     // Upload to Cloudinary
     const uploadResult = await uploadImageToCloud(req.file.path, {
       folder: `erp/${req.schoolId}/students`,
-      public_id: `student_${id}`,     // deterministic id → overwrites old photo cleanly
+      public_id: `student_${id}`, // deterministic id → overwrites old photo cleanly
       overwrite: true,
       resource_type: 'image',
     });
@@ -1018,7 +1307,7 @@ exports.uploadStudentPhoto = async (req, res) => {
     // Persist photo URL and publicId in StudentProfile
     profile.documents = profile.documents || {};
     profile.documents.photo = photoUrl;
-    profile.documents.photoPublicId = publicId;        // stored for deletion on next update
+    profile.documents.photoPublicId = publicId; // stored for deletion on next update
     profile.markModified('documents');
     await profile.save();
 
@@ -1031,7 +1320,6 @@ exports.uploadStudentPhoto = async (req, res) => {
     return serviceError(res, 'uploadStudentPhoto error:', error);
   }
 };
-
 
 const AdmissionFormSettings = require('../models/AdmissionFormSettings');
 const { ALL_FIELDS } = require('../models/AdmissionFormSettings');
@@ -1067,7 +1355,7 @@ exports.updateAdmissionFormSettings = async (req, res) => {
 
     if (Array.isArray(visibleFields)) {
       // Only allow valid field keys
-      updateData.visibleFields = visibleFields.filter(f => ALL_FIELDS.includes(f));
+      updateData.visibleFields = visibleFields.filter((f) => ALL_FIELDS.includes(f));
     }
 
     if (Array.isArray(registrationFormConfig)) {
@@ -1075,7 +1363,9 @@ exports.updateAdmissionFormSettings = async (req, res) => {
     }
 
     if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({ success: false, message: 'Provide visibleFields or registrationFormConfig' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Provide visibleFields or registrationFormConfig' });
     }
 
     let settings = await AdmissionFormSettings.findOneAndUpdate(
@@ -1100,15 +1390,12 @@ exports.updateAdmissionFormSettings = async (req, res) => {
 
 exports.getFormStudents = async (req, res) => {
   try {
-    const {
-      page = 1, limit = 20, search = '',
-      classId, sectionId, session
-    } = req.query;
+    const { page = 1, limit = 20, search = '', classId, sectionId, session } = req.query;
 
     const filter = { schoolId: req.schoolId, isDeleted: { $ne: true } };
-    if (classId)   filter.classId   = classId;
+    if (classId) filter.classId = classId;
     if (sectionId) filter.sectionId = sectionId;
-    if (session)   filter.session   = session;
+    if (session) filter.session = session;
 
     if (search && search.trim()) {
       const q = search.trim();
@@ -1116,29 +1403,37 @@ exports.getFormStudents = async (req, res) => {
       const regex = new RegExp(q, 'i');
       if (words.length > 1) {
         filter.$or = [
-          { $and: [{ firstName: new RegExp(words[0], 'i') }, { lastName: new RegExp(words[1], 'i') }] },
+          {
+            $and: [
+              { firstName: new RegExp(words[0], 'i') },
+              { lastName: new RegExp(words[1], 'i') },
+            ],
+          },
           { fullName: regex },
           { 'parentDetails.father.name': regex },
         ];
       } else {
         filter.$or = [
-          { firstName: regex }, { lastName: regex }, { fullName: regex },
-          { admissionNumber: regex }, { rollNo: regex },
+          { firstName: regex },
+          { lastName: regex },
+          { fullName: regex },
+          { admissionNumber: regex },
+          { rollNo: regex },
           { 'parentDetails.father.name': regex },
         ];
       }
     }
 
-    const pageNum  = Math.max(1, parseInt(page));
+    const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
-    const skip     = (pageNum - 1) * limitNum;
+    const skip = (pageNum - 1) * limitNum;
 
     const [students, total] = await Promise.all([
       StudentProfile.find(filter)
-        .populate('classId',   'name numericOrder')
+        .populate('classId', 'name numericOrder')
         .populate('sectionId', 'name')
-        .populate('session',   'name')
-        .populate('userId',    'firstName lastName email phone isActive')
+        .populate('session', 'name')
+        .populate('userId', 'firstName lastName email phone isActive')
         .sort({ firstName: 1, lastName: 1 })
         .skip(skip)
         .limit(limitNum)
@@ -1162,4 +1457,3 @@ exports.getFormStudents = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-

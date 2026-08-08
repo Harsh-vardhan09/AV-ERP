@@ -22,22 +22,21 @@ app.set('trust proxy', 1);
 app.use(helmet(helmetConfig));
 app.use(compression({ threshold: 1024 }));
 
-app.use(express.json({ limit: '50mb' }));            // large import metadata
+app.use(express.json({ limit: '50mb' })); // large import metadata
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 app.use(morgan('short'));
-app.use(mongoSanitize({ replaceWith: '_' }));        // strip $ and . from input
+app.use(mongoSanitize({ replaceWith: '_' })); // strip $ and . from input
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));                 // preflight, SAME options
+app.options('*', cors(corsOptions)); // preflight, SAME options
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads')));
 
 // Health must precede the route block: complainBoxRoute mounts on the bare
 // '/api/v1' path and would otherwise shadow /api/v1/health
-app.get('/', (req, res) =>
-  res.json({ status: 'ok', message: 'School ERP API is running' }));
+app.get('/', (req, res) => res.json({ status: 'ok', message: 'School ERP API is running' }));
 
 app.get('/api/v1/health', (req, res) =>
   res.status(200).json({
@@ -46,16 +45,23 @@ app.get('/api/v1/health', (req, res) =>
     uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV || 'development',
-  }));
+  })
+);
 
-// Not yet in a module: these three routers still live in src-old. They are passed
-// through the loader so they sort into their exact former positions — 60 and 90 sit
-// ABOVE the bare /api/v1 mount (order 130) and 150 below it, and that is what keeps
-// their unauthenticated responses unchanged.
+// Not yet in a module: this router still lives in src-old. It is passed through the
+// loader so it sorts into its exact former position — 150 sits BELOW the bare /api/v1
+// mount (order 130), and that is what keeps its unauthenticated responses unchanged.
+// exam-controller (60) and assignment (90) now carry their own order in the
+// examination and academics manifests.
 const legacyMounts = [
-  { module: 'src-old', path: '/api/v1/exam-controller', routes: require('../src-old/routes/examControllerRoutes'), auth: 'router', limiter: 'api', order: 60 },
-  { module: 'src-old', path: '/api/v1/assignment',      routes: require('../src-old/routes/assignment'),           auth: 'router', limiter: 'api', order: 90 },
-  { module: 'src-old', path: '/events',                 routes: require('../src-old/routes/eventRoutes'),          auth: 'router', limiter: 'api', order: 150 },
+  {
+    module: 'src-old',
+    path: '/events',
+    routes: require('../src-old/routes/eventRoutes'),
+    auth: 'router',
+    limiter: 'api',
+    order: 150,
+  },
 ];
 
 registerModules(app, { apiLimiter, authLimiter }, legacyMounts);

@@ -12,13 +12,22 @@ const A4_W = 794;
 const A4_H = 1123;
 
 class PDFService {
-
   // The only caller of TemplateParserService, and the only place _wrapInDocument
   // runs — wrapping twice nests a second <html> and breaks @page
-  static async generateFromTemplate({ template, data, css = '', fileName, outputDir, options = {} }) {
+  static async generateFromTemplate({
+    template,
+    data,
+    css = '',
+    fileName,
+    outputDir,
+    options = {},
+  }) {
     // The one sanctioned core -> module import. Rendering a template is the
     // reportcards module's logic; core owns only the Puppeteer wrapper around it.
     // Invert later by having reportcards pass the rendered HTML in.
+    // TODO: the one sanctioned core -> module import. Invert by having reportcards
+    // TODO: render the HTML and pass it in, leaving core owning only Puppeteer
+    // eslint-disable-next-line import/no-restricted-paths
     const { TemplateParserService } = require('../../modules/reportcards');
     const startTime = Date.now();
 
@@ -61,7 +70,13 @@ class PDFService {
     return { ...result, generationTime: Date.now() - startTime };
   }
 
-  static async generateAndSave({ html, css = '', fileName, outputDir = './output/reports', options = {} }) {
+  static async generateAndSave({
+    html,
+    css = '',
+    fileName,
+    outputDir = './output/reports',
+    options = {},
+  }) {
     try {
       await fs.mkdir(outputDir, { recursive: true });
       const result = await this.generatePDF({ html, css, options });
@@ -69,7 +84,13 @@ class PDFService {
       const finalFileName = fileName || `report_${uuidv4()}.pdf`;
       const filePath = path.join(outputDir, finalFileName);
       await fs.writeFile(filePath, result.buffer);
-      return { success: true, filePath, fileName: finalFileName, size: result.size, generationTime: result.generationTime };
+      return {
+        success: true,
+        filePath,
+        fileName: finalFileName,
+        size: result.size,
+        generationTime: result.generationTime,
+      };
     } catch (err) {
       return { success: false, error: err.message };
     }
@@ -82,10 +103,18 @@ class PDFService {
     const BATCH_SIZE = 5;
     for (let i = 0; i < reports.length; i += BATCH_SIZE) {
       const batch = reports.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(batch.map(async (r) => {
-        const res = await this.generateAndSave({ html: r.html, css: r.css, fileName: r.fileName, outputDir, options: r.options || options });
-        return { studentId: r.studentId, ...res };
-      }));
+      const batchResults = await Promise.all(
+        batch.map(async (r) => {
+          const res = await this.generateAndSave({
+            html: r.html,
+            css: r.css,
+            fileName: r.fileName,
+            outputDir,
+            options: r.options || options,
+          });
+          return { studentId: r.studentId, ...res };
+        })
+      );
       results.push(...batchResults);
     }
     return results;
@@ -124,12 +153,12 @@ class PDFService {
 
       const buffer = await page.pdf({
         format: options.format || 'A4',
-        printBackground: true,      // preserve all colours, backgrounds, borders
-        preferCSSPageSize: true,    // honour the @page size declaration in CSS
+        printBackground: true, // preserve all colours, backgrounds, borders
+        preferCSSPageSize: true, // honour the @page size declaration in CSS
         // Margins MUST be 0 here — @page CSS in _wrapInDocument owns the margins.
         // Letting Puppeteer also set margins causes double-margin compression.
         margin: { top: '0', right: '0', bottom: '0', left: '0' },
-        scale: 1,                   // no auto-scale / shrink
+        scale: 1, // no auto-scale / shrink
         displayHeaderFooter: false,
         omitBackground: false,
       });
@@ -251,8 +280,8 @@ ${content}
   static getMetadata(buffer) {
     return {
       size: buffer.length,
-      sizeKB: Math.round(buffer.length / 1024 * 100) / 100,
-      sizeMB: Math.round(buffer.length / (1024 * 1024) * 100) / 100,
+      sizeKB: Math.round((buffer.length / 1024) * 100) / 100,
+      sizeMB: Math.round((buffer.length / (1024 * 1024)) * 100) / 100,
     };
   }
 
@@ -265,7 +294,10 @@ ${content}
       for (const file of files) {
         const fp = path.join(outputDir, file);
         const stats = await fs.stat(fp);
-        if (now - stats.mtimeMs > maxAgeMs) { await fs.unlink(fp); deleted++; }
+        if (now - stats.mtimeMs > maxAgeMs) {
+          await fs.unlink(fp);
+          deleted++;
+        }
       }
       return deleted;
     } catch (err) {

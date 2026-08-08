@@ -1,5 +1,8 @@
 const logger = require('../logging/logger');
 
+// TODO: core -> module. The gate reads per-school settings that tenancy owns
+// TODO: invert by having tenancy register the gate factory with core at boot
+// eslint-disable-next-line import/no-restricted-paths
 const SchoolSettings = require('../../modules/tenancy').SchoolSettings;
 const { isModuleEnabled } = require('@av-erp/shared');
 
@@ -16,9 +19,10 @@ const checkModuleAccess = (moduleKey) => {
       // No school context means a public or super-admin route
       if (!schoolId) return next();
 
-      const settings = await SchoolSettings
-        .findOne({ schoolId }, { modules: 1, isOasesEnabled: 1 })
-        .lean();
+      const settings = await SchoolSettings.findOne(
+        { schoolId },
+        { modules: 1, isOasesEnabled: 1 }
+      ).lean();
 
       let enabled;
 
@@ -31,10 +35,10 @@ const checkModuleAccess = (moduleKey) => {
 
       if (!enabled) {
         return res.status(403).json({
-          success:       false,
+          success: false,
           moduleDisabled: true,
-          module:        moduleKey,
-          message:       `The "${moduleKey.replace(/_/g, ' ')}" module is not enabled for your school. Please contact your administrator.`,
+          module: moduleKey,
+          message: `The "${moduleKey.replace(/_/g, ' ')}" module is not enabled for your school. Please contact your administrator.`,
         });
       }
 

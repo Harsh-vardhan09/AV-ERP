@@ -1,11 +1,11 @@
-const AcademicSession = require('../../../../src-old/models/AcademicSession');  // TEMP: moves to modules/academics
-const ClassModel = require('../../../../src-old/models/ClassModel');  // TEMP: moves to modules/academics
-const ClassSubjectMap = require('../../../../src-old/models/ClassSubjectMap');  // TEMP: moves to modules/academics
-const ClassTeacherAssignment = require('../../../../src-old/models/ClassTeacherAssignment');  // TEMP: moves to modules/academics
-const CoScholasticMark = require('../../../../src-old/models/CoScholasticMark');  // TEMP: moves to modules/examination
-const Exam = require('../../../../src-old/models/Exam');  // TEMP: moves to modules/examination
-const ExamSubjectConfig = require('../../../../src-old/models/ExamSubjectConfig');  // TEMP: moves to modules/examination
-const Marks = require('../../../../src-old/models/MarksModel');  // TEMP: moves to modules/examination
+const { AcademicSession } = require('../../academics');
+const { ClassModel } = require('../../academics');
+const { ClassSubjectMap } = require('../../academics');
+const { ClassTeacherAssignment } = require('../../academics');
+const { CoScholasticMark } = require('../../examination');
+const { Exam } = require('../../examination');
+const { ExamSubjectConfig } = require('../../examination');
+const { MarksModel: Marks } = require('../../examination');
 const ReportCard = require('../models/ReportCard');
 const ReportCardMark = require('../models/ReportCardMark');
 const StudentProfile = require('../../people').StudentProfile;
@@ -16,12 +16,13 @@ const {
   sanitizeScholasticRows,
   sanitizeCoScholasticRows,
   sanitizeDynamicMarks,
-} = require('../../../../src-old/utils/marksValidation');  // TEMP: moves to modules/examination
+} = require('../../examination').marksValidation;
 const { canGenerateReport } = require('../lib/reportCardValidation');
-const { getExamReadiness } = require('../../../../src-old/services/marksReadinessService');  // TEMP: moves to modules/examination
+const { getExamReadiness } = require('../../examination').marksReadinessService;
 const logger = require('../../../core/logging/logger.js');
 
-const { createInAppNotification, sendEmailNotification } = require('../../notifications').notificationService;
+const { createInAppNotification, sendEmailNotification } =
+  require('../../notifications').notificationService;
 
 const SLOT_FIELDS = [
   'fa1_1',
@@ -36,16 +37,7 @@ const SLOT_FIELDS = [
   'sa2',
 ];
 
-const FA_SLOT_ORDER = [
-  'fa1_1',
-  'fa1_2',
-  'fa2_1',
-  'fa2_2',
-  'fa3_1',
-  'fa3_2',
-  'fa4_1',
-  'fa4_2',
-];
+const FA_SLOT_ORDER = ['fa1_1', 'fa1_2', 'fa2_1', 'fa2_2', 'fa3_1', 'fa3_2', 'fa4_1', 'fa4_2'];
 
 const DEFAULT_CO_SCHOLASTIC_SKILLS = [
   'Punctuality / Regularity',
@@ -99,7 +91,10 @@ const calculateSubjectTotal = (row) => {
   };
 };
 
-const normalizeExamName = (name) => String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const normalizeExamName = (name) =>
+  String(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
 
 const isHalfYearlyExam = (exam) => {
   const normalized = normalizeExamName(exam?.name);
@@ -225,7 +220,7 @@ const fetchClassExams = async (classId, sessionId, schoolId) => {
 const calculateDynamicSubjectTotal = (dynamicMarks = {}, exams = []) => {
   let obtained = 0;
   let achievedMax = 0;
-  const dm = dynamicMarks instanceof Map ? Object.fromEntries(dynamicMarks) : (dynamicMarks || {});
+  const dm = dynamicMarks instanceof Map ? Object.fromEntries(dynamicMarks) : dynamicMarks || {};
   exams.forEach((exam) => {
     const val = toNumberOrNull(dm[exam._id.toString()]);
     if (val !== null) {
@@ -261,7 +256,13 @@ const ensureTeacherCanAccessStudent = async (teacherId, studentProfile, sessionI
   return Boolean(assignment);
 };
 
-const ensureTeacherClassAccess = async (teacherId, classId, sessionId, schoolId, sectionId = null) => {
+const ensureTeacherClassAccess = async (
+  teacherId,
+  classId,
+  sessionId,
+  schoolId,
+  sectionId = null
+) => {
   const filter = {
     teacherId,
     classId,
@@ -281,16 +282,22 @@ const ensureCoScholasticRows = async (reportCardId, schoolId) => {
   const existing = await CoScholasticMark.find({ reportCardId, schoolId });
   const existingKeys = new Set(existing.map((item) => item.skillName));
 
-  const toCreate = DEFAULT_CO_SCHOLASTIC_SKILLS
-    .filter((skillName) => !existingKeys.has(skillName))
-    .map((skillName) => ({ reportCardId, skillName, schoolId }));
+  const toCreate = DEFAULT_CO_SCHOLASTIC_SKILLS.filter(
+    (skillName) => !existingKeys.has(skillName)
+  ).map((skillName) => ({ reportCardId, skillName, schoolId }));
 
   if (toCreate.length > 0) {
     await CoScholasticMark.insertMany(toCreate, { ordered: false });
   }
 };
 
-const seedSubjectRows = async (reportCardId, studentProfile, sessionId, schoolId, marksDocs = []) => {
+const seedSubjectRows = async (
+  reportCardId,
+  studentProfile,
+  sessionId,
+  schoolId,
+  marksDocs = []
+) => {
   const mappings = await ClassSubjectMap.find({
     classId: studentProfile?.classId?._id ?? studentProfile?.classId,
     session: sessionId,
@@ -322,12 +329,12 @@ const seedSubjectRows = async (reportCardId, studentProfile, sessionId, schoolId
 
   const existingRows = await ReportCardMark.find({ reportCardId, schoolId });
   const existingBySubjectId = new Set(
-    existingRows
-      .filter((row) => row.subjectId)
-      .map((row) => row.subjectId.toString())
+    existingRows.filter((row) => row.subjectId).map((row) => row.subjectId.toString())
   );
 
-  const existingBySubjectName = new Set(existingRows.map((row) => normalizeText(row.subject).toLowerCase()));
+  const existingBySubjectName = new Set(
+    existingRows.map((row) => normalizeText(row.subject).toLowerCase())
+  );
 
   // Auto-cleanup: remove ReportCardMark rows for deleted / unmapped subjects
   // Always runs. When subjectsFromMap is empty (all subjects deleted/unmapped),
@@ -343,7 +350,8 @@ const seedSubjectRows = async (reportCardId, studentProfile, sessionId, schoolId
     staleIds.forEach((staleId) => {
       const staleRow = existingRows.find((r) => String(r._id) === String(staleId));
       if (staleRow?.subjectId) existingBySubjectId.delete(staleRow.subjectId.toString());
-      if (staleRow?.subject) existingBySubjectName.delete(normalizeText(staleRow.subject).toLowerCase());
+      if (staleRow?.subject)
+        existingBySubjectName.delete(normalizeText(staleRow.subject).toLowerCase());
     });
   }
 
@@ -354,7 +362,10 @@ const seedSubjectRows = async (reportCardId, studentProfile, sessionId, schoolId
 
     if (!subjectName) return;
 
-    if ((sid && existingBySubjectId.has(sid)) || existingBySubjectName.has(subjectName.toLowerCase())) {
+    if (
+      (sid && existingBySubjectId.has(sid)) ||
+      existingBySubjectName.has(subjectName.toLowerCase())
+    ) {
       return;
     }
 
@@ -371,12 +382,24 @@ const seedSubjectRows = async (reportCardId, studentProfile, sessionId, schoolId
   }
 };
 
-const syncMarksFromSource = async (reportCard, studentProfile, sessionId, schoolId, debug = false) => {
+const syncMarksFromSource = async (
+  reportCard,
+  studentProfile,
+  sessionId,
+  schoolId,
+  debug = false
+) => {
   // Finalized report cards are immutable — never write marks/co-scholastic from source.
   if (reportCard.isFinalized) {
     const [marksRows, coScholasticRows] = await Promise.all([
-      ReportCardMark.find({ reportCardId: reportCard._id, schoolId }).sort({ createdAt: 1, subject: 1 }),
-      CoScholasticMark.find({ reportCardId: reportCard._id, schoolId }).sort({ createdAt: 1, skillName: 1 }),
+      ReportCardMark.find({ reportCardId: reportCard._id, schoolId }).sort({
+        createdAt: 1,
+        subject: 1,
+      }),
+      CoScholasticMark.find({ reportCardId: reportCard._id, schoolId }).sort({
+        createdAt: 1,
+        skillName: 1,
+      }),
     ]);
     return { marksRows, coScholasticRows, slotExamDetails: {} };
   }
@@ -409,10 +432,12 @@ const syncMarksFromSource = async (reportCard, studentProfile, sessionId, school
   const examIds = [...new Set(marksDocs.map((m) => m.examId?._id?.toString()).filter(Boolean))];
   const allowedConfigs = examIds.length
     ? await ExamSubjectConfig.find({
-      examId: { $in: examIds },
-      classId,
-      schoolId,
-    }).select('examId subjectId').lean()
+        examId: { $in: examIds },
+        classId,
+        schoolId,
+      })
+        .select('examId subjectId')
+        .lean()
     : [];
   const allowedPairs = new Set(
     allowedConfigs.map((cfg) => `${String(cfg.examId)}:${String(cfg.subjectId)}`)
@@ -424,7 +449,9 @@ const syncMarksFromSource = async (reportCard, studentProfile, sessionId, school
     return allowedPairs.has(`${examKey}:${subjectKey}`);
   });
 
-  const subjectsFromMarks = [...new Set(consistentMarksDocs.map((m) => m.subjectId?._id?.toString()).filter(Boolean))];
+  const subjectsFromMarks = [
+    ...new Set(consistentMarksDocs.map((m) => m.subjectId?._id?.toString()).filter(Boolean)),
+  ];
 
   if (debug) {
     // Debug logging: trace what the report card sync is using.
@@ -460,11 +487,19 @@ const syncMarksFromSource = async (reportCard, studentProfile, sessionId, school
   if (debug) {
     logger.debug(
       '[ReportCardDebug] ClassExams (ALL exams for this class):',
-      classExams.map((e) => ({ _id: String(e._id), name: e.name, type: e.type, maxMarks: e.maxMarks }))
+      classExams.map((e) => ({
+        _id: String(e._id),
+        name: e.name,
+        type: e.type,
+        maxMarks: e.maxMarks,
+      }))
     );
     logger.debug(
       '[ReportCardDebug] Marks examIds from source:',
-      consistentMarksDocs.map((m) => ({ examId: String(m.examId?._id || ''), subject: m.subjectId?.name || '' }))
+      consistentMarksDocs.map((m) => ({
+        examId: String(m.examId?._id || ''),
+        subject: m.subjectId?.name || '',
+      }))
     );
   }
 
@@ -497,9 +532,10 @@ const syncMarksFromSource = async (reportCard, studentProfile, sessionId, school
   if (classExams.length > 0) {
     const allRows = await ReportCardMark.find({ reportCardId: reportCard._id, schoolId });
     for (const row of allRows) {
-      const dmRaw = row.dynamicMarks instanceof Map
-        ? Object.fromEntries(row.dynamicMarks)
-        : (row.dynamicMarks || {});
+      const dmRaw =
+        row.dynamicMarks instanceof Map
+          ? Object.fromEntries(row.dynamicMarks)
+          : row.dynamicMarks || {};
       const subjectId = row.subjectId?.toString();
       if (!subjectId) continue;
 
@@ -538,8 +574,14 @@ const syncMarksFromSource = async (reportCard, studentProfile, sessionId, school
     }
   }
 
-  const finalRows = await ReportCardMark.find({ reportCardId: reportCard._id, schoolId }).sort({ createdAt: 1, subject: 1 });
-  const coScholasticRows = await CoScholasticMark.find({ reportCardId: reportCard._id, schoolId }).sort({ createdAt: 1, skillName: 1 });
+  const finalRows = await ReportCardMark.find({ reportCardId: reportCard._id, schoolId }).sort({
+    createdAt: 1,
+    subject: 1,
+  });
+  const coScholasticRows = await CoScholasticMark.find({
+    reportCardId: reportCard._id,
+    schoolId,
+  }).sort({ createdAt: 1, skillName: 1 });
 
   return {
     marksRows: finalRows,
@@ -585,21 +627,20 @@ const getOrCreateReportCard = async (studentProfile, sessionId, schoolId) => {
 };
 
 const buildSummary = (marksRows = [], classExams = []) => {
-  const maxPerSubject = classExams.length > 0
-    ? classExams.reduce((s, e) => s + e.maxMarks, 0)
-    : 100;
+  const maxPerSubject =
+    classExams.length > 0 ? classExams.reduce((s, e) => s + e.maxMarks, 0) : 100;
 
   const grandTotal = Number(
-    marksRows.reduce((sum, row) => {
-      const val = classExams.length > 0 ? (Number(row.dynamicTotal) || 0) : (Number(row.total) || 0);
-      return sum + val;
-    }, 0).toFixed(2)
+    marksRows
+      .reduce((sum, row) => {
+        const val = classExams.length > 0 ? Number(row.dynamicTotal) || 0 : Number(row.total) || 0;
+        return sum + val;
+      }, 0)
+      .toFixed(2)
   );
 
   const totalMax = marksRows.length * maxPerSubject;
-  const percentage = totalMax > 0
-    ? Number(((grandTotal / totalMax) * 100).toFixed(2))
-    : 0;
+  const percentage = totalMax > 0 ? Number(((grandTotal / totalMax) * 100).toFixed(2)) : 0;
 
   return {
     subjectCount: marksRows.length,
@@ -638,7 +679,15 @@ const ensureAllExamsEvaluated = async (classId, sessionId, schoolId) => {
   return exams.every((exam) => exam.evaluationStatus === 'completed');
 };
 
-const createPayload = ({ reportCard, studentProfile, marksRows, coScholasticRows, slotExamDetails, canEdit, classExams = [] }) => ({
+const createPayload = ({
+  reportCard,
+  studentProfile,
+  marksRows,
+  coScholasticRows,
+  slotExamDetails,
+  canEdit,
+  classExams = [],
+}) => ({
   reportCard,
   student: {
     _id: studentProfile._id,
@@ -677,25 +726,46 @@ exports.getReportCard = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Student profile not found' });
     }
 
-    if (req.user.role === 'student' && String(studentProfile.userId?._id) !== String(req.user._id)) {
+    if (
+      req.user.role === 'student' &&
+      String(studentProfile.userId?._id) !== String(req.user._id)
+    ) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
-    const sessionId = await resolveSessionId(req.query.session || studentProfile.session?._id, req.schoolId);
+    const sessionId = await resolveSessionId(
+      req.query.session || studentProfile.session?._id,
+      req.schoolId
+    );
     if (!sessionId) {
-      return res.status(400).json({ success: false, message: 'Session not found. Activate a session first.' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Session not found. Activate a session first.' });
     }
 
     if (req.user.role === 'teacher') {
-      const allowed = await ensureTeacherCanAccessStudent(req.user._id, studentProfile, sessionId, req.schoolId);
+      const allowed = await ensureTeacherCanAccessStudent(
+        req.user._id,
+        studentProfile,
+        sessionId,
+        req.schoolId
+      );
       if (!allowed) {
-        return res.status(403).json({ success: false, message: 'You are not assigned as class teacher for this student.' });
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message: 'You are not assigned as class teacher for this student.',
+          });
       }
     }
 
     const reportCard = await getOrCreateReportCard(studentProfile, sessionId, req.schoolId);
 
-    const debugMode = req.query?.debug === '1' || req.query?.debug === 'true' || process.env.DEBUG_REPORT_CARDS === '1';
+    const debugMode =
+      req.query?.debug === '1' ||
+      req.query?.debug === 'true' ||
+      process.env.DEBUG_REPORT_CARDS === '1';
 
     // Only sync marks from source if the report card is NOT finalized.
     // Finalized cards are immutable — we read exactly what is stored.
@@ -710,8 +780,14 @@ exports.getReportCard = async (req, res) => {
       ));
     } else {
       [marksRows, coScholasticRows] = await Promise.all([
-        ReportCardMark.find({ reportCardId: reportCard._id, schoolId: req.schoolId }).sort({ createdAt: 1, subject: 1 }),
-        CoScholasticMark.find({ reportCardId: reportCard._id, schoolId: req.schoolId }).sort({ createdAt: 1, skillName: 1 }),
+        ReportCardMark.find({ reportCardId: reportCard._id, schoolId: req.schoolId }).sort({
+          createdAt: 1,
+          subject: 1,
+        }),
+        CoScholasticMark.find({ reportCardId: reportCard._id, schoolId: req.schoolId }).sort({
+          createdAt: 1,
+          skillName: 1,
+        }),
       ]);
       slotExamDetails = {};
       classExams = await fetchClassExams(
@@ -721,9 +797,10 @@ exports.getReportCard = async (req, res) => {
       );
     }
 
-    const canEdit = req.user.role === 'admin'
-      ? !reportCard.isFinalized   // admin also locked out until unlock
-      : req.user.role === 'teacher' && !reportCard.isFinalized;
+    const canEdit =
+      req.user.role === 'admin'
+        ? !reportCard.isFinalized // admin also locked out until unlock
+        : req.user.role === 'teacher' && !reportCard.isFinalized;
 
     return res.status(200).json({
       success: true,
@@ -749,7 +826,10 @@ exports.updateReportCard = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Report card not found' });
     }
 
-    const studentProfile = await StudentProfile.findOne({ _id: reportCard.studentId, schoolId: req.schoolId })
+    const studentProfile = await StudentProfile.findOne({
+      _id: reportCard.studentId,
+      schoolId: req.schoolId,
+    })
       .populate('userId', 'firstName lastName email role')
       .populate('classId', 'name numericOrder')
       .populate('sectionId', 'name')
@@ -760,9 +840,19 @@ exports.updateReportCard = async (req, res) => {
     }
 
     if (req.user.role === 'teacher') {
-      const allowed = await ensureTeacherCanAccessStudent(req.user._id, studentProfile, reportCard.session, req.schoolId);
+      const allowed = await ensureTeacherCanAccessStudent(
+        req.user._id,
+        studentProfile,
+        reportCard.session,
+        req.schoolId
+      );
       if (!allowed) {
-        return res.status(403).json({ success: false, message: 'You are not assigned as class teacher for this student.' });
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message: 'You are not assigned as class teacher for this student.',
+          });
       }
     }
 
@@ -776,15 +866,8 @@ exports.updateReportCard = async (req, res) => {
       });
     }
 
-    const {
-      rank,
-      remarksTerm1,
-      remarksTerm2,
-      healthTerm1,
-      healthTerm2,
-      marks,
-      coScholastic,
-    } = req.body;
+    const { rank, remarksTerm1, remarksTerm2, healthTerm1, healthTerm2, marks, coScholastic } =
+      req.body;
 
     // CRITICAL: Only block direct marks updates if OASES is enabled
     // When OASES OFF, marks should be editable directly via report card API
@@ -826,15 +909,27 @@ exports.updateReportCard = async (req, res) => {
 
     if (healthTerm1 && typeof healthTerm1 === 'object') {
       reportCard.healthTerm1 = {
-        height: healthTerm1.height !== undefined ? normalizeText(healthTerm1.height) : reportCard.healthTerm1?.height || '',
-        weight: healthTerm1.weight !== undefined ? normalizeText(healthTerm1.weight) : reportCard.healthTerm1?.weight || '',
+        height:
+          healthTerm1.height !== undefined
+            ? normalizeText(healthTerm1.height)
+            : reportCard.healthTerm1?.height || '',
+        weight:
+          healthTerm1.weight !== undefined
+            ? normalizeText(healthTerm1.weight)
+            : reportCard.healthTerm1?.weight || '',
       };
     }
 
     if (healthTerm2 && typeof healthTerm2 === 'object') {
       reportCard.healthTerm2 = {
-        height: healthTerm2.height !== undefined ? normalizeText(healthTerm2.height) : reportCard.healthTerm2?.height || '',
-        weight: healthTerm2.weight !== undefined ? normalizeText(healthTerm2.weight) : reportCard.healthTerm2?.weight || '',
+        height:
+          healthTerm2.height !== undefined
+            ? normalizeText(healthTerm2.height)
+            : reportCard.healthTerm2?.height || '',
+        weight:
+          healthTerm2.weight !== undefined
+            ? normalizeText(healthTerm2.weight)
+            : reportCard.healthTerm2?.weight || '',
       };
     }
 
@@ -895,9 +990,10 @@ exports.updateReportCard = async (req, res) => {
             const raw = rowInput[field];
             const parsed = toNumberOrNull(raw);
             // Second-layer clamp (aligns with sanitizeScholasticRows)
-            updates[field] = parsed !== null && maxAllowed !== undefined
-              ? Math.min(maxAllowed, Math.max(0, parsed))
-              : parsed;
+            updates[field] =
+              parsed !== null && maxAllowed !== undefined
+                ? Math.min(maxAllowed, Math.max(0, parsed))
+                : parsed;
             touchedSlots = true;
           }
         });
@@ -925,7 +1021,8 @@ exports.updateReportCard = async (req, res) => {
         }
 
         if (rowInput.grade !== undefined) {
-          updates.grade = normalizeText(rowInput.grade) || calculateGrade(updates.total ?? row.total);
+          updates.grade =
+            normalizeText(rowInput.grade) || calculateGrade(updates.total ?? row.total);
         } else if (touchedSlots || updates.total !== undefined) {
           const totalForGrade = updates.total !== undefined ? updates.total : row.total;
           updates.grade = calculateGrade(totalForGrade);
@@ -998,24 +1095,21 @@ exports.updateReportCard = async (req, res) => {
         const rawTerm1 = Object.prototype.hasOwnProperty.call(rowInput, 'term1Marks')
           ? toNumberOrNull(rowInput.term1Marks)
           : row.term1Marks;
-        const term1Marks = rawTerm1 !== null
-          ? Math.min(CO_SCHOLASTIC_MAX, Math.max(0, rawTerm1))
-          : rawTerm1;
+        const term1Marks =
+          rawTerm1 !== null ? Math.min(CO_SCHOLASTIC_MAX, Math.max(0, rawTerm1)) : rawTerm1;
 
         const rawTerm2 = Object.prototype.hasOwnProperty.call(rowInput, 'term2Marks')
           ? toNumberOrNull(rowInput.term2Marks)
           : row.term2Marks;
-        const term2Marks = rawTerm2 !== null
-          ? Math.min(CO_SCHOLASTIC_MAX, Math.max(0, rawTerm2))
-          : rawTerm2;
+        const term2Marks =
+          rawTerm2 !== null ? Math.min(CO_SCHOLASTIC_MAX, Math.max(0, rawTerm2)) : rawTerm2;
 
         let grade = rowInput.grade !== undefined ? normalizeText(rowInput.grade) : '';
 
         if (!grade) {
           const values = [term1Marks, term2Marks].filter((value) => value !== null);
-          const score = values.length > 0
-            ? values.reduce((sum, value) => sum + value, 0) / values.length
-            : 0;
+          const score =
+            values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
           grade = calculateGrade(score);
         }
 
@@ -1023,7 +1117,10 @@ exports.updateReportCard = async (req, res) => {
           { _id: row._id, reportCardId: reportCard._id, schoolId: req.schoolId },
           {
             $set: {
-              skillName: rowInput.skillName !== undefined ? normalizeText(rowInput.skillName) || row.skillName : row.skillName,
+              skillName:
+                rowInput.skillName !== undefined
+                  ? normalizeText(rowInput.skillName) || row.skillName
+                  : row.skillName,
               term1Marks,
               term2Marks,
               grade,
@@ -1085,7 +1182,9 @@ exports.getExamsForClass = async (req, res) => {
     }
     const sessionId = await resolveSessionId(session, req.schoolId);
     if (!sessionId) {
-      return res.status(400).json({ success: false, message: 'Session not found. Activate a session first.' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Session not found. Activate a session first.' });
     }
     const exams = await fetchClassExams(classId, sessionId, req.schoolId);
     return res.status(200).json({ success: true, data: exams });
@@ -1104,7 +1203,9 @@ exports.generateReportCards = async (req, res) => {
 
     const sessionId = await resolveSessionId(session, req.schoolId);
     if (!sessionId) {
-      return res.status(400).json({ success: false, message: 'Session not found. Activate a session first.' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Session not found. Activate a session first.' });
     }
 
     // DUAL WORKFLOW VALIDATION
@@ -1122,9 +1223,20 @@ exports.generateReportCards = async (req, res) => {
     }
 
     if (req.user.role === 'teacher') {
-      const assignments = await ensureTeacherClassAccess(req.user._id, classId, sessionId, req.schoolId, sectionId || null);
+      const assignments = await ensureTeacherClassAccess(
+        req.user._id,
+        classId,
+        sessionId,
+        req.schoolId,
+        sectionId || null
+      );
       if (!assignments.length) {
-        return res.status(403).json({ success: false, message: 'You are not assigned as class teacher for this class.' });
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message: 'You are not assigned as class teacher for this class.',
+          });
       }
     }
 
@@ -1138,7 +1250,12 @@ exports.generateReportCards = async (req, res) => {
     if (sectionId) {
       studentFilter.sectionId = sectionId;
     } else if (req.user.role === 'teacher') {
-      const assignments = await ensureTeacherClassAccess(req.user._id, classId, sessionId, req.schoolId);
+      const assignments = await ensureTeacherClassAccess(
+        req.user._id,
+        classId,
+        sessionId,
+        req.schoolId
+      );
       studentFilter.sectionId = { $in: assignments.map((item) => item.sectionId) };
     }
 
@@ -1164,7 +1281,8 @@ exports.generateReportCards = async (req, res) => {
     if (finalizedCount > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Cannot regenerate report cards after finalize. Unlock finalized report cards first.',
+        message:
+          'Cannot regenerate report cards after finalize. Unlock finalized report cards first.',
       });
     }
 
@@ -1195,16 +1313,29 @@ exports.finalizeReportCard = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Report card not found' });
     }
 
-    const studentProfile = await StudentProfile.findOne({ _id: reportCard.studentId, schoolId: req.schoolId }).select('classId sectionId session');
+    const studentProfile = await StudentProfile.findOne({
+      _id: reportCard.studentId,
+      schoolId: req.schoolId,
+    }).select('classId sectionId session');
 
     if (!studentProfile) {
       return res.status(404).json({ success: false, message: 'Student profile not found' });
     }
 
     if (req.user.role === 'teacher') {
-      const allowed = await ensureTeacherCanAccessStudent(req.user._id, studentProfile, reportCard.session, req.schoolId);
+      const allowed = await ensureTeacherCanAccessStudent(
+        req.user._id,
+        studentProfile,
+        reportCard.session,
+        req.schoolId
+      );
       if (!allowed) {
-        return res.status(403).json({ success: false, message: 'You are not assigned as class teacher for this student.' });
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message: 'You are not assigned as class teacher for this student.',
+          });
       }
     }
 
@@ -1216,7 +1347,10 @@ exports.finalizeReportCard = async (req, res) => {
     );
 
     if (!finalized) {
-      const current = await ReportCard.findOne({ _id: reportCard._id, schoolId: req.schoolId }).select('isFinalized');
+      const current = await ReportCard.findOne({
+        _id: reportCard._id,
+        schoolId: req.schoolId,
+      }).select('isFinalized');
       if (!current) {
         return res.status(404).json({ success: false, message: 'Report card not found' });
       }
@@ -1242,7 +1376,7 @@ exports.finalizeReportCard = async (req, res) => {
     // TODO: unreachable — the 200 above returns first, so finalize never notifies
     // TODO: move this block above the response
     // eslint-disable-next-line no-unreachable
-    ;(async () => {
+    (async () => {
       try {
         const loginUrl = process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
         const School = require('../../tenancy').School;
@@ -1251,8 +1385,11 @@ exports.finalizeReportCard = async (req, res) => {
 
         // studentProfile is already fetched earlier in this function
         const fullProfile = await StudentProfile.findOne({
-          _id: reportCard.studentId, schoolId: req.schoolId,
-        }).populate('userId', 'firstName lastName email').lean();
+          _id: reportCard.studentId,
+          schoolId: req.schoolId,
+        })
+          .populate('userId', 'firstName lastName email')
+          .lean();
 
         if (!fullProfile?.userId) return;
         const studentUser = fullProfile.userId;
@@ -1260,21 +1397,21 @@ exports.finalizeReportCard = async (req, res) => {
 
         // In-app notification
         await createInAppNotification({
-          userId:          studentUser._id,
-          schoolId:        req.schoolId,
-          type:            'marks',
-          title:           'Report Card Published',
-          message:         'Your report card has been finalized and is ready to view.',
-          link:            '/student/report-card',
-          triggeredBy:     req.user._id,
+          userId: studentUser._id,
+          schoolId: req.schoolId,
+          type: 'marks',
+          title: 'Report Card Published',
+          message: 'Your report card has been finalized and is ready to view.',
+          link: '/student/report-card',
+          triggeredBy: req.user._id,
           triggeredByName: `${req.user.firstName} ${req.user.lastName}`,
-          metadata:        { reportCardId: finalized._id },
+          metadata: { reportCardId: finalized._id },
         });
 
         // Email notification
         if (studentUser.email) {
           await sendEmailNotification({
-            to:      studentUser.email,
+            to: studentUser.email,
             subject: `Report Card Published | ${schoolName}`,
             html: `
               <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
@@ -1304,7 +1441,9 @@ exports.finalizeReportCard = async (req, res) => {
           });
         }
       } catch (notifErr) {
-        logger.warn('[Notif] Report card finalize notification failed', { error: notifErr.message });
+        logger.warn('[Notif] Report card finalize notification failed', {
+          error: notifErr.message,
+        });
       }
     })();
     // END NOTIFICATION BLOCK
@@ -1342,7 +1481,9 @@ exports.unlockReportCard = async (req, res) => {
     );
 
     if (!unlocked) {
-      return res.status(400).json({ success: false, message: 'Report card is not finalized — nothing to unlock.' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Report card is not finalized — nothing to unlock.' });
     }
 
     return res.status(200).json({
@@ -1367,13 +1508,26 @@ exports.getClassReportCards = async (req, res) => {
 
     const sessionId = await resolveSessionId(session, req.schoolId);
     if (!sessionId) {
-      return res.status(400).json({ success: false, message: 'Session not found. Activate a session first.' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Session not found. Activate a session first.' });
     }
 
     if (req.user.role === 'teacher') {
-      const assignments = await ensureTeacherClassAccess(req.user._id, classId, sessionId, req.schoolId, sectionId || null);
+      const assignments = await ensureTeacherClassAccess(
+        req.user._id,
+        classId,
+        sessionId,
+        req.schoolId,
+        sectionId || null
+      );
       if (!assignments.length) {
-        return res.status(403).json({ success: false, message: 'You are not assigned as class teacher for this class.' });
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message: 'You are not assigned as class teacher for this class.',
+          });
       }
     }
 
@@ -1387,7 +1541,12 @@ exports.getClassReportCards = async (req, res) => {
     if (sectionId) {
       studentFilter.sectionId = sectionId;
     } else if (req.user.role === 'teacher') {
-      const assignments = await ensureTeacherClassAccess(req.user._id, classId, sessionId, req.schoolId);
+      const assignments = await ensureTeacherClassAccess(
+        req.user._id,
+        classId,
+        sessionId,
+        req.schoolId
+      );
       studentFilter.sectionId = { $in: assignments.map((item) => item.sectionId) };
     }
 
@@ -1398,7 +1557,7 @@ exports.getClassReportCards = async (req, res) => {
         { firstName: searchRegex },
         { lastName: searchRegex },
         { fullName: searchRegex },
-        { rollNo: searchRegex }
+        { rollNo: searchRegex },
       ];
     }
 
@@ -1445,7 +1604,9 @@ exports.getClassReportCards = async (req, res) => {
       };
     });
 
-    const classInfo = await ClassModel.findOne({ _id: classId, schoolId: req.schoolId }).select('name numericOrder');
+    const classInfo = await ClassModel.findOne({ _id: classId, schoolId: req.schoolId }).select(
+      'name numericOrder'
+    );
 
     return res.status(200).json({
       success: true,
@@ -1482,16 +1643,24 @@ exports.getMarksReadiness = async (req, res) => {
 
     const sessionId = await resolveSessionId(session, req.schoolId);
     if (!sessionId) {
-      return res.status(400).json({ success: false, message: 'Session not found. Activate a session first.' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Session not found. Activate a session first.' });
     }
 
     // Teachers only see classes they are assigned to.
     if (req.user.role === 'teacher') {
       const assignments = await ensureTeacherClassAccess(
-        req.user._id, classId, sessionId, req.schoolId, sectionId || null
+        req.user._id,
+        classId,
+        sessionId,
+        req.schoolId,
+        sectionId || null
       );
       if (!assignments.length) {
-        return res.status(403).json({ success: false, message: 'You are not assigned to this class.' });
+        return res
+          .status(403)
+          .json({ success: false, message: 'You are not assigned to this class.' });
       }
     }
 
@@ -1533,7 +1702,7 @@ exports.getMarksReadiness = async (req, res) => {
         exams: results,
         // Exams with no configured subjects can never be "ready" — exclude them
         // so an unconfigured exam doesn't permanently block the class.
-        allReady: results.filter(r => r.totalSubjects > 0).every(r => r.ready),
+        allReady: results.filter((r) => r.totalSubjects > 0).every((r) => r.ready),
         classId,
         sectionId: sectionId || null,
         session: sessionId,

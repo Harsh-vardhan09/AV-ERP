@@ -1,5 +1,8 @@
 const jwt = require('jsonwebtoken');
 const logger = require('../logging/logger');
+// TODO: core -> module. Every request loads the user here, so identity cannot
+// TODO: own it without an injection point. Pass a user loader into authenticate
+// eslint-disable-next-line import/no-restricted-paths
 const { User } = require('../../modules/identity/models/user');
 
 const authenticate = async (req, res, next) => {
@@ -13,14 +16,17 @@ const authenticate = async (req, res, next) => {
     if (!token) {
       // Cookie names and origin are logged because a missing token here is
       // almost always a cross-origin cookie that never arrived
-      logger.warn('[authenticate] No token found. Cookies received:',
+      logger.warn(
+        '[authenticate] No token found. Cookies received:',
         Object.keys(req.cookies || {}),
-        '| Origin:', req.headers.origin,
-        '| Host:', req.headers.host
+        '| Origin:',
+        req.headers.origin,
+        '| Host:',
+        req.headers.host
       );
       return res.status(401).json({
         success: false,
-        message: 'Token is required. Please login.'
+        message: 'Token is required. Please login.',
       });
     }
 
@@ -32,14 +38,14 @@ const authenticate = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'User not found. Token is invalid.'
+        message: 'User not found. Token is invalid.',
       });
     }
 
     if (!user.isActive) {
       return res.status(403).json({
         success: false,
-        message: 'Your account has been deactivated. Please contact admin.'
+        message: 'Your account has been deactivated. Please contact admin.',
       });
     }
 
@@ -47,24 +53,27 @@ const authenticate = async (req, res, next) => {
     if (!user.schoolId) {
       logger.warn('[authenticate] User has no schoolId!', {
         userId: user._id,
-        email:  user.email,
-        role:   user.role,
+        email: user.email,
+        role: user.role,
       });
     }
 
-    req.user     = user;
-    req.userid   = user._id;        // backward compatibility
-    req.schoolId = user.schoolId;   // every controller filters on this
+    req.user = user;
+    req.userid = user._id; // backward compatibility
+    req.schoolId = user.schoolId; // every controller filters on this
     next();
   } catch (error) {
-    logger.error('[authenticate] Token verification error:',
+    logger.error(
+      '[authenticate] Token verification error:',
       error.message,
-      '| Token present:', !!token,
-      '| Origin:', req.headers.origin
+      '| Token present:',
+      !!token,
+      '| Origin:',
+      req.headers.origin
     );
     return res.status(401).json({
       success: false,
-      message: 'Invalid or expired token'
+      message: 'Invalid or expired token',
     });
   }
 };

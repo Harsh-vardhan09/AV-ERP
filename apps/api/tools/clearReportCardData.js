@@ -7,39 +7,51 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const mongoose = require('mongoose');
-const connect  = require('../src/core/config/database');
+const connect = require('../src/core/config/database');
 
 const DUMMY_EMAILS = [
-  'rc_s01@school.com','rc_s02@school.com','rc_s03@school.com',
-  'rc_s04@school.com','rc_s05@school.com','rc_s06@school.com',
-  'rc_s07@school.com','rc_s08@school.com','rc_s09@school.com',
-  'rc_s10@school.com','rc_s11@school.com','rc_s12@school.com',
+  'rc_s01@school.com',
+  'rc_s02@school.com',
+  'rc_s03@school.com',
+  'rc_s04@school.com',
+  'rc_s05@school.com',
+  'rc_s06@school.com',
+  'rc_s07@school.com',
+  'rc_s08@school.com',
+  'rc_s09@school.com',
+  'rc_s10@school.com',
+  'rc_s11@school.com',
+  'rc_s12@school.com',
 ];
 
 const DUMMY_EXAM_NAMES = [
-  'FA1 Exam 1','FA1 Exam 2',
-  'FA2 Exam 1','FA2 Exam 2',
+  'FA1 Exam 1',
+  'FA1 Exam 2',
+  'FA2 Exam 1',
+  'FA2 Exam 2',
   'SA-I (Half Yearly)',
-  'FA3 Exam 1','FA3 Exam 2',
-  'FA4 Exam 1','FA4 Exam 2',
+  'FA3 Exam 1',
+  'FA3 Exam 2',
+  'FA4 Exam 1',
+  'FA4 Exam 2',
   'SA-II (Annual)',
 ];
 
-const DUMMY_SUBJECT_CODES = ['SCI','SST','COMP','SAN']; // codes not in seedMaster.js
+const DUMMY_SUBJECT_CODES = ['SCI', 'SST', 'COMP', 'SAN']; // codes not in seedMaster.js
 
 const clear = async () => {
   await connect();
 
-  const { User }          = require('../src/modules/identity');
-  const StudentProfile    = require('../src/modules/people/models/StudentProfile');
-  const Exam              = require('../src-old/models/Exam');
-  const Marks             = require('../src-old/models/MarksModel');
-  const ReportCard        = require('../src/modules/reportcards').ReportCard;
-  const ReportCardMark    = require('../src/modules/reportcards').ReportCardMark;
-  const CoScholasticMark  = require('../src-old/models/CoScholasticMark');
-  const SubjectMaster     = require('../src-old/models/SubjectMaster');
-  const ClassSubjectMap   = require('../src-old/models/ClassSubjectMap');
-  const School            = require('../src/modules/tenancy').School;
+  const { User } = require('../src/modules/identity');
+  const StudentProfile = require('../src/modules/people/models/StudentProfile');
+  const Exam = require('../src/modules/examination').Exam;
+  const Marks = require('../src/modules/examination').MarksModel;
+  const ReportCard = require('../src/modules/reportcards').ReportCard;
+  const ReportCardMark = require('../src/modules/reportcards').ReportCardMark;
+  const CoScholasticMark = require('../src/modules/examination').CoScholasticMark;
+  const SubjectMaster = require('../src/modules/academics').SubjectMaster;
+  const ClassSubjectMap = require('../src/modules/academics').ClassSubjectMap;
+  const School = require('../src/modules/tenancy').School;
 
   console.log('\n🗑️  Clearing Report Card Dummy Data...\n');
 
@@ -53,7 +65,7 @@ const clear = async () => {
 
   // 1. Resolve dummy user IDs
   const dummyUsers = await User.find({ email: { $in: DUMMY_EMAILS }, schoolId: school._id });
-  const dummyUserIds = dummyUsers.map(u => u._id);
+  const dummyUserIds = dummyUsers.map((u) => u._id);
   console.log(`  Found ${dummyUserIds.length} dummy user(s).`);
 
   // 2. Resolve dummy student profile IDs
@@ -61,17 +73,20 @@ const clear = async () => {
     userId: { $in: dummyUserIds },
     schoolId: school._id,
   });
-  const dummyProfileIds = dummyProfiles.map(p => p._id);
+  const dummyProfileIds = dummyProfiles.map((p) => p._id);
   console.log(`  Found ${dummyProfileIds.length} dummy student profile(s).`);
 
   // 3. Resolve dummy exam IDs
   const dummyExams = await Exam.find({ name: { $in: DUMMY_EXAM_NAMES }, schoolId: school._id });
-  const dummyExamIds = dummyExams.map(e => e._id);
+  const dummyExamIds = dummyExams.map((e) => e._id);
   console.log(`  Found ${dummyExamIds.length} dummy exam(s).`);
 
   // 4. Resolve dummy ReportCard IDs
-  const dummyRCs = await ReportCard.find({ studentId: { $in: dummyProfileIds }, schoolId: school._id });
-  const dummyRCIds = dummyRCs.map(rc => rc._id);
+  const dummyRCs = await ReportCard.find({
+    studentId: { $in: dummyProfileIds },
+    schoolId: school._id,
+  });
+  const dummyRCIds = dummyRCs.map((rc) => rc._id);
   console.log(`  Found ${dummyRCIds.length} dummy report card(s).`);
 
   // 5. Delete CoScholasticMarks
@@ -98,8 +113,8 @@ const clear = async () => {
   // 8. Delete raw Marks
   const { deletedCount: marksDeleted } = await Marks.deleteMany({
     studentId: { $in: dummyUserIds },
-    examId:    { $in: dummyExamIds },
-    schoolId:  school._id,
+    examId: { $in: dummyExamIds },
+    schoolId: school._id,
   });
   console.log(`✅  Raw Marks deleted         : ${marksDeleted}`);
 
@@ -126,10 +141,17 @@ const clear = async () => {
 
   // 12. Delete extra subjects (SCI, SST, COMP, SAN) added by this script
   //   Only if they are NOT referenced by any non-dummy ClassSubjectMap
-  const extraSubs = await SubjectMaster.find({ code: { $in: DUMMY_SUBJECT_CODES }, schoolId: school._id });
+  const extraSubs = await SubjectMaster.find({
+    code: { $in: DUMMY_SUBJECT_CODES },
+    schoolId: school._id,
+  });
   let subsDeleted = 0;
   for (const sub of extraSubs) {
-    await ClassSubjectMap.deleteMany({ subjectId: sub._id, classId: /* class10 */ { $exists: true }, schoolId: school._id });
+    await ClassSubjectMap.deleteMany({
+      subjectId: sub._id,
+      classId: /* class10 */ { $exists: true },
+      schoolId: school._id,
+    });
     await sub.deleteOne();
     subsDeleted++;
   }

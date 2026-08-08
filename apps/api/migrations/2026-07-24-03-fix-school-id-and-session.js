@@ -2,15 +2,15 @@
 
 require('dotenv').config();
 const mongoose = require('mongoose');
-const connect  = require('../src/core/config/database');
+const connect = require('../src/core/config/database');
 
 const fix = async () => {
   await connect();
 
-  const School          = require('../src/modules/tenancy').School;
-  const { User }        = require('../src/modules/identity');
-  const AcademicSession = require('../src-old/models/AcademicSession');
-  const StudentProfile  = require('../src/modules/people/models/StudentProfile');
+  const School = require('../src/modules/tenancy').School;
+  const { User } = require('../src/modules/identity');
+  const AcademicSession = require('../src/modules/academics').AcademicSession;
+  const StudentProfile = require('../src/modules/people/models/StudentProfile');
 
   console.log('');
   console.log('=== DIAGNOSTIC REPORT ===');
@@ -19,7 +19,7 @@ const fix = async () => {
   // 1. All schools
   const schools = await School.find({}).select('name code _id');
   console.log('SCHOOLS in DB (' + schools.length + '):');
-  schools.forEach(s => console.log('  [' + s.code + '] ' + s.name + ' => _id: ' + s._id));
+  schools.forEach((s) => console.log('  [' + s.code + '] ' + s.name + ' => _id: ' + s._id));
 
   if (schools.length === 0) {
     console.log('ERROR: No schools found. Run seedMaster.js first.');
@@ -28,25 +28,40 @@ const fix = async () => {
   }
 
   // 2. All sessions
-  const sessions = await AcademicSession.find({}).select('name isActive schoolId createdAt').sort({ createdAt: -1 });
+  const sessions = await AcademicSession.find({})
+    .select('name isActive schoolId createdAt')
+    .sort({ createdAt: -1 });
   console.log('');
   console.log('SESSIONS in DB (' + sessions.length + '):');
-  sessions.forEach(s => {
+  sessions.forEach((s) => {
     const dateStr = s.createdAt ? new Date(s.createdAt).toISOString().slice(0, 10) : 'N/A';
-    console.log('  "' + s.name + '" | isActive: ' + s.isActive + ' | schoolId: ' + s.schoolId + ' | created: ' + dateStr);
+    console.log(
+      '  "' +
+        s.name +
+        '" | isActive: ' +
+        s.isActive +
+        ' | schoolId: ' +
+        s.schoolId +
+        ' | created: ' +
+        dateStr
+    );
   });
 
   // 3. Admin user
   const adminUser = await User.findOne({ email: 'admin@school.com' }).select('email schoolId role');
   console.log('');
   if (adminUser) {
-    console.log('USER admin@school.com => schoolId: ' + adminUser.schoolId + ' | role: ' + adminUser.role);
+    console.log(
+      'USER admin@school.com => schoolId: ' + adminUser.schoolId + ' | role: ' + adminUser.role
+    );
   } else {
     console.log('USER admin@school.com => NOT FOUND');
   }
 
   // 4. Teacher user
-  const teacherUser = await User.findOne({ email: 'rc_teacher@school.com' }).select('email schoolId role');
+  const teacherUser = await User.findOne({ email: 'rc_teacher@school.com' }).select(
+    'email schoolId role'
+  );
   if (teacherUser) {
     console.log('USER rc_teacher@school.com => schoolId: ' + teacherUser.schoolId);
   } else {
@@ -55,14 +70,16 @@ const fix = async () => {
 
   // 5. Students per schoolId
   const studentsBySchool = await StudentProfile.aggregate([
-    { $group: { _id: '$schoolId', count: { $sum: 1 } } }
+    { $group: { _id: '$schoolId', count: { $sum: 1 } } },
   ]);
   console.log('');
   console.log('STUDENTS per schoolId:');
   if (studentsBySchool.length === 0) {
     console.log('  (none found)');
   }
-  studentsBySchool.forEach(g => console.log('  schoolId: ' + g._id + ' => ' + g.count + ' students'));
+  studentsBySchool.forEach((g) =>
+    console.log('  schoolId: ' + g._id + ' => ' + g.count + ' students')
+  );
 
   // 6. DEMO2025 fix
   const demo = await School.findByCode('DEMO2025');
@@ -78,7 +95,9 @@ const fix = async () => {
   // Fix session
   const demoSession = await AcademicSession.findOne({ schoolId: demo._id }).sort({ createdAt: -1 });
   if (demoSession) {
-    console.log('Latest session for DEMO2025: "' + demoSession.name + '" | isActive: ' + demoSession.isActive);
+    console.log(
+      'Latest session for DEMO2025: "' + demoSession.name + '" | isActive: ' + demoSession.isActive
+    );
     if (!demoSession.isActive) {
       console.log('FIX: Setting session isActive = true...');
       await AcademicSession.updateMany({ schoolId: demo._id }, { $set: { isActive: false } });
@@ -140,7 +159,7 @@ const fix = async () => {
   process.exit(0);
 };
 
-fix().catch(err => {
+fix().catch((err) => {
   console.error('Script failed:', err.message || err);
   mongoose.connection.close();
   process.exit(1);

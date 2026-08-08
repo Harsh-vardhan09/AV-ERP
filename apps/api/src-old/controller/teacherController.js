@@ -1,21 +1,25 @@
-const TeacherSubjectAssignment = require('../models/TeacherSubjectAssignment');
-const ClassTeacherAssignment = require('../models/ClassTeacherAssignment');
+const {
+  TeacherSubjectAssignment,
+  ClassTeacherAssignment,
+  Assignment,
+  Assignmentupload,
+  AcademicSession,
+  ClassModel,
+  ClassSubjectMap,
+} = require('../../src/modules/academics');
+const {
+  MarksModel: Marks,
+  MarksAuditLog,
+  ExamSubjectConfig,
+  Exam,
+} = require('../../src/modules/examination');
 const Attendance = require('../../src/modules/attendance/models/attendance');
 const Leave = require('../../src/modules/communication').Leave;
-const Assignment = require('../models/assignment');
-const Assignmentupload = require('../models/uploadassignment');
 const Knowledgecenter = require('../../src/modules/communication').Knowledgecenter;
-const Marks = require('../models/MarksModel');
-const MarksAuditLog = require('../models/MarksAuditLog');
 const StudentProfile = require('../../src/modules/people/models/StudentProfile');
-const AcademicSession = require('../models/AcademicSession');
-const ExamSubjectConfig = require('../models/ExamSubjectConfig');
-const Exam = require('../models/Exam');
-const ClassModel = require('../models/ClassModel');
-const ClassSubjectMap = require('../models/ClassSubjectMap');
 const ReportTemplate = require('../../src/modules/reportcards').ReportTemplate;
 const TemplateFieldExtractor = require('../../src/modules/reportcards').TemplateFieldExtractor;
-const { refreshExamEvaluationStatus } = require('../services/marksReadinessService');
+const { refreshExamEvaluationStatus } = require('../../src/modules/examination').marksReadinessService;
 const { User } = require('../../src/modules/identity');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
@@ -2100,7 +2104,7 @@ exports.getTemplateForExam = async (req, res) => {
 };
 
 // ─── Co-Scholastic Marks (Discipline / Activity) ──────────────────────────────
-const CoScholasticMark = require('../models/CoScholasticMark');
+const { CoScholasticMark } = require('../../src/modules/examination');
 const ReportCard       = require('../../src/modules/reportcards').ReportCard;
 
 // const TEMPLATE_EXAM_TYPES = new Set(['annual', 'half_yearly', 'term1', 'term2', 'custom']);
