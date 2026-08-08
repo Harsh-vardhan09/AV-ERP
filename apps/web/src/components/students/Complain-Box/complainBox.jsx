@@ -230,18 +230,16 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { complainData } from '@modules/communication/store/complainSlice';
 
-// Assume we're using phosphor-react for icons (can be replaced with any icon library)
-import { 
-  Package, 
-  Plus, 
-  Spinner, 
-  ArrowRight, 
-  Users, 
-  CaretDown, 
-//   Search,
+import {
+  Package,
+  Plus,
+  Loader2,
+  ArrowRight,
+  Users,
+  ChevronDown,
   Funnel,
-  SortAscending
-} from 'phosphor-react';
+  ArrowUpNarrowWide,
+} from 'lucide-react';
 
 function ComplaintBox() {
     const dispatch = useDispatch();
@@ -316,7 +314,7 @@ function ComplaintBox() {
                 <div className="header-content">
                     <div className="app-branding">
                         <div className="logo-container">
-                            <Package size={24} weight="fill" />
+                            <Package size={24} />
                         </div>
                         <h1 className="app-name">Complaint Manager</h1>
                     </div>
@@ -325,7 +323,7 @@ function ComplaintBox() {
                         className="add-complaint-btn" 
                         onClick={handleAddComplaint}
                     >
-                        <Plus size={20} weight="bold" />
+                        <Plus size={20} strokeWidth={2.5} />
                         <span>New Complaint</span>
                     </button>
                 </div>
@@ -339,8 +337,7 @@ function ComplaintBox() {
                 
                 <div className="filters-container">
                     <div className="search-container">
-                        {/* <Search size={18} className="search-icon" /> */}
-                        <input 
+                                                <input 
                             type="text" 
                             placeholder="Search complaints..." 
                             value={searchTerm}
@@ -354,7 +351,7 @@ function ComplaintBox() {
                             <button className="filter-btn">
                                 <Funnel size={16} />
                                 <span>Status: {filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}</span>
-                                <CaretDown size={12} />
+                                <ChevronDown size={12} />
                             </button>
                             <div className="dropdown-menu">
                                 <button 
@@ -386,9 +383,9 @@ function ComplaintBox() {
                         
                         <div className="sort-dropdown">
                             <button className="filter-btn">
-                                <SortAscending size={16} />
+                                <ArrowUpNarrowWide size={16} />
                                 <span>Sort: {sortBy === 'newest' ? 'Newest' : sortBy === 'oldest' ? 'Oldest' : 'Most Supported'}</span>
-                                <CaretDown size={12} />
+                                <ChevronDown size={12} />
                             </button>
                             <div className="dropdown-menu">
                                 <button 
@@ -416,13 +413,13 @@ function ComplaintBox() {
                 
                 {isLoading ? (
                     <div className="loading-state">
-                        <Spinner size={40} className="spinner" />
+                        <Loader2 size={40} className="spinner" />
                         <p>Loading complaints...</p>
                     </div>
                 ) : complaints.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-icon">
-                            <Package size={48} weight="thin" />
+                            <Package size={48} strokeWidth={1} />
                         </div>
                         <h3>No complaints found</h3>
                         <p>
@@ -435,7 +432,7 @@ function ComplaintBox() {
                                 className="add-complaint-btn-empty" 
                                 onClick={handleAddComplaint}
                             >
-                                <Plus size={18} weight="bold" />
+                                <Plus size={18} strokeWidth={2.5} />
                                 <span>Add New Complaint</span>
                             </button>
                         )}

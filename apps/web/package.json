@@ -28,7 +28,6 @@
     "jspdf": "^2.5.2",
     "lucide-react": "^0.483.0",
     "papaparse": "^5.5.3",
-    "phosphor-react": "^1.4.1",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.0.1",
     "react": "^18.3.1",
