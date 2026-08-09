@@ -15,7 +15,7 @@
     "format:check": "prettier --check .",
     "boot:check": "node scripts/boot-check.js",
     "test": "npm run test --workspace=apps/api",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "workspaces": [
     "apps/*",
