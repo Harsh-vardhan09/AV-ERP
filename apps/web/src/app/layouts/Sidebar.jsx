@@ -85,15 +85,29 @@ const Sidebar = ({ role, isCollapsed, isClassTeacher, onMobileClose, onToggleCol
   const isOasesEnabled = useSelector((state) => state?.oasesSettings?.isOasesEnabled ?? false);
   const enabledModules = useSelector((state) => state?.moduleSettings?.modules ?? {});
 
-  const entries = (navConfig[role] || []).filter((entry) => {
-    if (entry.group) return true;
-    if (entry.classTeacherOnly && !isClassTeacher) return false;
+  const moduleAllows = (key) => {
+    if (!key) return true;
     // OASES reads its own slice — the school toggle composed with the Super
     // Admin switch, which moduleSettings.oases alone does not capture.
-    if (entry.module === 'oases') return isOasesEnabled;
-    if (entry.module) return enabledModules[entry.module] !== false;
-    return true;
-  });
+    if (key === 'oases') return isOasesEnabled;
+    return enabledModules[key] !== false;
+  };
+
+  const entries = (navConfig[role] || []).reduce((kept, entry) => {
+    if (entry.group) {
+      if (!moduleAllows(entry.module)) return kept;
+      // Group children carry their own keys; a group whose every child is
+      // switched off must not render as an empty expander
+      const items = (entry.items || []).filter((i) => moduleAllows(i.module));
+      if (items.length === 0) return kept;
+      kept.push({ ...entry, items });
+      return kept;
+    }
+    if (entry.classTeacherOnly && !isClassTeacher) return kept;
+    if (!moduleAllows(entry.module)) return kept;
+    kept.push(entry);
+    return kept;
+  }, []);
 
   return (
     <>

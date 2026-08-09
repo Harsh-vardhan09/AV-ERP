@@ -16,7 +16,64 @@
 'use strict';
 
 const nodemailer = require('nodemailer');
-const logger     = require('../../../core/logging/logger');
+const logger = require('../../../core/logging/logger');
+
+// Render blocks outbound SMTP (25/465/587) to stop spam, so nodemailer hangs
+// there and times out while working fine locally. Resend's HTTPS API is on 443
+// and is never blocked — preferred whenever RESEND_API_KEY is set.
+// Set EMAIL_TRANSPORT=smtp to force SMTP anyway.
+const useResendApi = () =>
+  Boolean(process.env.RESEND_API_KEY) && process.env.EMAIL_TRANSPORT !== 'smtp';
+
+// Shaped like a nodemailer transport so every existing caller works unchanged
+const resendApiTransport = () => ({
+  sendMail: async ({ from, to, subject, html, text, attachments }) => {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        ...(html && { html }),
+        ...(text && { text }),
+        // Resend takes the same filename/path/content keys; contentType is inferred
+        ...(attachments?.length && {
+          attachments: attachments.map(({ filename, path, content }) => ({
+            filename,
+            ...(path && { path }),
+            ...(content && { content }),
+          })),
+        }),
+      }),
+    });
+
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(`Resend API ${response.status}: ${body?.message || 'send failed'}`);
+    }
+    return { messageId: body.id };
+  },
+
+  // Nothing to handshake over HTTP; a key check is the only useful signal
+  verify: async () => {
+    if (!process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY is not set');
+    return true;
+  },
+});
+
+// SMTP_USER is not an address on every provider — with Resend it is literally
+// "resend", which the API rejects with a 422. Only fall back to it if it looks
+// like an email
+const fromAddress = () => {
+  const explicit = process.env.SMTP_FROM || process.env.EMAIL_FROM;
+  if (explicit) return explicit;
+  const user = process.env.SMTP_USER;
+  return user && user.includes('@') ? user : 'onboarding@resend.dev';
+};
 
 // Transporter factory
 //
@@ -27,18 +84,18 @@ const logger     = require('../../../core/logging/logger');
 //   call is ~1 ms overhead and is the only reliable approach in both serverless
 //   and long-running (PM2 / Docker) modes.
 const getTransporter = () => {
-  const host   = process.env.SMTP_HOST;
-  const port   = parseInt(process.env.SMTP_PORT, 10) || 587;
+  if (useResendApi()) return resendApiTransport();
+
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT, 10) || 587;
   const secure = process.env.SMTP_SECURE === 'true'; // false → STARTTLS on 587
-  const user   = process.env.SMTP_USER;
-  const pass   = process.env.SMTP_PASS;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
 
   if (!host || !user || !pass) {
-    const missing = [
-      !host && 'SMTP_HOST',
-      !user && 'SMTP_USER',
-      !pass && 'SMTP_PASS',
-    ].filter(Boolean);
+    const missing = [!host && 'SMTP_HOST', !user && 'SMTP_USER', !pass && 'SMTP_PASS'].filter(
+      Boolean
+    );
     logger.error('emailService: Missing required SMTP environment variables', { missing });
     throw new Error(`Missing SMTP config: ${missing.join(', ')}`);
   }
@@ -53,17 +110,17 @@ const getTransporter = () => {
     pool: false,
 
     tls: {
-      minVersion:         'TLSv1.2',
+      minVersion: 'TLSv1.2',
       rejectUnauthorized: true,
     },
 
     // Explicit timeouts — avoid hanging forever in flaky network conditions
-    connectionTimeout: 10_000,  // 10 s  — TCP connect
-    greetingTimeout:   10_000,  // 10 s  — EHLO/HELO
-    socketTimeout:     15_000,  // 15 s  — idle socket
+    connectionTimeout: 10_000, // 10 s  — TCP connect
+    greetingTimeout: 10_000, // 10 s  — EHLO/HELO
+    socketTimeout: 15_000, // 15 s  — idle socket
 
     logger: process.env.NODE_ENV === 'development',
-    debug:  process.env.NODE_ENV === 'development',
+    debug: process.env.NODE_ENV === 'development',
   });
 
   logger.info('emailService: SMTP transporter created', {
@@ -84,12 +141,19 @@ const verifyTransporter = async () => {
   try {
     const transporter = getTransporter();
     await transporter.verify();
-    logger.info('emailService: SMTP connection verified successfully');
+    logger.info(
+      `emailService: ${useResendApi() ? 'Resend HTTP API' : 'SMTP'} verified successfully`
+    );
     return true;
   } catch (error) {
-    logger.error('emailService: SMTP verification failed — emails will not be sent', {
+    // ETIMEDOUT/ECONNREFUSED on 465/587 here means the host blocks outbound SMTP
+    // (Render does) — set RESEND_API_KEY to switch to the HTTPS API
+    logger.error('emailService: transport verification failed — emails will not be sent', {
       error: error.message,
-      code:  error.code,
+      code: error.code,
+      transport: useResendApi()
+        ? 'resend-api'
+        : `smtp:${process.env.SMTP_HOST}:${process.env.SMTP_PORT}`,
     });
     return false;
   }
@@ -98,7 +162,7 @@ const verifyTransporter = async () => {
 // Internal send helper
 const _send = async ({ to, subject, html, attachments }) => {
   const transporter = getTransporter();
-  const from = process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER;
+  const from = fromAddress();
 
   const result = await transporter.sendMail({
     from,
@@ -113,7 +177,8 @@ const _send = async ({ to, subject, html, attachments }) => {
 };
 
 // HTML shell — shared layout (inline CSS for email-client compatibility)
-const _shell = ({ headerBg = '#4F46E5', headerLabel, schoolName, body }) => `
+const _shell = ({ headerBg = '#4F46E5', headerLabel, schoolName, body }) =>
+  `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -165,11 +230,11 @@ const _warn = (text, bg = '#fffbeb', border = '#f59e0b', color = '#92400e') => `
 
 // Role display-name map
 const ROLE_DISPLAY_NAMES = {
-  admission:       'Admission Staff',
-  accounts:        'Accounts Staff',
-  librarian:       'Librarian',
+  admission: 'Admission Staff',
+  accounts: 'Accounts Staff',
+  librarian: 'Librarian',
   exam_controller: 'Exam Controller',
-  admin:           'School Administrator',
+  admin: 'School Administrator',
 };
 
 // 1. sendStaffCredentials
@@ -185,18 +250,24 @@ const ROLE_DISPLAY_NAMES = {
  * @param {string} p.loginUrl     - ERP login URL
  */
 const sendStaffCredentials = async ({
-  to, staffName, role, schoolName, schoolCode, tempPassword, loginUrl,
+  to,
+  staffName,
+  role,
+  schoolName,
+  schoolCode,
+  tempPassword,
+  loginUrl,
 }) => {
   if (!to || !staffName || !tempPassword) {
     throw new Error('sendStaffCredentials: to, staffName, and tempPassword are required');
   }
 
-  const roleLabel = ROLE_DISPLAY_NAMES[role] || (role.charAt(0).toUpperCase() + role.slice(1));
-  const subject   = `Your ${roleLabel} Account — ${schoolName}`;
-  const url       = loginUrl || process.env.CLIENT_URL || 'https://averp.com';
+  const roleLabel = ROLE_DISPLAY_NAMES[role] || role.charAt(0).toUpperCase() + role.slice(1);
+  const subject = `Your ${roleLabel} Account — ${schoolName}`;
+  const url = loginUrl || process.env.CLIENT_URL || 'https://averp.com';
 
   const html = _shell({
-    headerBg:    '#4F46E5',
+    headerBg: '#4F46E5',
     headerLabel: 'Staff Account Created',
     schoolName,
     body: `
@@ -254,10 +325,20 @@ const sendStaffCredentials = async ({
 
   try {
     const result = await _send({ to, subject, html });
-    logger.info('sendStaffCredentials: Sent successfully', { to, role, schoolCode, messageId: result.messageId });
+    logger.info('sendStaffCredentials: Sent successfully', {
+      to,
+      role,
+      schoolCode,
+      messageId: result.messageId,
+    });
     return result;
   } catch (error) {
-    logger.error('sendStaffCredentials: Failed to send', { to, role, error: error.message, code: error.code });
+    logger.error('sendStaffCredentials: Failed to send', {
+      to,
+      role,
+      error: error.message,
+      code: error.code,
+    });
     throw error;
   }
 };
@@ -274,17 +355,22 @@ const sendStaffCredentials = async ({
  * @param {string} p.loginUrl     - ERP login URL
  */
 const sendAdminCredentials = async ({
-  to, adminName, schoolName, schoolCode, tempPassword, loginUrl,
+  to,
+  adminName,
+  schoolName,
+  schoolCode,
+  tempPassword,
+  loginUrl,
 }) => {
   if (!to || !adminName || !tempPassword) {
     throw new Error('sendAdminCredentials: to, adminName, and tempPassword are required');
   }
 
   const subject = `Your School Admin Account — ${schoolName}`;
-  const url     = loginUrl || process.env.CLIENT_URL || 'https://averp.com';
+  const url = loginUrl || process.env.CLIENT_URL || 'https://averp.com';
 
   const html = _shell({
-    headerBg:    '#059669',
+    headerBg: '#059669',
     headerLabel: 'Admin Account Created',
     schoolName,
     body: `
@@ -342,10 +428,18 @@ const sendAdminCredentials = async ({
 
   try {
     const result = await _send({ to, subject, html });
-    logger.info('sendAdminCredentials: Sent successfully', { to, schoolCode, messageId: result.messageId });
+    logger.info('sendAdminCredentials: Sent successfully', {
+      to,
+      schoolCode,
+      messageId: result.messageId,
+    });
     return result;
   } catch (error) {
-    logger.error('sendAdminCredentials: Failed to send', { to, error: error.message, code: error.code });
+    logger.error('sendAdminCredentials: Failed to send', {
+      to,
+      error: error.message,
+      code: error.code,
+    });
     throw error;
   }
 };
@@ -365,12 +459,12 @@ const sendPasswordChangedNotification = async ({ to, userName, schoolName }) => 
   }
 
   const subject = `Password Changed — ${schoolName || 'School ERP'}`;
-  const now     = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+  const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
   const html = _shell({
-    headerBg:    '#DC2626',
+    headerBg: '#DC2626',
     headerLabel: 'Security Alert',
-    schoolName:  schoolName || 'School ERP',
+    schoolName: schoolName || 'School ERP',
     body: `
       <p style="color:#111827;font-size:15px;margin:0 0 12px;">Dear <strong>${userName}</strong>,</p>
       <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 16px;">
@@ -379,7 +473,9 @@ const sendPasswordChangedNotification = async ({ to, userName, schoolName }) => 
       </p>
       ${_warn(
         '🔒 If you did not make this change, please contact your school administrator immediately and reset your password.',
-        '#fef2f2', '#dc2626', '#991b1b'
+        '#fef2f2',
+        '#dc2626',
+        '#991b1b'
       )}
     `,
   });
@@ -393,7 +489,7 @@ const sendPasswordChangedNotification = async ({ to, userName, schoolName }) => 
     logger.warn('sendPasswordChangedNotification: Failed (non-critical)', {
       to,
       error: err.message,
-      code:  err.code,
+      code: err.code,
     });
   }
 };
@@ -416,14 +512,24 @@ const sendPayslipEmail = async ({ to, teacherName, month, year, schoolName, pdfU
   }
 
   const MONTHS = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
   const monthName = MONTHS[month - 1] || String(month);
-  const subject   = `Your Payslip for ${monthName} ${year} — ${schoolName}`;
+  const subject = `Your Payslip for ${monthName} ${year} — ${schoolName}`;
 
   const html = _shell({
-    headerBg:    '#059669',
+    headerBg: '#059669',
     headerLabel: `Payslip — ${monthName} ${year}`,
     schoolName,
     body: `
@@ -444,16 +550,27 @@ const sendPayslipEmail = async ({ to, teacherName, month, year, schoolName, pdfU
       to,
       subject,
       html,
-      attachments: [{
-        filename:    `Payslip_${monthName}_${year}.pdf`,
-        path:        pdfUrl,
-        contentType: 'application/pdf',
-      }],
+      attachments: [
+        {
+          filename: `Payslip_${monthName}_${year}.pdf`,
+          path: pdfUrl,
+          contentType: 'application/pdf',
+        },
+      ],
     });
-    logger.info('sendPayslipEmail: Sent successfully', { to, month, year, messageId: result.messageId });
+    logger.info('sendPayslipEmail: Sent successfully', {
+      to,
+      month,
+      year,
+      messageId: result.messageId,
+    });
     return result;
   } catch (error) {
-    logger.error('sendPayslipEmail: Failed to send', { to, error: error.message, code: error.code });
+    logger.error('sendPayslipEmail: Failed to send', {
+      to,
+      error: error.message,
+      code: error.code,
+    });
     throw error;
   }
 };
@@ -464,18 +581,18 @@ const sendPayslipEmail = async ({ to, teacherName, month, year, schoolName, pdfU
 const sendmail = async (email, otp) => {
   const { VERIFICATION_EMAIL_TEMPLATE } = require('./mailTemplates');
   return _send({
-    to:      email,
+    to: email,
     subject: 'Verify your email — ERP Portal',
-    html:    VERIFICATION_EMAIL_TEMPLATE.replace('{verificationCode}', otp),
+    html: VERIFICATION_EMAIL_TEMPLATE.replace('{verificationCode}', otp),
   });
 };
 
 /** Welcome email (legacy) */
 const sendwelcomeemail = async (mail, name) => {
   return _send({
-    to:      mail,
+    to: mail,
     subject: 'Welcome to the ERP Portal!',
-    html:    `<p style="font-family:Arial,sans-serif;">Hello <strong>${name}</strong>,<br><br>Welcome! Your account has been created successfully.</p>`,
+    html: `<p style="font-family:Arial,sans-serif;">Hello <strong>${name}</strong>,<br><br>Welcome! Your account has been created successfully.</p>`,
   });
 };
 
@@ -483,15 +600,16 @@ const sendwelcomeemail = async (mail, name) => {
 const resetPasswordmail = async (mail, resetURL) => {
   const { PASSWORD_RESET_REQUEST_TEMPLATE } = require('./mailTemplates');
   return _send({
-    to:      mail,
+    to: mail,
     subject: 'Reset your password — ERP Portal',
-    html:    PASSWORD_RESET_REQUEST_TEMPLATE.replace('{resetURL}', resetURL),
+    html: PASSWORD_RESET_REQUEST_TEMPLATE.replace('{resetURL}', resetURL),
   });
 };
 
 module.exports = {
   getTransporter,
   verifyTransporter,
+  fromAddress,
   // Primary (used by controllers)
   sendStaffCredentials,
   sendAdminCredentials,

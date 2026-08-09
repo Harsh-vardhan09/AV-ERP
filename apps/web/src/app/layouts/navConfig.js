@@ -61,13 +61,14 @@ const STUDENTS_GROUP = {
     { to: '/admin/students/dropped', icon: MdExitToApp, label: 'Dropped Students' },
     { to: '/admin/students/suspended', icon: MdBlock, label: 'Suspended Students' },
     { to: '/admin/students/promotion', icon: MdUpgrade, label: 'Migration / Promotion' },
-    { to: '/admin/bulk-import', icon: MdUploadFile, label: '📥 Bulk Import' },
+    { to: '/admin/bulk-import', icon: MdUploadFile, label: '📥 Bulk Import', module: 'imports' },
   ],
 };
 
 const admissionFormsGroup = (prefix) => ({
   group: 'admissionForms',
   label: 'Admission Forms',
+  module: 'admissions',
   icon: MdFeed,
   storageKey: 'erp.sidebar.admissionforms.open',
   defaultOpen: true,
@@ -109,6 +110,7 @@ const ID_CARDS_GROUP = {
 const CUSTOM_FORMS_GROUP = {
   group: 'customForms',
   label: 'Custom Forms',
+  module: 'custom_forms',
   icon: MdArticle,
   storageKey: 'erp.sidebar.customforms.open',
   defaultOpen: true,
@@ -121,6 +123,7 @@ const CUSTOM_FORMS_GROUP = {
 const LIBRARY_GROUP = {
   group: 'library',
   label: 'Library',
+  module: 'library',
   icon: MdLibraryBooks,
   storageKey: 'erp.sidebar.library.open',
   defaultOpen: false,
@@ -138,6 +141,7 @@ const LIBRARY_GROUP = {
 const PAYROLL_GROUP = {
   group: 'payroll',
   label: 'Payroll',
+  module: 'payroll',
   icon: MdAttachMoney,
   storageKey: 'erp.sidebar.payroll.open',
   defaultOpen: false,
@@ -177,7 +181,13 @@ export const navConfig = {
     },
     { to: '/admin/exams', icon: MdGrading, size: 20, label: 'Exams' },
     { to: '/admin/marks-audit-log', icon: MdBarChart, size: 20, label: 'Marks Audit Log' },
-    { to: '/admin/teacher-leaves', icon: MdCheckCircle, size: 20, label: 'Teacher Leaves' },
+    {
+      to: '/admin/teacher-leaves',
+      icon: MdCheckCircle,
+      size: 20,
+      label: 'Teacher Leaves',
+      module: 'communication',
+    },
     { to: '/admin/staff', icon: MdBadge, size: 20, label: 'Staff Management' },
     {
       to: '/admin/biometric/devices',
@@ -246,9 +256,27 @@ export const navConfig = {
     },
     { to: '/teacher/marks', icon: MdUploadFile, size: 18, label: 'Upload Marks' },
     { to: '/teacher/tests', icon: MdGrading, size: 18, label: 'My Tests' },
-    { to: '/teacher/materials', icon: MdBook, size: 18, label: 'Knowledge Center' },
-    { to: '/teacher/leave', icon: MdDescription, size: 18, label: 'My Leave' },
-    { to: '/teacher/student-leaves', icon: MdCheckCircle, size: 18, label: 'Student Leaves' },
+    {
+      to: '/teacher/materials',
+      icon: MdBook,
+      size: 18,
+      label: 'Knowledge Center',
+      module: 'communication',
+    },
+    {
+      to: '/teacher/leave',
+      icon: MdDescription,
+      size: 18,
+      label: 'My Leave',
+      module: 'communication',
+    },
+    {
+      to: '/teacher/student-leaves',
+      icon: MdCheckCircle,
+      size: 18,
+      label: 'Student Leaves',
+      module: 'communication',
+    },
     // Hidden unless the teacher is a class teacher — see Sidebar.
     {
       to: '/teacher/my-students',
@@ -272,7 +300,13 @@ export const navConfig = {
       label: 'OASES – My Copies',
       module: 'oases',
     },
-    { to: '/teacher/payroll/my-payslips', icon: MdReceipt, size: 18, label: 'My Payslips' },
+    {
+      to: '/teacher/payroll/my-payslips',
+      icon: MdReceipt,
+      size: 18,
+      label: 'My Payslips',
+      module: 'payroll',
+    },
   ],
 
   student: [
@@ -286,11 +320,35 @@ export const navConfig = {
       module: 'assignments',
     },
     { to: '/student/marks', icon: MdBarChart, size: 18, label: 'Marks & Results' },
-    { to: '/student/leave', icon: MdDescription, size: 18, label: 'Apply Leave' },
-    { to: '/student/materials', icon: MdBook, size: 18, label: 'Knowledge Center' },
-    { to: '/student/library', icon: MdLibraryBooks, size: 18, label: 'Library' },
-    { to: '/student/notices', icon: MdNotifications, size: 18, label: 'Notices' },
-    { to: '/student/complaints', icon: MdReport, size: 18, label: 'Complaints' },
+    {
+      to: '/student/leave',
+      icon: MdDescription,
+      size: 18,
+      label: 'Apply Leave',
+      module: 'communication',
+    },
+    {
+      to: '/student/materials',
+      icon: MdBook,
+      size: 18,
+      label: 'Knowledge Center',
+      module: 'communication',
+    },
+    { to: '/student/library', icon: MdLibraryBooks, size: 18, label: 'Library', module: 'library' },
+    {
+      to: '/student/notices',
+      icon: MdNotifications,
+      size: 18,
+      label: 'Notices',
+      module: 'communication',
+    },
+    {
+      to: '/student/complaints',
+      icon: MdReport,
+      size: 18,
+      label: 'Complaints',
+      module: 'communication',
+    },
     {
       to: '/student/fees',
       icon: FaCreditCard,
@@ -315,7 +373,13 @@ export const navConfig = {
     },
     { to: '/admission/students', icon: FaUserGraduate, size: 18, label: 'All Students' },
     { to: '/admission/teachers', icon: MdPeople, size: 18, label: 'All Teachers' },
-    { to: '/admin/bulk-import', icon: MdUploadFile, size: 18, label: '📥 Bulk Import' },
+    {
+      to: '/admin/bulk-import',
+      icon: MdUploadFile,
+      size: 18,
+      label: '📥 Bulk Import',
+      module: 'imports',
+    },
   ],
 
   accounts: [
@@ -339,15 +403,33 @@ export const navConfig = {
       size: 18,
       label: 'Payroll Dashboard',
     },
-    { to: '/accounts/payroll/runs', icon: MdPayments, size: 18, label: 'Payroll Runs' },
-    { to: '/accounts/payroll/payslips', icon: MdReceipt, size: 18, label: 'Payslips' },
+    {
+      to: '/accounts/payroll/runs',
+      icon: MdPayments,
+      size: 18,
+      label: 'Payroll Runs',
+      module: 'payroll',
+    },
+    {
+      to: '/accounts/payroll/payslips',
+      icon: MdReceipt,
+      size: 18,
+      label: 'Payslips',
+      module: 'payroll',
+    },
     {
       to: '/accounts/payroll/payment-batches',
       icon: MdAccountBalance,
       size: 18,
       label: 'Payment Batches',
     },
-    { to: '/accounts/payroll/reports', icon: MdBarChart, size: 18, label: 'Payroll Reports' },
+    {
+      to: '/accounts/payroll/reports',
+      icon: MdBarChart,
+      size: 18,
+      label: 'Payroll Reports',
+      module: 'payroll',
+    },
   ],
 
   librarian: [
