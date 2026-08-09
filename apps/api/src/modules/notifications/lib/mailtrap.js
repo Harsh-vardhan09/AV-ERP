@@ -4,7 +4,7 @@ const logger = require('../../../core/logging/logger');
 
 // Transport comes from emailService, which validates the SMTP env vars and pins
 // TLS 1.2. This file used to hardcode service:'gmail' and skip both.
-const _from = () => `ERP Unified Campus <${process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER}>`;
+const _from = () => process.env.SMTP_FROM || process.env.EMAIL_FROM || `ERP Unified Campus <${process.env.SMTP_USER}>`;
 
 // Errors stay swallowed: otpController awaits these inside its own try/catch and
 // still returns 200, so throwing here would change that endpoint's contract
