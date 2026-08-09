@@ -77,5 +77,8 @@
   "description": "This project was bootstrapped with Create React App.",
   "author": "Your Name",
   "license": "ISC",
-  "_removed_packages_note": "Removed: cors (Node.js only, irrelevant in browser), dotenv (Vite handles env vars), path (Node.js built-in, no browser equivalent needed)."
+  "_removed_packages_note": "Removed: cors (Node.js only, irrelevant in browser), dotenv (Vite handles env vars), path (Node.js built-in, no browser equivalent needed).",
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.62.2"
+  }
 }
