@@ -1,27 +1,10 @@
-/**
- * emailService.js — Gmail SMTP via Nodemailer
- * Single SMTP module for the entire ERP.
- *
- * Environment variables consumed:
- *   SMTP_HOST          — smtp.gmail.com
- *   SMTP_PORT          — 587
- *   SMTP_SECURE        — "false"  (STARTTLS on 587)
- *   SMTP_USER          — Gmail address (e.g. school-erp@gmail.com)
- *   SMTP_PASS          — Gmail App Password (16-char, NOT the account password)
- *   SMTP_FROM          — Sender display address (falls back to SMTP_USER)
- *   EMAIL_FROM         — Alias for SMTP_FROM (legacy compat)
- *   CLIENT_URL         — Frontend base URL used in email links
- */
-
 'use strict';
 
-const nodemailer = require('nodemailer');
 const logger = require('../../../core/logging/logger');
 
-// Render blocks outbound SMTP (25/465/587) to stop spam, so nodemailer hangs
-// there and times out while working fine locally. Resend's HTTPS API is on 443
-// and is never blocked — preferred whenever RESEND_API_KEY is set.
-// Set EMAIL_TRANSPORT=smtp to force SMTP anyway.
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 const useResendApi = () =>
   Boolean(process.env.RESEND_API_KEY) && process.env.EMAIL_TRANSPORT !== 'smtp';
 
@@ -75,105 +58,23 @@ const fromAddress = () => {
   return user && user.includes('@') ? user : 'onboarding@resend.dev';
 };
 
-// Transporter factory
-//
-// WHY pool:false + no singleton caching?
-//   Serverless environments (Vercel, AWS Lambda) kill TCP connections between
-//   warm invocations. A pooled / cached transporter reuses a dead socket and
-//   throws ECONNRESET on the very next send.  Creating a fresh transporter per
-//   call is ~1 ms overhead and is the only reliable approach in both serverless
-//   and long-running (PM2 / Docker) modes.
-const getTransporter = () => {
-  if (useResendApi()) return resendApiTransport();
-
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT, 10) || 587;
-  const secure = process.env.SMTP_SECURE === 'true'; // false → STARTTLS on 587
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    const missing = [!host && 'SMTP_HOST', !user && 'SMTP_USER', !pass && 'SMTP_PASS'].filter(
-      Boolean
-    );
-    logger.error('emailService: Missing required SMTP environment variables', { missing });
-    throw new Error(`Missing SMTP config: ${missing.join(', ')}`);
-  }
-
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: { user, pass },
-
-    // NO connection pool — fresh TCP per send (serverless-safe)
-    pool: false,
-
-    tls: {
-      minVersion: 'TLSv1.2',
-      rejectUnauthorized: true,
-    },
-
-    // Explicit timeouts — avoid hanging forever in flaky network conditions
-    connectionTimeout: 10_000, // 10 s  — TCP connect
-    greetingTimeout: 10_000, // 10 s  — EHLO/HELO
-    socketTimeout: 15_000, // 15 s  — idle socket
-
-    logger: process.env.NODE_ENV === 'development',
-    debug: process.env.NODE_ENV === 'development',
-  });
-
-  logger.info('emailService: SMTP transporter created', {
-    host,
-    port,
-    secure,
-    user: `${user.slice(0, 3)}***`,
-  });
-
-  return transporter;
-};
-
-/**
- * Verify SMTP credentials — call once at server boot.
- * Does NOT throw; the server can still start if email is misconfigured.
- */
-const verifyTransporter = async () => {
-  try {
-    const transporter = getTransporter();
-    await transporter.verify();
-    logger.info(
-      `emailService: ${useResendApi() ? 'Resend HTTP API' : 'SMTP'} verified successfully`
-    );
-    return true;
-  } catch (error) {
-    // ETIMEDOUT/ECONNREFUSED on 465/587 here means the host blocks outbound SMTP
-    // (Render does) — set RESEND_API_KEY to switch to the HTTPS API
-    logger.error('emailService: transport verification failed — emails will not be sent', {
-      error: error.message,
-      code: error.code,
-      transport: useResendApi()
-        ? 'resend-api'
-        : `smtp:${process.env.SMTP_HOST}:${process.env.SMTP_PORT}`,
-    });
-    return false;
-  }
-};
-
-// Internal send helper
-const _send = async ({ to, subject, html, attachments }) => {
-  const transporter = getTransporter();
-  const from = fromAddress();
-
-  const result = await transporter.sendMail({
-    from,
-    to,
+const _send = async ({ to, subject, html, text, attachments }) => {
+  const { data, error } = await resend.emails.send({
+    from: fromAddress(),
+    to: Array.isArray(to) ? to : [to],
     subject,
-    html,
-    ...(attachments && { attachments }),
+    ...(html && { html }),
+    ...(text && { text }),
+    ...(attachments?.length && { attachments }),
   });
 
-  logger.info('emailService: Email sent', { to, subject, messageId: result.messageId });
-  return result;
+  if (error) {
+    throw new Error(error.message || 'Resend email failed');
+  }
+
+  return {
+    messageId: data.id,
+  };
 };
 
 // HTML shell — shared layout (inline CSS for email-client compatibility)
@@ -237,18 +138,6 @@ const ROLE_DISPLAY_NAMES = {
   admin: 'School Administrator',
 };
 
-// 1. sendStaffCredentials
-//    Called by: staffController, libraryController, superAdminController
-/**
- * @param {Object} p
- * @param {string} p.to           - Recipient email
- * @param {string} p.staffName    - Full display name
- * @param {string} p.role         - Role key (e.g. "exam_controller")
- * @param {string} p.schoolName   - School name
- * @param {string} p.schoolCode   - School code
- * @param {string} p.tempPassword - Plain-text temporary password (shown once)
- * @param {string} p.loginUrl     - ERP login URL
- */
 const sendStaffCredentials = async ({
   to,
   staffName,
@@ -343,17 +232,6 @@ const sendStaffCredentials = async ({
   }
 };
 
-// 2. sendAdminCredentials
-//    Called by: platformRoutes, superAdminController (role === 'admin')
-/**
- * @param {Object} p
- * @param {string} p.to           - Recipient email
- * @param {string} p.adminName    - Full display name
- * @param {string} p.schoolName   - School name
- * @param {string} p.schoolCode   - School code
- * @param {string} p.tempPassword - Plain-text temporary password
- * @param {string} p.loginUrl     - ERP login URL
- */
 const sendAdminCredentials = async ({
   to,
   adminName,
@@ -444,14 +322,6 @@ const sendAdminCredentials = async ({
   }
 };
 
-// 3. sendPasswordChangedNotification
-//    Called by: authenticates.js (changePassword / changeFirstPassword)
-/**
- * @param {Object} p
- * @param {string} p.to         - Recipient email
- * @param {string} p.userName   - Staff display name
- * @param {string} p.schoolName - School name
- */
 const sendPasswordChangedNotification = async ({ to, userName, schoolName }) => {
   if (!to) {
     logger.warn('sendPasswordChangedNotification: No recipient email — skipping');
@@ -494,17 +364,6 @@ const sendPasswordChangedNotification = async ({ to, userName, schoolName }) => 
   }
 };
 
-// 4. sendPayslipEmail
-//    Called by: payrollWorker / payroll controllers
-/**
- * @param {Object} p
- * @param {string} p.to           - Recipient email
- * @param {string} p.teacherName  - Teacher display name
- * @param {number} p.month        - Month (1–12)
- * @param {number} p.year         - Year
- * @param {string} p.schoolName   - School name
- * @param {string} p.pdfUrl       - Signed URL / path for the payslip PDF
- */
 const sendPayslipEmail = async ({ to, teacherName, month, year, schoolName, pdfUrl }) => {
   if (!to) {
     logger.warn('sendPayslipEmail: No recipient email provided', { teacherName, month, year });
@@ -587,7 +446,6 @@ const sendmail = async (email, otp) => {
   });
 };
 
-/** Welcome email (legacy) */
 const sendwelcomeemail = async (mail, name) => {
   return _send({
     to: mail,
@@ -607,10 +465,7 @@ const resetPasswordmail = async (mail, resetURL) => {
 };
 
 module.exports = {
-  getTransporter,
-  verifyTransporter,
   fromAddress,
-  // Primary (used by controllers)
   sendStaffCredentials,
   sendAdminCredentials,
   sendPasswordChangedNotification,
