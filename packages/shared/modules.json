@@ -1,0 +1,106 @@
+{
+  "core": {
+    "key": "core",
+    "label": "Core ERP",
+    "description": "Students, teachers, classes, attendance, marks",
+    "defaultEnabled": true,
+    "canDisable": false,
+    "icon": "school"
+  },
+  "fee_management": {
+    "key": "fee_management",
+    "label": "Fee Management",
+    "description": "Fee structures, payments, receipts, Razorpay",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "payments"
+  },
+  "report_cards": {
+    "key": "report_cards",
+    "label": "Report Cards",
+    "description": "Report card generation and PDF export",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "description"
+  },
+  "documents": {
+    "key": "documents",
+    "label": "Documents (TC/Migration)",
+    "description": "Transfer and migration certificate generation",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "article"
+  },
+  "oases": {
+    "key": "oases",
+    "label": "OASES Evaluation",
+    "description": "Answer sheet scanning and evaluation system",
+    "defaultEnabled": false,
+    "canDisable": true,
+    "icon": "auto_stories"
+  },
+  "biometric": {
+    "key": "biometric",
+    "label": "Biometric Attendance",
+    "description": "Fingerprint device integration and faculty attendance",
+    "defaultEnabled": false,
+    "canDisable": true,
+    "icon": "fingerprint"
+  },
+  "communication": {
+    "key": "communication",
+    "label": "Communication",
+    "description": "Chat, notices, complaints, events, knowledge center",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "chat"
+  },
+  "assignments": {
+    "key": "assignments",
+    "label": "Assignments",
+    "description": "Teacher assignments and student submissions",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "assignment"
+  },
+  "payroll": {
+    "key": "payroll",
+    "label": "Payroll",
+    "description": "Staff salary, payslips, tax config and bank files",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "account_balance_wallet"
+  },
+  "library": {
+    "key": "library",
+    "label": "Library",
+    "description": "Book catalogue, issue and return, librarian accounts",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "menu_book"
+  },
+  "imports": {
+    "key": "imports",
+    "label": "Bulk Import",
+    "description": "CSV and XLSX import of students, teachers, fees, attendance",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "upload_file"
+  },
+  "admissions": {
+    "key": "admissions",
+    "label": "Admissions",
+    "description": "Admission forms, templates and applicant registration",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "how_to_reg"
+  },
+  "custom_forms": {
+    "key": "custom_forms",
+    "label": "Custom Forms",
+    "description": "School-built enquiry forms and their leads",
+    "defaultEnabled": true,
+    "canDisable": true,
+    "icon": "dynamic_form"
+  }
+}

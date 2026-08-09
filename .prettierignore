@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+coverage
+package-lock.json
+
+# Legacy, being deleted module by module — reformatting it would bury the moves
+apps/api/src-old
+
+# Hand-written CSS that the PDF renderer depends on byte-for-byte
+apps/api/src/modules/reportcards/templates
+
+apps/api/uploads
+apps/api/public

@@ -1,0 +1,17 @@
+# Dependencies
+/node_modules
+
+# Build Output
+/dist
+/build
+
+# Environment & Secrets
+.env
+.env.*
+# the checked-in template is the one exception
+!.env.example
+
+# Logs & Misc
+*.log
+.DS_Store
+coverage/

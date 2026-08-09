@@ -1,10 +1,9 @@
 services:
-  # ── Backend Web Service (Render) ──
   - type: web
     name: av-erp-backend
     env: node
     plan: free
-    rootDir: backend
+    rootDir: apps/api
     buildCommand: PUPPETEER_SKIP_DOWNLOAD=true npm install
     startCommand: npm start
     envVars:
@@ -23,11 +22,10 @@ services:
       - key: CLIENT_URL
         sync: false
 
-  # ── Optional Frontend Static Site (Render Blueprint fallback) ──
   - type: web
     name: av-erp-frontend
     env: static
-    rootDir: frontend
+    rootDir: apps/web
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     routes:

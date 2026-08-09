@@ -39,3 +39,11 @@ Thumbs.db
 .vscode/
 .idea/
 coverage/
+
+**.env.smoke
+scripts/.env.smoke
+*CLAUDE.md
+dump.rdb
+*.rdb
+scripts/diag*
+*/.claude

@@ -1,0 +1,820 @@
+/* Resets, element defaults and the shared .erp-* component classes. */
+/* ─── Base Overrides ─── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--page-bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Enterprise Sidebar ─── */
+.erp-sidebar {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  /* NOTE: display is NOT set here — controlled per-breakpoint below */
+  flex-direction: column;
+  width: 256px;
+  height: 100vh;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* ── Breakpoint enforcement: mobile < 1024px ──
+   Use ID selectors + !important to beat any Tailwind specificity conflicts.
+   The desktop sidebar & spacer MUST be invisible on mobile.
+   The mobile sidebar MUST be invisible on desktop (controlled by its transform). */
+@media (max-width: 1023px) {
+  #erp-desktop-sidebar { display: none !important; }
+  #erp-sidebar-spacer  { display: none !important; }
+  /* Mobile sidebar container needs flex for its internal layout */
+  #erp-mobile-sidebar  { display: flex !important; }
+}
+@media (min-width: 1024px) {
+  /* Mobile sidebar hidden on desktop (it's off-screen via translateX anyway, but belt+suspenders) */
+  #erp-mobile-sidebar  { display: none !important; }
+  /* Desktop sidebar uses flex for vertical column layout */
+  #erp-desktop-sidebar { display: flex !important; }
+  #erp-sidebar-spacer  { display: block !important; }
+}
+
+/* ── Collapsed sidebar: icon-only rail (68px) ── */
+.erp-sidebar--collapsed {
+  width: 68px;
+}
+
+.erp-sidebar--collapsed .erp-sidebar-header {
+  padding: 16px 10px !important;
+  align-items: center;
+}
+
+.erp-sidebar--collapsed .erp-sidebar-logo {
+  justify-content: center;
+  margin-bottom: 12px !important;
+}
+
+/* Hide text in collapsed mode */
+.erp-sidebar--collapsed .erp-sidebar-logo h1,
+.erp-sidebar--collapsed .erp-user-name,
+.erp-sidebar--collapsed .erp-user-email,
+.erp-sidebar--collapsed .erp-role-badge,
+.erp-sidebar--collapsed .erp-nav-section-label,
+.erp-sidebar--collapsed .erp-nav-label,
+.erp-sidebar--collapsed .erp-logout-label {
+  display: none !important;
+}
+
+.erp-sidebar--collapsed .erp-sidebar-user {
+  justify-content: center;
+  gap: 0 !important;
+}
+
+/* Center icons when collapsed */
+.erp-sidebar--collapsed .erp-nav-item {
+  justify-content: center;
+  padding: 11px;
+  gap: 0;
+  border-left: 3px solid transparent;
+}
+
+.erp-sidebar--collapsed .erp-nav-item.active {
+  border-left-color: var(--sidebar-active-accent);
+}
+
+.erp-sidebar--collapsed .erp-logout-btn {
+  justify-content: center;
+  padding: 10px;
+  gap: 0;
+}
+
+/* Toggle arrow button */
+.erp-sidebar-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--color-sidebar-text) 70%, transparent);
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s ease, background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.erp-sidebar-toggle:hover {
+  color: var(--color-sidebar-text);
+  background: var(--sidebar-hover-bg);
+}
+
+
+.erp-sidebar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.erp-sidebar-logo h1 {
+  color: var(--sidebar-logo-text);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.erp-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.erp-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--color-primary-dark);
+  color: var(--color-primary-text);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.erp-user-name {
+  color: var(--sidebar-text-active);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.erp-user-email {
+  color: var(--sidebar-text);
+  font-size: 11px;
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+
+.erp-role-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  background: var(--sidebar-role-badge-bg);
+  color: var(--sidebar-role-badge-text);
+  border: 1px solid var(--color-card-border);
+}
+
+/* Nav */
+.erp-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.erp-nav-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-sidebar-text) 50%, transparent);
+  padding: 6px 10px 4px;
+}
+
+.erp-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 9px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  margin-bottom: 2px;
+  gap: 10px;
+  border-left: 3px solid transparent;
+}
+
+.erp-nav-item:hover {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.erp-nav-item.active {
+  background: #f1f5f9;
+  color: #4f46e5;
+  border-left-color: #4f46e5;
+  font-weight: 600;
+}
+
+.erp-nav-item svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.erp-nav-item.active svg { opacity: 1; }
+
+/* Logout */
+.erp-sidebar-footer {
+  padding: 10px;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.erp-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-logout-text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.erp-logout-btn:hover {
+  color: var(--color-logout-hover);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+/* ─── Topbar ─── */
+.erp-topbar {
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--topbar-border);
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.erp-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.erp-topbar-brand svg { color: var(--color-primary); }
+
+.erp-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.erp-topbar-role-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-badge-role-bg);
+  color: var(--color-badge-role-text);
+  border: 1px solid var(--color-card-border);
+}
+
+.erp-topbar-mobile-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+}
+.erp-topbar-mobile-btn:hover {
+  background: color-mix(in srgb, var(--color-primary-light) 55%, transparent);
+}
+
+/* Mobile button: show on mobile, hide on desktop */
+@media (min-width: 1024px) {
+  .erp-topbar-mobile-btn { display: none !important; }
+}
+@media (max-width: 1023px) {
+  .erp-topbar-mobile-btn { display: flex !important; }
+}
+
+/* ─── Mobile overlay backdrop ─── */
+.erp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 40;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+/* Overlay only makes sense on mobile (desktop has no slide-in sidebar) */
+@media (min-width: 1024px) {
+  .erp-overlay { display: none !important; }
+}
+
+/* ─── Main Layout ─── */
+.erp-main-bg { background: var(--page-bg); }
+
+/* Main content padding — overridden at breakpoints */
+.erp-main-content { padding: 28px; }
+
+@media (max-width: 1024px) {
+  .erp-main-content { padding: 20px 16px !important; }
+}
+@media (max-width: 640px) {
+  .erp-main-content { padding: 14px 12px !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL RESPONSIVE LAYER  (Layers 1–12)
+   Mobile < 640px  |  Tablet 640-1024px  |  Desktop > 1024px
+   ══════════════════════════════════════════════════════════════ */
+
+/* Layer 1 — Global container */
+html, body, #root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Layer 5 — Table responsive utility */
+.responsive-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* Layer 11 — Prevent errant overflow everywhere */
+* { box-sizing: border-box; }
+
+/* ── Tablet (max 1024px) ── */
+@media (max-width: 1024px) {
+  /* Layer 3 — Reduce main content padding on tablet */
+  main { padding: 20px 16px !important; }
+
+  /* Layer 8 — Topbar subtle reduction */
+  .erp-topbar { padding: 0 16px; }
+}
+
+/* ── Mobile (max 640px) ── */
+@media (max-width: 640px) {
+  /* Layer 2 — Ensure mobile sidebar is always full overlay, no layout shift */
+  body { overflow-x: hidden; }
+
+  /* Layer 3 — Main content: tight padding on mobile */
+  main { padding: 14px 12px !important; }
+
+  /* Layer 7 — Typography: scale page titles down */
+  .erp-page-title { font-size: 18px; }
+
+  /* Layer 7 — Stat cards typography */
+  .erp-stat-value { font-size: 22px; }
+  .erp-stat-card  { padding: 14px; }
+
+  /* Layer 6 — Cards tighter on mobile */
+  .erp-section-card { padding: 14px; }
+
+  /* Layer 5 — Tables: smaller text + force scroll */
+  .erp-table { font-size: 11px; }
+  .erp-table thead th { padding: 8px 10px; }
+  .erp-table tbody td { padding: 8px 10px; }
+
+  /* Layer 8 — Topbar */
+  .erp-topbar { padding: 0 12px; height: 54px; }
+  .erp-topbar-brand { font-size: 13px; }
+
+  /* Layer 9 — Modals: cap width on mobile */
+  .fixed.inset-0 > div[class*="bg-white"],
+  .fixed.inset-0 > .bg-white {
+    max-width: calc(100vw - 24px) !important;
+    width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
+  }
+
+  /* Layer 6 — Inputs & buttons full width on mobile */
+  form input,
+  form select,
+  form textarea {
+    width: 100%;
+  }
+
+  /* Layer 10 — Images */
+  img { max-width: 100%; height: auto; }
+
+  /* Flex row headers → stack on mobile */
+  .flex.justify-between.items-center.mb-6,
+  .flex.items-center.justify-between.mb-6 {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Layer 8 — Topbar brand text hidden on very small screens */
+  .erp-topbar-brand span { display: none; }
+}
+
+/* ─── Enterprise Stat Cards ─── */
+.erp-stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  padding: 20px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  cursor: default;
+}
+.erp-stat-card.clickable { cursor: pointer; }
+.erp-stat-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.erp-stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.erp-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+.erp-stat-value.sm { font-size: 18px; }
+.erp-stat-value-success { color: var(--color-success); }
+.erp-stat-value-warning { color: var(--color-warning); }
+
+.erp-stat-sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.erp-stat-link {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-top: 8px;
+}
+
+.erp-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-stat-icon-text);
+  flex-shrink: 0;
+  background: var(--color-stat-icon-bg);
+}
+
+/* Keep variants for compatibility while unifying visual output */
+.erp-icon-blue,
+.erp-icon-green,
+.erp-icon-orange,
+.erp-icon-purple,
+.erp-icon-red,
+.erp-icon-teal {
+  background: var(--color-stat-icon-bg);
+  color: var(--color-stat-icon-text);
+}
+
+/* ─── Page Section ─── */
+.erp-page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+
+.erp-section-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  padding: 24px;
+}
+
+.erp-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+/* Data tables */
+.erp-table {
+  width: 100%;
+  font-size: 13px;
+  border-collapse: collapse;
+  border: 1px solid var(--color-card-border);
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.erp-table thead th {
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.erp-table tbody td {
+  padding: 11px 14px;
+  color: var(--color-text-primary);
+  border-top: 1px solid var(--color-card-border);
+}
+
+.erp-table tbody tr:nth-child(odd) { background: var(--color-card-bg); }
+.erp-table tbody tr:nth-child(even) { background: var(--color-row-alt); }
+.erp-table tbody tr:hover {
+  background: color-mix(in srgb, var(--color-primary-light) 40%, transparent);
+}
+
+/* Action cards */
+.erp-action-card {
+  border-radius: 12px;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.erp-action-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.erp-action-arrow {
+  color: var(--color-primary);
+}
+
+/* Loading spinner */
+.erp-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-card-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: erp-spin 0.8s linear infinite;
+}
+@keyframes erp-spin { to { transform: rotate(360deg); } }
+
+/* Mobile overlay */
+.erp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+}
+
+/* =========================================================
+   Enterprise UI normalization for legacy Tailwind screens
+   ========================================================= */
+
+/* Typography and page rhythm */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+p, span, label, li, td, th {
+  color: inherit;
+}
+
+/* Generic containers/cards */
+.bg-white {
+  background-color: var(--color-card-bg) !important;
+}
+
+.border-gray-100,
+.border-gray-200,
+.border-gray-300 {
+  border-color: var(--color-card-border) !important;
+}
+
+.shadow-sm,
+.shadow-md,
+.shadow-lg,
+.shadow-xl {
+  box-shadow: 0 1px 3px var(--color-shadow-soft) !important;
+}
+
+.rounded-lg,
+.rounded-xl {
+  border-radius: 12px !important;
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+  background: var(--color-card-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-card-border);
+  border-radius: 8px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+/* Buttons */
+button,
+.btn,
+[role="button"] {
+  border-radius: 8px;
+}
+
+/* Normalize common Tailwind color utilities to unified brand */
+.text-blue-500,
+.text-blue-600,
+.text-blue-700,
+.text-indigo-600,
+.text-indigo-700,
+.text-purple-500,
+.text-purple-600,
+.text-purple-700,
+.text-teal-500,
+.text-teal-600,
+.text-amber-600,
+.text-orange-500,
+.text-orange-600 {
+  color: var(--color-primary) !important;
+}
+
+.bg-blue-50,
+.bg-blue-100,
+.bg-indigo-50,
+.bg-purple-50,
+.bg-purple-100,
+.bg-teal-50,
+.bg-amber-50,
+.bg-orange-50 {
+  background-color: var(--color-primary-light) !important;
+}
+
+.bg-blue-500,
+.bg-blue-600,
+.bg-blue-700,
+.bg-indigo-500,
+.bg-purple-500,
+.bg-purple-600 {
+  background-color: var(--color-primary) !important;
+  color: var(--color-primary-text) !important;
+}
+
+.hover\:bg-blue-50:hover,
+.hover\:bg-blue-100:hover,
+.hover\:bg-purple-50:hover,
+.hover\:bg-green-50:hover {
+  background-color: color-mix(in srgb, var(--color-primary-light) 75%, transparent) !important;
+}
+
+.hover\:bg-blue-600:hover,
+.hover\:bg-purple-700:hover {
+  background-color: var(--color-primary-dark) !important;
+}
+
+.hover\:text-blue-500:hover,
+.hover\:text-blue-600:hover,
+.hover\:text-blue-800:hover,
+.hover\:text-purple-600:hover,
+.group:hover .group-hover\:text-blue-600,
+.group:hover .group-hover\:text-green-600,
+.group:hover .group-hover\:text-purple-600 {
+  color: var(--color-primary) !important;
+}
+
+/* Semantic colors */
+.text-green-500,
+.text-green-600,
+.text-green-700 {
+  color: var(--color-success) !important;
+}
+
+.bg-green-50,
+.bg-green-100 {
+  background-color: color-mix(in srgb, var(--color-success) 14%, white) !important;
+}
+
+.bg-green-500,
+.bg-green-600 {
+  background-color: var(--color-success) !important;
+  color: #ffffff !important;
+}
+
+.text-red-500,
+.text-red-600,
+.text-red-700 {
+  color: var(--color-danger) !important;
+}
+
+.bg-red-500,
+.bg-red-600 {
+  background-color: var(--color-danger) !important;
+  color: #ffffff !important;
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}
+
+/* Legacy data tables — SCOPED so certificate document tables are not affected */
+.erp-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-card-bg);
+}
+
+/* ═══════════════════════════════════════════════════
+   PRINT — Hide ALL ERP application chrome
+   Only the .doc-print-area sheet should print.
+   ═══════════════════════════════════════════════════ */
+@media print {
+  /* Hide sidebar by class and by ID */
+  .erp-sidebar,
+  #erp-desktop-sidebar,
+  #erp-mobile-sidebar {
+    display: none !important;
+  }
+
+  /* Hide topbar */
+  .erp-topbar {
+    display: none !important;
+  }
+
+  /* Hide mobile overlay */
+  .erp-overlay {
+    display: none !important;
+  }
+
+  /* Hide desktop spacer div (the 256px gap next to sidebar) */
+  #erp-sidebar-spacer,
+  [style*="width: 256"],
+  [style*="width:256"] {
+    display: none !important;
+    width: 0 !important;
+  }
+
+  /* Remove flex layout from the outer shell */
+  body > #root > div,
+  body > #root > div > div {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Make the main content area take full width */
+  main {
+    overflow: visible !important;
+    padding: 0 !important;
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  /* Reset body for clean print */
+  html, body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ─── Profile dropdown animation ─── */
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#topbar-profile-btn:hover {
+  background: var(--color-primary-light) !important;
+  border-color: var(--color-primary) !important;
+}
+

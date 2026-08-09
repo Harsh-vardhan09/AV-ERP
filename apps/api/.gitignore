@@ -1,0 +1,24 @@
+# Dependencies
+/node_modules
+
+# Environment & Secrets
+.env
+.env.*
+# the checked-in template is the one exception
+!.env.example
+
+# Runtime Database & Generated Outputs
+dump.rdb
+output/
+redis-local/
+scripts/diag_output.txt
+
+# Uploads & Logs
+/public/uploads
+/src/uploads
+/uploads
+/logs
+*.log
+
+# Misc
+.DS_Store
