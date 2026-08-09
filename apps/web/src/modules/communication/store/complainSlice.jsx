@@ -6,7 +6,7 @@ const initialState = {
 }
 
 export const complainData = createAsyncThunk('complainsData',async()=>{
-    const data = await axios.get(`${import.meta.env.VITE_PORT}/api/v1/complains`);
+    const data = await axios.get(`${import.meta.env.VITE_PORT}/api/v1/complains`, { withCredentials: true });
     return data.data;
 })
 

@@ -203,7 +203,7 @@ function ComplaintNext() {
             await axios.patch(`${import.meta.env.VITE_PORT}/api/v1/complain/change/status`, {
                 "id": id,
                 "status": value
-            });
+            }, { withCredentials: true });
             // Close modal and update UI without reload
             toggleModal();
             // Update the status in the UI

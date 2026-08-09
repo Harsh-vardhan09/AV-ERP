@@ -101,14 +101,14 @@ function ComplaintForm() {
         status: "pending"
       };
 
+      // The :id segment is ignored by the API — the submitter comes from the session
       if (complaintType === "Solo") {
-        payload.sentto = null;
-        await axios.post(`${apiUrl}/67000c5c3a4def779eff1605`, payload);
+        await axios.post(`${apiUrl}/me`, payload, { withCredentials: true });
       } else if (complaintType === "Group") {
         payload.selectedStudents = members;
-        await axios.post(`${apiUrl}/multiple/67000c5c3a4def779eff1605?info={"semester":"V","section":"A"}`, payload);
+        await axios.post(`${apiUrl}/multiple/me?info={"semester":"V","section":"A"}`, payload, { withCredentials: true });
       } else if (complaintType === "All") {
-        await axios.post(`${apiUrl}/all/67000c5c3a4def779eff1605?info={"semester":"V","section":"A"}`, payload);
+        await axios.post(`${apiUrl}/all/me?info={"semester":"V","section":"A"}`, payload, { withCredentials: true });
       }
 
       toast.success("Complaint submitted successfully!");
