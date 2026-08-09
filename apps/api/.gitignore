@@ -4,6 +4,8 @@
 # Environment & Secrets
 .env
 .env.*
+# the checked-in template is the one exception
+!.env.example
 
 # Runtime Database & Generated Outputs
 dump.rdb

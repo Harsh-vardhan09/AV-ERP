@@ -138,6 +138,12 @@ module.exports = {
 
   overrides: [
     {
+      // The repo is CommonJS by default; .mjs files are the ESM exceptions,
+      // such as the shared package's entry for apps/web.
+      files: ['**/*.mjs'],
+      parserOptions: { sourceType: 'module' },
+    },
+    {
       files: ['apps/api/src/modules/*/controllers/**/*.js'],
       excludedFiles: LEGACY_CONTROLLERS,
       rules: {
