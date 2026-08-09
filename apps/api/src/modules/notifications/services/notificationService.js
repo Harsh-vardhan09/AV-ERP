@@ -19,19 +19,9 @@
 const Notification = require('../models/Notification');
 const NotificationPreference = require('../models/NotificationPreference');
 const SchoolSettings = require('../../tenancy').SchoolSettings;
-const nodemailer = require('nodemailer');
+const { getTransporter } = require('../lib/emailService');
 const { getIo } = require('../../../core/realtime/socket');
 const logger = require('../../../core/logging/logger');
-
-// Nodemailer transporter (mirrors existing emailService.js pattern)
-const createTransporter = () =>
-  nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
 
 // PHASE 3 HELPERS — internal, not exported
 
@@ -311,9 +301,10 @@ exports.sendEmailNotification = async ({
     }
 
     // Send immediately
-    const transporter = createTransporter();
+    const transporter = getTransporter();
+    const from = process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER;
     await transporter.sendMail({
-      from: `"${process.env.SCHOOL_ERP_NAME || 'School ERP'}" <${process.env.SMTP_USER}>`,
+      from,
       to,
       subject,
       html,
