@@ -77,18 +77,12 @@ digestSchedulerQueue.process(async () => {
           recipientEmail: userData.to,
         });
 
-        // Use raw nodemailer — bypass preference check
-        // (digest IS the delivery preference — no double-check needed)
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-        });
+        const { getTransporter } = require('../lib/emailService');
+        const transporter = getTransporter();
+        const from = process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER;
 
         await transporter.sendMail({
-          from: `"${process.env.SCHOOL_ERP_NAME || 'School ERP'}" <${process.env.SMTP_USER}>`,
+          from,
           to:      userData.to,
           subject,
           html,
