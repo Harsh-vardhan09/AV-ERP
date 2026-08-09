@@ -6,6 +6,7 @@ import { setSuperAdmin } from '../store/superAdminSlice';
 import { setStoredSuperAdminToken } from '../api/superAdminApi';
 import toast from 'react-hot-toast';
 import Loader from '@shared/ui/Loader';
+import { Loader2 } from 'lucide-react';
 
 const SuperAdminLogin = () => {
   const navigate  = useNavigate();
@@ -135,7 +136,14 @@ const SuperAdminLogin = () => {
             disabled={isLoading}
             className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition duration-300 flex justify-center items-center"
           >
-            {isLoading ? <Loader /> : 'Sign In'}
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Signing in...
+              </span>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
 
