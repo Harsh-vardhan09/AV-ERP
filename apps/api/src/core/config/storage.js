@@ -1,6 +1,23 @@
 const { v2 } = require('cloudinary');
 const fs = require('fs');
+const env = require('./env.js');
+const logger = require('../logging/logger.js');
 
+// The SDK only self-configures from CLOUDINARY_URL; we ship the three separate
+// vars, so without this every upload fails with "Must supply api_key"
+v2.config({
+  cloud_name: env.CLOUDINARY_CLOUD_NAME,
+  api_key: env.CLOUDINARY_API_KEY,
+  api_secret: env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
+
+const isConfigured = Boolean(
+  env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET
+);
+if (!isConfigured) {
+  logger.warn('[Cloudinary] Credentials missing — file uploads will fail');
+}
 
 const uploadoncloud = async (localfilepath) => {
   try {
@@ -8,16 +25,19 @@ const uploadoncloud = async (localfilepath) => {
     const response = await v2.uploader.upload(localfilepath, {
       resource_type: 'raw',
     });
-    console.log(`Uploading successfully`, response.url);
-    try { fs.unlinkSync(localfilepath); } catch (_) { }
+    logger.info(`[Cloudinary] Uploaded: ${response.url}`);
+    try {
+      fs.unlinkSync(localfilepath);
+    } catch (_) {}
     return response;
   } catch (error) {
-    console.log('Error occurred in uploading', error);
-    try { fs.unlinkSync(localfilepath); } catch (_) { }
+    logger.error('[Cloudinary] Upload failed', { error: error.message });
+    try {
+      fs.unlinkSync(localfilepath);
+    } catch (_) {}
     return null;
   }
 };
-
 
 const uploadImageToCloud = async (source, options = {}) => {
   try {
@@ -31,7 +51,9 @@ const uploadImageToCloud = async (source, options = {}) => {
     let response;
     if (typeof source === 'string') {
       response = await v2.uploader.upload(source, defaults);
-      try { fs.unlinkSync(source); } catch (_) { }
+      try {
+        fs.unlinkSync(source);
+      } catch (_) {}
     } else if (Buffer.isBuffer(source)) {
       response = await new Promise((resolve, reject) => {
         const uploadStream = v2.uploader.upload_stream(defaults, (err, result) => {
@@ -49,7 +71,9 @@ const uploadImageToCloud = async (source, options = {}) => {
   } catch (error) {
     console.error('[Cloudinary] Image upload error:', error.message);
     if (typeof source === 'string') {
-      try { fs.unlinkSync(source); } catch (_) { }
+      try {
+        fs.unlinkSync(source);
+      } catch (_) {}
     }
     throw error;
   }
