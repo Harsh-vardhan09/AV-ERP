@@ -8,7 +8,8 @@ import {
   Eye, 
   EyeOff, 
   ChevronDown, 
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import { useLoginMutation, authApi } from '../api/userApi';
 import { useDispatch } from 'react-redux';
@@ -272,7 +273,10 @@ const Login = () => {
             disabled={isLoading}
           >
             {isLoading ? (
-              <Loader />
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Signing in...
+              </span>
             ) : (
               <>
                 Sign In <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
