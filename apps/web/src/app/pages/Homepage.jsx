@@ -99,8 +99,8 @@ const HomePage = () => {
         {/* Header */}
         <header className="fixed top-0 w-full bg-white shadow-md px-3 sm:px-6 py-3 flex justify-between items-center z-40">
       <div className="flex items-center">
-        <img src="/unified_campus.png" alt="Unified Campus Logo" className="w-8 h-8 sm:w-10 sm:h-10 mr-2" />
-        <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">Unified Campus</h2>
+        <img src="/unified_campus.png" alt="AV ERP Logo" className="w-8 h-8 sm:w-10 sm:h-10 mr-2" />
+        <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">AV ERP</h2>
       </div>
 
       <div className="flex-1 mx-2 sm:mx-8 hidden sm:flex">

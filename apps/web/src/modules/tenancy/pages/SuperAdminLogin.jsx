@@ -70,7 +70,7 @@ const SuperAdminLogin = () => {
           Super Admin Login
         </h2>
         <p className="text-center text-sm text-gray-500 mb-6">
-          Unified Campus Platform Control
+          AV ERP Platform Control
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>

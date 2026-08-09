@@ -21,7 +21,7 @@ const MONGO_URI =
   process.env.MONGO_OVERRIDE ||
   process.env.MONGO_URI;
 
-const SA_EMAIL    = getArg('--email')    || 'superadmin@unifiedcampus.com';
+const SA_EMAIL    = getArg('--email')    || 'superadmin@averp.com';
 // No default: a shipped default password becomes the production credential
 const SA_PASSWORD = getArg('--password') || process.env.SEED_SUPERADMIN_PASSWORD;
 

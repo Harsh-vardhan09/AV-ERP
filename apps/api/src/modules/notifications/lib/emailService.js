@@ -193,7 +193,7 @@ const sendStaffCredentials = async ({
 
   const roleLabel = ROLE_DISPLAY_NAMES[role] || (role.charAt(0).toUpperCase() + role.slice(1));
   const subject   = `Your ${roleLabel} Account — ${schoolName}`;
-  const url       = loginUrl || process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
+  const url       = loginUrl || process.env.CLIENT_URL || 'https://averp.com';
 
   const html = _shell({
     headerBg:    '#4F46E5',
@@ -281,7 +281,7 @@ const sendAdminCredentials = async ({
   }
 
   const subject = `Your School Admin Account — ${schoolName}`;
-  const url     = loginUrl || process.env.CLIENT_URL || 'https://campus.unifiedcampus.com';
+  const url     = loginUrl || process.env.CLIENT_URL || 'https://averp.com';
 
   const html = _shell({
     headerBg:    '#059669',

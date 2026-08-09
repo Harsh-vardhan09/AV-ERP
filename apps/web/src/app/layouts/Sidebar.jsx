@@ -117,7 +117,7 @@ const Sidebar = ({ role, isCollapsed, isClassTeacher, onMobileClose, onToggleCol
 
         <img
           src="/unified_campus.png"
-          alt="Unified Campus"
+          alt="AV ERP"
           style={{
             width: isCollapsed ? 38 : 80,
             height: isCollapsed ? 38 : 80,
@@ -139,7 +139,7 @@ const Sidebar = ({ role, isCollapsed, isClassTeacher, onMobileClose, onToggleCol
             color: '#64748b', textAlign: 'center',
             lineHeight: 1.4, display: 'block'
           }}>
-            UNIFIED CAMPUS
+            AV ERP
           </span>
         )}
       </div>

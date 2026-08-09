@@ -24,7 +24,7 @@ const SuperAdminDashboard = () => {
         <div>
           <h1 className="erp-page-title">Dashboard</h1>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>
-            Welcome back, {superAdmin?.firstName || 'Admin'} · Unified Campus Platform
+            Welcome back, {superAdmin?.firstName || 'Admin'} · AV ERP Platform
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>

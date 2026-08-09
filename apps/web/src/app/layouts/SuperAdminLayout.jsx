@@ -86,7 +86,7 @@ const SuperAdminLayout = () => {
           </button>
         </div>
 
-        {/* UC Logo — big and centered */}
+        {/* AV Logo — big and centered */}
         <div style={{
           width: isCollapsed ? 38 : 58,
           height: isCollapsed ? 38 : 58,
@@ -102,10 +102,10 @@ const SuperAdminLayout = () => {
             color: '#fff', fontWeight: 900,
             fontSize: isCollapsed ? 14 : 24,
             letterSpacing: '-1px', lineHeight: 1
-          }}>UC</span>
+          }}>AV</span>
         </div>
 
-        {/* UNIFIED CAMPUS text — only when expanded */}
+        {/* AV ERP text — only when expanded */}
         {!isCollapsed && (
           <h1 style={{
             margin: 0, fontSize: 11, fontWeight: 700,
@@ -113,7 +113,7 @@ const SuperAdminLayout = () => {
             color: 'rgba(255,255,255,0.85)', textAlign: 'center',
             lineHeight: 1.4
           }}>
-            UNIFIED CAMPUS
+            AV ERP
           </h1>
         )}
 

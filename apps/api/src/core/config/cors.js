@@ -11,7 +11,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);                    // Postman, server-to-server
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, origin);
-    if (origin.endsWith('.unifiedcampus.com')) return callback(null, origin);
+    if (origin.endsWith('.averp.com') || origin.endsWith('.unifiedcampus.com')) return callback(null, origin);
     if (origin.endsWith('.vercel.app')) return callback(null, origin);
     logger.warn('[CORS] Blocked origin:', origin);
     callback(new Error(`CORS blocked: ${origin}`));

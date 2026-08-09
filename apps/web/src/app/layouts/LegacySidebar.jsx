@@ -153,7 +153,7 @@ const Sidebar = () => {
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 bg-purple-600 text-white">
-          <h1 className="text-lg font-bold">Unified Campus</h1>
+          <h1 className="text-lg font-bold">AV ERP</h1>
           <button
             onClick={handleToggleSidebar}
             className="text-white hover:text-gray-200 transition-colors"
