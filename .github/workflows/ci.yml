@@ -13,18 +13,17 @@ jobs:
   verify:
     runs-on: ubuntu-latest
 
-    env:
-      NODE_ENV: test
-      # Not secrets: nothing here reaches a real service. The tests run against a
-      # mongodb-memory-server instance they start themselves.
-      JWT_SECRET: ci-jwt-secret
-      SUPER_ADMIN_JWT_SECRET: ci-super-admin-secret
-      PLATFORM_SECRET: ci-platform-secret
-      # Bull's factory returns a no-op stub when Redis is absent
-      REDIS_DISABLED: 'true'
-      # Chromium is only needed to render a PDF; the report card test skips
-      # itself when it is missing
-      PUPPETEER_SKIP_DOWNLOAD: 'true'
+  env:
+    NODE_ENV: test
+    CLIENT_URL: http://localhost:3000
+    MONGO_URI: mongodb://127.0.0.1:27017/av-erp-test
+
+    JWT_SECRET: ci-jwt-secret-123456
+    SUPER_ADMIN_JWT_SECRET: ci-super-admin-secret-123456
+    PLATFORM_SECRET: ci-platform-secret-123456
+
+    REDIS_DISABLED: 'true'
+    PUPPETEER_SKIP_DOWNLOAD: 'true'
 
     steps:
       - uses: actions/checkout@v4
