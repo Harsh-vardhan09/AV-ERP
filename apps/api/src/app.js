@@ -35,7 +35,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads')));
 
 // Health must precede the route block: complainBoxRoute mounts on the bare
-// '/api/v1' path and would otherwise shadow /api/v1/health
 app.get('/', (req, res) => res.json({ status: 'ok', message: 'School ERP API is running' }));
 
 app.get('/api/v1/health', (req, res) =>

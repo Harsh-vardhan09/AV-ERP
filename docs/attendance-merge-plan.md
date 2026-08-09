@@ -12,29 +12,29 @@ the name.
 
 ## The three models at a glance
 
-| | `attendance.js` | `TeacherAttendance.js` | `FacultyAttendance.js` |
-|---|---|---|---|
-| Model name | `Attendance` | `TeacherAttendance` | `FacultyAttendance` |
-| Collection | `attendances` | `teacherattendances` | `facultyattendances` |
-| Subject of the record | a **class + section** | one **teacher** | one **faculty member** |
-| Grain | **one document per class period** | one document per teacher per day | one document per faculty per day |
-| Who is inside | `records[]` — an array of students | a single `teacherId` | a single `facultyId` |
-| Source of truth | a teacher taking a register | an admin marking staff | a **biometric device** |
-| Status values | `present, absent, late, leave` | `present, absent, half_day, on_leave, holiday, weekly_off` | `present, absent, late, half_day, on_leave` |
-| Unique index | none — duplicate prevention is in application code | `{schoolId, teacherId, date}` **unique** | `{schoolId, facultyId, date}` **unique** |
-| Times | none | none | `punchIn`, `punchOut`, `totalHours`, `rawPunches[]` |
-| Hooks | none | none | `pre('save')` computes `totalHours` and derives status from punch time |
-| Files importing it | 4 | 4 | 3 |
+|                       | `attendance.js`                                    | `TeacherAttendance.js`                                     | `FacultyAttendance.js`                                                 |
+| --------------------- | -------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Model name            | `Attendance`                                       | `TeacherAttendance`                                        | `FacultyAttendance`                                                    |
+| Collection            | `attendances`                                      | `teacherattendances`                                       | `facultyattendances`                                                   |
+| Subject of the record | a **class + section**                              | one **teacher**                                            | one **faculty member**                                                 |
+| Grain                 | **one document per class period**                  | one document per teacher per day                           | one document per faculty per day                                       |
+| Who is inside         | `records[]` — an array of students                 | a single `teacherId`                                       | a single `facultyId`                                                   |
+| Source of truth       | a teacher taking a register                        | an admin marking staff                                     | a **biometric device**                                                 |
+| Status values         | `present, absent, late, leave`                     | `present, absent, half_day, on_leave, holiday, weekly_off` | `present, absent, late, half_day, on_leave`                            |
+| Unique index          | none — duplicate prevention is in application code | `{schoolId, teacherId, date}` **unique**                   | `{schoolId, facultyId, date}` **unique**                               |
+| Times                 | none                                               | none                                                       | `punchIn`, `punchOut`, `totalHours`, `rawPunches[]`                    |
+| Hooks                 | none                                               | none                                                       | `pre('save')` computes `totalHours` and derives status from punch time |
+| Files importing it    | 4                                                  | 4                                                          | 3                                                                      |
 
 ---
 
 ## Why student attendance is a different shape entirely
 
-`attendance.js` is **not** a per-person daily record. One document represents *one
-class period* and carries an embedded `records[]` array of every student in it:
+`attendance.js` is **not** a per-person daily record. One document represents _one
+class period_ and carries an embedded `records[]` array of every student in it:
 
 ```js
-records: [{ studentId, status, leaveId }]
+records: [{ studentId, status, leaveId }];
 ```
 
 It is keyed by `classId + sectionId + subjectId + date + attendanceType`, and it
@@ -56,8 +56,8 @@ There is no benefit on offer that justifies that. **Leave `attendance.js` alone.
 
 ## Why the two staff models are genuinely redundant
 
-`TeacherAttendance` and `FacultyAttendance` describe the same real-world fact — *did
-this staff member turn up today* — at the same grain (one row per person per day),
+`TeacherAttendance` and `FacultyAttendance` describe the same real-world fact — _did
+this staff member turn up today_ — at the same grain (one row per person per day),
 both keyed on a `TeacherProfile` reference, both with a unique index on
 `{schoolId, person, date}`.
 
@@ -133,3 +133,4 @@ rollback path is restore, not un-merge.
 - Whether the biometric device flow ever writes `source: 'manual'` today — if it
   does, the two models are already being used interchangeably somewhere and that
   code needs finding first.
+  ffdfsasdfasdfsd
