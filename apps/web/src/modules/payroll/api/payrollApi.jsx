@@ -95,6 +95,14 @@ export const payrollApi = createApi({
         const qs = new URLSearchParams(params).toString();
         return qs ? `/payslips?${qs}` : '/payslips';
       },
+      // Server sends {data:{docs,totalDocs,...}}; docs must always be an array or
+      // antd Table calls .some() on an object and the page crashes
+      transformResponse: (res) => ({
+        docs: Array.isArray(res?.data?.docs) ? res.data.docs : [],
+        totalDocs: res?.data?.totalDocs ?? 0,
+        page: res?.data?.page ?? 1,
+        totalPages: res?.data?.totalPages ?? 0,
+      }),
       providesTags: ['Payslip'],
     }),
     getPayslipById: builder.query({

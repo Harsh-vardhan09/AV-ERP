@@ -3,10 +3,6 @@ import { FaRegCircle } from 'react-icons/fa';
 import { FiSquare } from 'react-icons/fi';
 import { LuHexagon } from 'react-icons/lu';
 import { RxCross2 } from 'react-icons/rx';
-import { IoIosUnlock } from 'react-icons/io';
-import { HiMiniSpeakerWave } from 'react-icons/hi2';
-import { IoSettingsOutline } from 'react-icons/io5';
-import { RxEnterFullScreen } from 'react-icons/rx';
 import { useNavigate } from 'react-router';
 
 function Kahootquize() {

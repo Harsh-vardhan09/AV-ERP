@@ -17,41 +17,42 @@ function TeacherCard({ teacher, schoolName, schoolAddress, schoolPhone, schoolLo
 
   return (
     <div style={{
-      width: 320, minHeight: 200, border: '2px solid #14532d', borderRadius: 12,
+      width: 320, height: 202, border: '2px solid #14532d', borderRadius: 10,
       fontFamily: 'Arial, sans-serif', overflow: 'hidden', background: '#fff',
       boxShadow: '0 4px 12px rgba(0,0,0,0.15)', pageBreakInside: 'avoid',
+      display: 'flex', flexDirection: 'column',
     }}>
       {/* Header */}
       <div style={{
         background: 'linear-gradient(135deg,#14532d,#16a34a)', color: '#fff',
-        padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8,
+        padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0,
       }}>
         {schoolLogo
-          ? <img src={schoolLogo} alt="logo" style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid #fff', objectFit: 'cover' }} />
-          : <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: '#14532d' }}>S</div>
+          ? <img src={schoolLogo} alt="logo" style={{ width: 30, height: 30, borderRadius: '50%', border: '2px solid #fff', objectFit: 'cover' }} />
+          : <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: '#14532d' }}>S</div>
         }
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 11, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{schoolName || 'School Name'}</div>
-          <div style={{ fontSize: 9, opacity: 0.85, marginTop: 1 }}>TEACHER IDENTITY CARD</div>
+          <div style={{ fontWeight: 700, fontSize: 10.5, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{schoolName || 'School Name'}</div>
+          <div style={{ fontSize: 8, opacity: 0.85, letterSpacing: 0.4 }}>TEACHER IDENTITY CARD</div>
         </div>
       </div>
 
       {/* Body */}
-      <div style={{ padding: '10px 12px', display: 'flex', gap: 10 }}>
+      <div style={{ flex: 1, minHeight: 0, padding: '7px 10px', display: 'flex', gap: 9 }}>
         {/* Photo */}
         <div style={{ flexShrink: 0 }}>
           {photo
-            ? <img src={photo} alt={fullName} style={{ width: 72, height: 90, objectFit: 'cover', border: '2px solid #14532d', borderRadius: 6 }} />
-            : <div style={{ width: 72, height: 90, border: '2px solid #14532d', borderRadius: 6, background: 'linear-gradient(135deg,#dcfce7,#f0fdf4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#14532d' }}>
+            ? <img src={photo} alt={fullName} style={{ width: 58, height: 72, objectFit: 'cover', border: '2px solid #14532d', borderRadius: 5 }} />
+            : <div style={{ width: 58, height: 72, border: '2px solid #14532d', borderRadius: 5, background: 'linear-gradient(135deg,#dcfce7,#f0fdf4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: '#14532d' }}>
                 {`${teacher.firstName?.[0] || ''}${teacher.lastName?.[0] || ''}`.toUpperCase() || 'T'}
               </div>
           }
-          <div style={{ marginTop: 4, textAlign: 'center', background: '#14532d', color: '#fff', borderRadius: 4, padding: '2px 4px', fontSize: 9, fontWeight: 700 }}>{blood}</div>
+          <div style={{ marginTop: 3, textAlign: 'center', background: '#14532d', color: '#fff', borderRadius: 3, padding: '1px 4px', fontSize: 8.5, fontWeight: 700 }}>{blood}</div>
         </div>
 
         {/* Info */}
-        <div style={{ flex: 1, fontSize: 9.5, lineHeight: 1.7 }}>
-          <div style={{ fontWeight: 700, fontSize: 12, color: '#14532d', marginBottom: 3 }}>{fullName}</div>
+        <div style={{ flex: 1, minWidth: 0, fontSize: 9, lineHeight: 1.45 }}>
+          <div style={{ fontWeight: 700, fontSize: 11.5, color: '#14532d', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fullName}</div>
           {[
             ['Emp. ID',       empId],
             ['Designation',   teacher.designation || 'Teacher'],
@@ -60,7 +61,7 @@ function TeacherCard({ teacher, schoolName, schoolAddress, schoolPhone, schoolLo
             ['Contact',       phone],
           ].map(([label, value]) => (
             <div key={label} style={{ display: 'flex', gap: 4 }}>
-              <span style={{ color: '#4b5563', fontWeight: 600, minWidth: 68, flexShrink: 0 }}>{label}:</span>
+              <span style={{ color: '#4b5563', fontWeight: 600, minWidth: 62, flexShrink: 0 }}>{label}:</span>
               <span style={{ color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
             </div>
           ))}
@@ -68,7 +69,7 @@ function TeacherCard({ teacher, schoolName, schoolAddress, schoolPhone, schoolLo
       </div>
 
       {/* Footer */}
-      <div style={{ background: '#f0fdf4', borderTop: '1px solid #bbf7d0', padding: '5px 12px', display: 'flex', justifyContent: 'space-between', fontSize: 8.5, color: '#166534' }}>
+      <div style={{ background: '#f0fdf4', borderTop: '1px solid #bbf7d0', padding: '3px 10px', display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 8, color: '#166534', flexShrink: 0, whiteSpace: 'nowrap', overflow: 'hidden' }}>
         <span>Session: {session || '—'}</span>
         <span>{schoolPhone || schoolAddress || ''}</span>
       </div>

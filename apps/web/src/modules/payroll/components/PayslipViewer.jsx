@@ -23,7 +23,7 @@ const PayslipViewer = ({ payrollId, open, onClose, period }) => {
   );
   const [resend] = useResendPayslipMutation();
 
-  const payslips = data?.data || data || [];
+  const payslips = data?.docs || [];
 
   const handleResend = async (id) => {
     try {

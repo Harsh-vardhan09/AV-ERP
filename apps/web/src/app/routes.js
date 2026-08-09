@@ -30,8 +30,6 @@ import { appLegacyRoutes } from '@app/routes.legacy';
 
 const ADMIN_BRANCH = [ROLES.ADMIN, ROLES.ADMISSION];
 
-// Branch landing spots. These were <Route index> under each prefix; as full
-// paths they resolve identically and stay visible in the parity table.
 const branchIndexes = [
   { path: 'admin', lazy: redirect('/admin/dashboard'), handle: { roles: ADMIN_BRANCH } },
   {

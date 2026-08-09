@@ -50,9 +50,7 @@ const PayrollRunDetail = () => {
   }
 
 
-  // ✅ Fix: Handle normalized data mapping (Requirement 2.3)
-  // After transformResponse in payrollApi.js, payslipsData is the array of docs directly.
-  const payslips = Array.isArray(payslipsData) ? payslipsData : [];
+  const payslips = payslipsData?.docs || [];
 
   const handleAction = async (action) => {
     try {

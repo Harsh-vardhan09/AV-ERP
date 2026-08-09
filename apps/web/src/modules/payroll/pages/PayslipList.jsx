@@ -53,7 +53,7 @@ const PayslipList = () => {
     return <Navigate to="/" />;
   }
 
-  const payslips = res?.data || [];
+  const payslips = res?.docs || [];
 
 
   const handleDownload = (url) => {
@@ -204,7 +204,7 @@ const PayslipList = () => {
           pagination={{
             current: page,
             pageSize,
-            total: payslips.length, // ✅ fallback
+            total: res?.totalDocs || 0,
             onChange: (p, ps) => {
               setPage(p);
               setPageSize(ps);
