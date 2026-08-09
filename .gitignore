@@ -46,3 +46,4 @@ scripts/.env.smoke
 dump.rdb
 *.rdb
 scripts/diag*
+*/.claude

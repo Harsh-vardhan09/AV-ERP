@@ -10,3 +10,7 @@ process.env.CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 // Bull's factory returns a no-op stub instead of opening a Redis connection that
 // would keep the run alive after the last assertion
 process.env.REDIS_DISABLED = 'true';
+
+// The razorpay idempotency test signs its own callback; the secret only has to
+// match what verifySignature reads.
+process.env.RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'test-razorpay-secret';

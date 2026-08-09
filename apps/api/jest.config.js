@@ -9,4 +9,7 @@ module.exports = {
   maxWorkers: 1,
   // First run downloads a mongod binary
   testTimeout: 120000,
+  // Mongoose and the socket server keep handles open past the last assertion,
+  // so jest would sit there instead of exiting and CI would hang.
+  forceExit: true,
 };
