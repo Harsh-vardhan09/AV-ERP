@@ -8,7 +8,7 @@
  * no longer crash the entire server.
  */
 const logger = require('../../../core/logging/logger');
-const { REDIS_URL, REDIS_DISABLED } = require('../../../core/config/redis');
+const { REDIS_URL, REDIS_DISABLED, redisOpts } = require('../../../core/config/redis');
 
 // Graceful stub (used when Redis is unavailable)
 const makeStub = (name) => ({
@@ -26,14 +26,21 @@ try {
   if (REDIS_DISABLED) throw new Error('Redis disabled via REDIS_DISABLED=true');
 
   const Queue = require('bull');
-  feeReminderQueue   = new Queue('fee-reminders',    REDIS_URL);
-  feeOverdueQueue    = new Queue('fee-overdue',       REDIS_URL);
-  marksDeadlineQueue = new Queue('marks-deadline',    REDIS_URL);
+  feeReminderQueue   = new Queue('fee-reminders',    REDIS_URL, { redis: redisOpts });
+  feeOverdueQueue    = new Queue('fee-overdue',       REDIS_URL, { redis: redisOpts });
+  marksDeadlineQueue = new Queue('marks-deadline',    REDIS_URL, { redis: redisOpts });
 
-  // Suppress unhandled Redis errors — already logged in config/redis.js
-  feeReminderQueue.on('error',   (e) => logger.warn('[NotifWorker] feeReminderQueue Redis error',   { error: e.message }));
-  feeOverdueQueue.on('error',    (e) => logger.warn('[NotifWorker] feeOverdueQueue Redis error',    { error: e.message }));
-  marksDeadlineQueue.on('error', (e) => logger.warn('[NotifWorker] marksDeadlineQueue Redis error', { error: e.message }));
+  const handleQueueError = (queueName, e) => {
+    if (e.code === 'ECONNRESET' || (e.message && e.message.includes('ECONNRESET'))) {
+      logger.debug(`[NotifWorker] ${queueName} Redis connection reset (reconnecting automatically)`);
+      return;
+    }
+    logger.warn(`[NotifWorker] ${queueName} Redis error`, { error: e.message });
+  };
+
+  feeReminderQueue.on('error',   (e) => handleQueueError('feeReminderQueue', e));
+  feeOverdueQueue.on('error',    (e) => handleQueueError('feeOverdueQueue', e));
+  marksDeadlineQueue.on('error', (e) => handleQueueError('marksDeadlineQueue', e));
 
   logger.info('[NotifWorker] Notification queues initialized');
 

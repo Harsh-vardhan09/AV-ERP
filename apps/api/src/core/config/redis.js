@@ -13,6 +13,7 @@ const redisOpts = {
   maxRetriesPerRequest: null, // required by Bull
   enableReadyCheck: false, // required by Bull
   lazyConnect: false,
+  keepAlive: 10000, // TCP keep-alive (10s) prevents Upstash serverless idle connection drops
   ...(needsTls && {
     tls: { rejectUnauthorized: false }, // Upstash self-signed cert
   }),
