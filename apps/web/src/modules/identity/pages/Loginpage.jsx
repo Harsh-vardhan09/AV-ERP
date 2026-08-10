@@ -10,7 +10,7 @@ const Login = () => (
   <LoginForm
     roles={LOGIN_ROLES}
     defaultRole="student"
-    emailPlaceholder="Ex: student1@school.com"
+    emailPlaceholder="Roll No or email — e.g. 101 or student1@school.com"
     footer={
       <p className="text-xs font-medium text-slate-500">
         Teacher, admin or staff member?{' '}

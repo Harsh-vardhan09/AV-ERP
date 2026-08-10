@@ -29,7 +29,7 @@ const checks = (pwd) => ({
 const ForcePasswordChange = () => {
   const navigate  = useNavigate();
   const dispatch  = useDispatch();
-  const { data: authData } = useCheak_authQuery();
+  const { data: authData, refetch } = useCheak_authQuery();
   const user = authData?.user;
 
   const [changeFirstPassword, { isLoading }] = useChangeFirstPasswordMutation();
@@ -51,6 +51,10 @@ const ForcePasswordChange = () => {
     try {
       await changeFirstPassword({ newPassword, confirmPassword }).unwrap();
       dispatch(setUser({ user: { ...user, mustChangePassword: false } }));
+      // Invalidating ['user'] only starts a refetch — the old cheak_auth payload
+      // stays readable while it runs, so navigating now lets RouteGuard read
+      // mustChangePassword: true and bounce straight back here.
+      await refetch();
       toast.success('Password updated successfully. Welcome!');
       navigate(roleHome[user?.role] || '/login', { replace: true });
     } catch (err) {

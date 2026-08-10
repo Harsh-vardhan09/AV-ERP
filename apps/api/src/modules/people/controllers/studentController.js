@@ -20,6 +20,7 @@ const logger = require('../../../core/logging/logger.js');
 // ── Phase 2: Notification imports ────────────────────────────────────────────
 const { createInAppNotification } = require('../../notifications').notificationService;
 const { User } = require('../../identity');
+const { issueOtp, consumeOtp } = require('../../identity').otpController;
 
 const studentProfileService = require('../services/studentProfileService');
 const studentSelfService = require('../../communication').studentSelfServiceService;
@@ -614,5 +615,68 @@ exports.getMyReport = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ========================
+// LOGIN EMAIL (students are created with a rollNo only; login accepts either)
+// ========================
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Scoped to the requesting user so an OTP mailed for one student cannot be
+// replayed to attach the same address to another account.
+const otpKeyFor = (userId, email) => `student-email:${userId}:${email}`;
+
+const normalizeEmail = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .trim();
+
+const validateNewEmail = async (email, userId, schoolId) => {
+  if (!email || !EMAIL_RE.test(email)) return 'Please provide a valid email address';
+  const taken = await User.findOne({ email, schoolId, _id: { $ne: userId } }).select('_id');
+  if (taken) return 'That email is already in use at this school';
+  return null;
+};
+
+exports.requestEmailChange = async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const error = await validateNewEmail(email, req.user._id, req.schoolId);
+    if (error) return res.status(400).json({ success: false, message: error });
+
+    await issueOtp(email, otpKeyFor(req.user._id, email));
+    res.status(200).json({ success: true, message: `OTP sent to ${email}` });
+  } catch (error) {
+    logger.error('[Student] requestEmailChange failed', { error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: 'Failed to send OTP. Please check the email address.' });
+  }
+};
+
+exports.verifyEmailChange = async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const { otp } = req.body;
+    if (!otp) return res.status(400).json({ success: false, message: 'OTP is required' });
+
+    const error = await validateNewEmail(email, req.user._id, req.schoolId);
+    if (error) return res.status(400).json({ success: false, message: error });
+
+    const otpError = consumeOtp(otpKeyFor(req.user._id, email), otp);
+    if (otpError) return res.status(400).json({ success: false, message: otpError });
+
+    // Scoped by schoolId as well as _id — a student may only change their own
+    await User.updateOne(
+      { _id: req.user._id, schoolId: req.schoolId },
+      { $set: { email, isVerified: true } }
+    );
+
+    res.status(200).json({ success: true, message: 'Login email added', data: { email } });
+  } catch (error) {
+    logger.error('[Student] verifyEmailChange failed', { error: error.message });
+    res.status(500).json({ success: false, message: 'Verification failed. Please try again.' });
   }
 };

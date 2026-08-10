@@ -4,6 +4,7 @@ import storage from 'redux-persist/lib/storage';
 
 import userReducer from '@shared/lib/store/userSlice';
 import sidebarReducer from '@shared/lib/store/sidebarSlice';
+import suspensionMiddleware from '@shared/lib/store/suspensionMiddleware';
 
 // adminApi and assignmentapi have no owning module yet — adminApi mirrors the
 // backend god-controller, assignments belong to a web `academics` module that
@@ -106,7 +107,8 @@ export const store = configureStore({
       .concat(admissionTemplateApi.middleware)
       .concat(admissionRefApi.middleware)
       .concat(payrollApi.middleware)
-      .concat(examControllerApi.middleware),
+      .concat(examControllerApi.middleware)
+      .concat(suspensionMiddleware),
 });
 
 export const persistor = persistStore(store);

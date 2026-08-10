@@ -6,6 +6,7 @@ const { User } = require('../../identity');
 const SchoolSettings = require('../models/SchoolSettings');
 const { generateSuperAdminToken } = require('../../identity').generateSuperAdminToken;
 const { crossSiteCookie } = require('../../../core/security/cookieOptions');
+const { invalidateSchoolStatus } = require('../../../core/security/authenticate');
 const logger = require('../../../core/logging/logger');
 const { MODULES, DEFAULT_MODULES, MODULE_KEYS, isModuleEnabled } = require('@av-erp/shared');
 
@@ -406,6 +407,8 @@ exports.toggleSchoolStatus = async (req, res, next) => {
     }
 
     await school.save();
+    // authenticate() caches isActive for 60s — drop it so the change is immediate
+    invalidateSchoolStatus(school._id);
 
     logger.info(`[SuperAdmin] School ${action}d`, {
       schoolId: school._id,

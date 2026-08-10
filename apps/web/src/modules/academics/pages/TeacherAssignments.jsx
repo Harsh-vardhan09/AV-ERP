@@ -9,6 +9,7 @@ import {
   useGetMyAssignmentsQuery,
 } from '@modules/people/api/teacherApi';
 import { useGetActiveSessionQuery } from '@shared/lib/api/adminApi';
+import { fileUrl } from '@shared/utils/fileUrl';
 import toast from 'react-hot-toast';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -132,7 +133,9 @@ const TeacherAssignments = () => {
     } catch (err) { toast.error(err?.data?.message || 'Delete failed'); }
   };
 
-  const downloadFile = (url, name) => { const l = document.createElement('a'); l.href = url; l.download = name; l.click(); };
+  // Cloudinary is cross-origin, so the download attribute is ignored — open the
+  // file instead of silently doing nothing.
+  const downloadFile = (url) => { window.open(fileUrl(url), '_blank', 'noopener'); };
 
   return (
     <div>
@@ -169,11 +172,11 @@ const TeacherAssignments = () => {
                 <button onClick={() => setConfirmDeleteId(viewTarget._id)} className="text-xs border border-red-200 text-red-600 px-3 py-1.5 rounded hover:bg-red-50">Delete</button>
               </div>
             </div>
-            {viewTarget.photo && (
-              <div className="mt-3">
-                <a href={viewTarget.photo} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline">View attached file</a>
-              </div>
-            )}
+            <div className="mt-3">
+              {fileUrl(viewTarget.photo)
+                ? <a href={fileUrl(viewTarget.photo)} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline">View attached file</a>
+                : <span className="text-xs text-gray-400">No file attached to this assignment</span>}
+            </div>
           </div>
 
           {/* Stats row */}
@@ -225,8 +228,8 @@ const TeacherAssignments = () => {
                           <td className="px-4 py-3 text-gray-600">{fmtDate(s.submittedAt || s.createdAt)}</td>
                           <td className="px-4 py-3">
                             {s.photo
-                              ? <button onClick={() => downloadFile(s.photo, `submission_${s.studentid?.rollNo || s._id}.pdf`)}
-                                  className="text-xs text-blue-600 underline hover:text-blue-800">Download</button>
+                              ? <button onClick={() => downloadFile(s.photo)}
+                                  className="text-xs text-blue-600 underline hover:text-blue-800">Open</button>
                               : <span className="text-xs text-gray-400">No file</span>}
                           </td>
                         </tr>

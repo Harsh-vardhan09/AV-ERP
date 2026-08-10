@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Building2,
   User,
@@ -40,6 +40,8 @@ const LoginForm = ({ roles, defaultRole, emailPlaceholder, footer }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loginRole, setLoginRole]       = useState(defaultRole);
+  // Set by suspensionMiddleware when the API 403s with SCHOOL_SUSPENDED
+  const suspendedMessage = useSearchParams()[0].get('suspended');
 
   const {
     register,
@@ -110,6 +112,12 @@ const LoginForm = ({ roles, defaultRole, emailPlaceholder, footer }) => {
             Sign in to access your portal
           </p>
         </div>
+
+        {suspendedMessage && (
+          <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800">
+            {suspendedMessage}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
 

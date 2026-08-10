@@ -4,12 +4,17 @@ const { varifyToken } = require('../../../core/security/authenticate.js');
 const { authorize } = require('../../../core/security/roleMiddleware.js');
 const student = require('../controllers/studentController');
 const upload = require('../../../core/http/upload.disk.js');
+const { authLimiter } = require('../../../core/security/rateLimiters.js');
 
 // All student routes are protected
 router.use(varifyToken, authorize('student'));
 
 // Profile
 router.get('/profile', student.getMyProfile);
+
+// Login email — students are created with a rollNo only; login accepts either
+router.post('/request-email-change', authLimiter, student.requestEmailChange);
+router.post('/verify-email-change', authLimiter, student.verifyEmailChange);
 
 // Attendance
 router.get('/attendance', student.getMyAttendance);

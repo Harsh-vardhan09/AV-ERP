@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle, FaDownload, FaEye } from 'react-icons/fa';
+import { fileUrl } from '@shared/utils/fileUrl';
 
 const LeaveSection = () => {
   const [pdfs, setPdfs] = useState([]);
@@ -56,11 +57,11 @@ const LeaveSection = () => {
 
               {/* File Attachments */}
               <div className="mb-4">
-                {!pdf.file[0] ? (
+                {!fileUrl(pdf.file?.[0]) ? (
                   <p className="text-gray-500 italic">No Attachments</p>
                 ) : (
                   <a
-                    href={`${import.meta.env.VITE_PORT}/uploads/${pdf.file[0]}`}
+                    href={fileUrl(pdf.file[0])}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline hover:text-blue-800 transition"
@@ -82,8 +83,9 @@ const LeaveSection = () => {
                     <FaEye className="mr-2" /> View PDF
                   </Link>
                   <a
-                    href={`${import.meta.env.VITE_PORT}/uploads/${pdf.file[0]}`}
-                    download
+                    href={fileUrl(pdf.file?.[0])}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center justify-center border border-blue-500 text-blue-500 px-4 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition"
                   >
                     <FaDownload className="mr-2" /> Download

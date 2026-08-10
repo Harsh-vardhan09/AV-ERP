@@ -23,7 +23,7 @@ const moduleHandles = (matches) =>
 const RouteGuard = () => {
   const matches = useMatches();
   const location = useLocation();
-  const { data, isLoading } = useCheak_authQuery();
+  const { data, isLoading, isFetching } = useCheak_authQuery();
   const moduleSettings = useSelector((s) => s.moduleSettings);
   const oasesSettings = useSelector((s) => s.oasesSettings);
 
@@ -34,8 +34,13 @@ const RouteGuard = () => {
   const home = roleHomePaths[role] || '/login';
 
   // Someone still on their temporary password goes to the change-password page
-  // whatever they asked for.
-  if (data?.user?.mustChangePassword && !location.pathname.includes('/change-password')) {
+  // whatever they asked for. isFetching is checked too: mid-refetch the cache
+  // still holds the pre-change payload, which would bounce the user back.
+  if (
+    data?.user?.mustChangePassword &&
+    !isFetching &&
+    !location.pathname.includes('/change-password')
+  ) {
     return <Navigate to="/change-password" replace />;
   }
 

@@ -38,15 +38,34 @@ const toObjectId = (value) => {
   }
 };
 
-const validateExamContext = async ({ examId, classId, sessionId, schoolId }) => {
-  const exam = await Exam.findOne({
+const validateExamContext = async ({ examId, classId, sessionId, schoolId }) =>
+  Exam.findOne({
     _id: examId,
     schoolId,
     session: sessionId,
     classIds: classId,
-  }).select('_id');
-  return Boolean(exam);
+  })
+    .select('_id name startDate status evaluationLocked')
+    .lean();
+
+const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', { dateStyle: 'medium' });
+
+// Marks may only be entered once the exam has actually started and before the
+// exam controller locks evaluation. Returns a message, or null when writes are allowed.
+const marksWindowError = (exam) => {
+  if (exam.evaluationLocked) {
+    return `Evaluation is locked for "${exam.name}". Marks can no longer be changed.`;
+  }
+  const notStarted = exam.startDate && new Date() < new Date(exam.startDate);
+  if (exam.status === 'upcoming' || notStarted) {
+    return exam.startDate
+      ? `"${exam.name}" has not started yet. Marks entry opens on ${fmtDate(exam.startDate)}.`
+      : `"${exam.name}" has not started yet. Marks entry opens once the exam begins.`;
+  }
+  return null;
 };
+
+exports.marksWindowError = marksWindowError;
 
 // ========================
 // MY ASSIGNMENTS (what classes/subjects am I assigned to)
@@ -198,12 +217,10 @@ exports.takeAttendance = async (req, res) => {
         schoolId: req.schoolId,
       });
       if (!assignment) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: 'You are not assigned to teach this subject in this class/section.',
-          });
+        return res.status(403).json({
+          success: false,
+          message: 'You are not assigned to teach this subject in this class/section.',
+        });
       }
     }
 
@@ -1293,16 +1310,21 @@ exports.uploadMarks = async (req, res) => {
         .json({ success: false, message: 'Invalid examId/subjectId/classId/sectionId/session' });
     }
 
-    const examExists = await validateExamContext({
+    const exam = await validateExamContext({
       examId: examObjectId,
       classId: classObjectId,
       sessionId: sessionObjectId,
       schoolId: req.schoolId,
     });
-    if (!examExists) {
+    if (!exam) {
       return res
         .status(400)
         .json({ success: false, message: 'Exam not found for this school/session/class' });
+    }
+
+    const windowError = marksWindowError(exam);
+    if (windowError) {
+      return res.status(400).json({ success: false, message: windowError });
     }
 
     // ── EXAM_CONTROLLER: MARKS_ALL_ACCESS — bypass assignment check ──────────
@@ -1333,12 +1355,10 @@ exports.uploadMarks = async (req, res) => {
       schoolId: req.schoolId,
     });
     if (!examConfig && !isNewFormat) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'This subject is not configured for this class in this exam',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'This subject is not configured for this class in this exam',
+      });
     }
 
     // Build per-field max map from marksDistribution
@@ -1524,12 +1544,10 @@ exports.uploadMarks = async (req, res) => {
 
     const clampMsg =
       clampedCount > 0 ? ` (clamped ${clampedCount} value(s) to max ${maxMarks})` : '';
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: `${marksType} marks uploaded for ${sanitizedMarks.length} student(s)${clampMsg}`,
-      });
+    res.status(200).json({
+      success: true,
+      message: `${marksType} marks uploaded for ${sanitizedMarks.length} student(s)${clampMsg}`,
+    });
 
     // ── NOTIFICATION BLOCK — non-blocking ───────────────────────────────────
     (async () => {
@@ -1681,16 +1699,21 @@ exports.uploadMarksExcel = async (req, res) => {
         .json({ success: false, message: 'Invalid examId/subjectId/classId/sectionId/session' });
     }
 
-    const examExists = await validateExamContext({
+    const exam = await validateExamContext({
       examId: examObjectId,
       classId: classObjectId,
       sessionId: sessionObjectId,
       schoolId: req.schoolId,
     });
-    if (!examExists) {
+    if (!exam) {
       return res
         .status(400)
         .json({ success: false, message: 'Exam not found for this school/session/class' });
+    }
+
+    const windowError = marksWindowError(exam);
+    if (windowError) {
+      return res.status(400).json({ success: false, message: windowError });
     }
 
     if (!req.file) {
@@ -2587,12 +2610,10 @@ exports.getCoScholasticMarks = async (req, res) => {
       ? await AcademicSession.findById(sessionParam).lean()
       : await AcademicSession.findOne({ schoolId: req.schoolId, isActive: true }).lean();
     if (!sessionDoc)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'No active session found. Please create or activate an academic session.',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'No active session found. Please create or activate an academic session.',
+      });
 
     // ── Class-teacher guard — session-agnostic ────────────────────────────────
     // We search WITHOUT session so that assignments created in any session for
@@ -2794,12 +2815,10 @@ exports.saveCoScholasticMarks = async (req, res) => {
       ? await AcademicSession.findById(sessionParam).lean()
       : await AcademicSession.findOne({ schoolId: req.schoolId, isActive: true }).lean();
     if (!sessionDoc)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'No active session found. Please activate an academic session.',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'No active session found. Please activate an academic session.',
+      });
 
     // ── Class-teacher guard (session-agnostic) ───────────────────────────────
     const ctFilter = { teacherId: req.user._id, classId, schoolId: req.schoolId };
@@ -2810,6 +2829,26 @@ exports.saveCoScholasticMarks = async (req, res) => {
         success: false,
         message: 'You are not the class teacher of this class/section.',
       });
+    }
+
+    // Same window as scholastic marks. Co-scholastic entry is session-scoped, so
+    // examId is optional here — when the caller names an exam, it must have started.
+    if (req.body.examId) {
+      const exam = await validateExamContext({
+        examId: toObjectId(req.body.examId),
+        classId: toObjectId(classId),
+        sessionId: sessionDoc._id,
+        schoolId: req.schoolId,
+      });
+      if (!exam) {
+        return res
+          .status(400)
+          .json({ success: false, message: 'Exam not found for this school/session/class' });
+      }
+      const windowError = marksWindowError(exam);
+      if (windowError) {
+        return res.status(400).json({ success: false, message: windowError });
+      }
     }
 
     // let selectedTemplate = null;

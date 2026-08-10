@@ -22,7 +22,7 @@
  */
 
 const TemplateFieldExtractor = require('./templateFieldExtractor');
-const FieldMappingService    = require('../../admissions').fieldMappingService;
+const FieldMappingService = require('../../admissions').fieldMappingService;
 const logger = require('../../../core/logging/logger.js');
 
 // Core resolvers
@@ -62,7 +62,6 @@ function normalizeKey(k) {
 const safeResolve = deepResolve;
 
 class TemplateParserService {
-
   // Public API
 
   /**
@@ -83,7 +82,13 @@ class TemplateParserService {
     const missingFields = [];
 
     if (!template || typeof template !== 'string') {
-      return { html: '', missingFields: [], error: 'Invalid template', renderTime: 0, success: false };
+      return {
+        html: '',
+        missingFields: [],
+        error: 'Invalid template',
+        renderTime: 0,
+        success: false,
+      };
     }
 
     try {
@@ -93,8 +98,8 @@ class TemplateParserService {
       // Pre-build a normalizedIndex for fuzzy key matching
       // normalizedIndex["studentname"] = enriched.name (for example)
       const normalizedIndex = {};
-      Object.keys(enriched).forEach(k => {
-        normalizedIndex[normalizeKey(k)] = k;  // maps normalized key → original key
+      Object.keys(enriched).forEach((k) => {
+        normalizedIndex[normalizeKey(k)] = k; // maps normalized key → original key
       });
       enriched._normalizedIndex = normalizedIndex;
 
@@ -118,10 +123,13 @@ class TemplateParserService {
       html = this._prependLogoIfAbsent(html, template, enriched);
 
       const uniqueMissing = [...new Set(missingFields)];
-      // DEBUG: log data coverage so template authors can diagnose missing fields
+      // warn, not debug: an unresolved placeholder renders as blank or 'N/A' and
+      // is indistinguishable from genuinely absent marks unless the key is logged
       if (uniqueMissing.length > 0) {
-        logger.debug('[TemplateParser] Missing fields:', uniqueMissing);
-        logger.debug('[TemplateParser] Available data keys:', Object.keys(enriched).filter(k => !k.startsWith('_')).length);
+        logger.warn('[TemplateParser] Unresolved placeholders', {
+          keys: uniqueMissing,
+          availableKeys: Object.keys(enriched).filter((k) => !k.startsWith('_')).length,
+        });
       }
       return {
         html,
@@ -129,14 +137,20 @@ class TemplateParserService {
         renderTime: Date.now() - t0,
         success: true,
         debug: {
-          dataKeyCount: Object.keys(enriched).filter(k => !k.startsWith('_')).length,
+          dataKeyCount: Object.keys(enriched).filter((k) => !k.startsWith('_')).length,
           templateFieldCount: (template.match(/\{\{[^}]+\}\}/g) || []).length,
           missingCount: uniqueMissing.length,
         },
       };
     } catch (err) {
       logger.error('[TemplateParser] Render error:', err.message);
-      return { html: template, missingFields: [], error: err.message, renderTime: Date.now() - t0, success: false };
+      return {
+        html: template,
+        missingFields: [],
+        error: err.message,
+        renderTime: Date.now() - t0,
+        success: false,
+      };
     }
   }
 
@@ -148,22 +162,27 @@ class TemplateParserService {
         options.css || ''
       );
     }
-    const missingHtml = result.missingFields.length > 0
-      ? `<div style="background:#fff3cd;border:1px solid #ffc107;padding:10px;margin-bottom:10px;font-size:11px;word-break:break-all;">
+    const missingHtml =
+      result.missingFields.length > 0
+        ? `<div style="background:#fff3cd;border:1px solid #ffc107;padding:10px;margin-bottom:10px;font-size:11px;word-break:break-all;">
            <strong>⚠ Missing Fields (${result.missingFields.length}):</strong> ${result.missingFields.join(', ')}
          </div>`
-      : '';
+        : '';
     return this._wrapInDocument(missingHtml + result.html, options.css || '');
   }
 
   static validate(template, data) {
-    const extracted   = TemplateFieldExtractor.extractFields(template);
-    const validation  = TemplateFieldExtractor.validateData(template, data);
+    const extracted = TemplateFieldExtractor.extractFields(template);
+    const validation = TemplateFieldExtractor.validateData(template, data);
     const renderResult = this.render(template, data);
     return {
       extracted,
       validation,
-      renderResult: { success: renderResult.success, missingFields: renderResult.missingFields, renderTime: renderResult.renderTime },
+      renderResult: {
+        success: renderResult.success,
+        missingFields: renderResult.missingFields,
+        renderTime: renderResult.renderTime,
+      },
       isValid: validation.isValid && renderResult.success,
     };
   }
@@ -175,7 +194,11 @@ class TemplateParserService {
    * Returns '' when the school has no logo so {{school-logo}} collapses to
    * nothing instead of emitting <img src=""> (which renders a broken icon).
    */
-  static _logoImg(url, cls = 'rc-school-logo', style = 'max-height:90px;max-width:200px;object-fit:contain;') {
+  static _logoImg(
+    url,
+    cls = 'rc-school-logo',
+    style = 'max-height:90px;max-width:200px;object-fit:contain;'
+  ) {
     if (!url || typeof url !== 'string') return '';
     const safe = url.replace(/"/g, '&quot;');
     return `<img class="${cls}" src="${safe}" alt="" style="${style}" />`;
@@ -193,96 +216,104 @@ class TemplateParserService {
     // {{board-logo}} / {{student-photo}} follow the same contract as
     // {{school-logo}}: a ready-to-render <img>, or nothing at all when the
     // source URL is absent — never <img src="">.
-    d.boardLogo    = d.board_logo    = this._logoImg(d.boardLogoUrl, 'rc-board-logo',   'max-height:80px;max-width:80px;object-fit:contain;');
-    d.studentPhoto = d.student_photo = this._logoImg(d.studentPhotoUrl, 'rc-student-photo', 'width:100%;height:100%;object-fit:cover;');
+    d.boardLogo = d.board_logo = this._logoImg(
+      d.boardLogoUrl,
+      'rc-board-logo',
+      'max-height:80px;max-width:80px;object-fit:contain;'
+    );
+    d.studentPhoto = d.student_photo = this._logoImg(
+      d.studentPhotoUrl,
+      'rc-student-photo',
+      'width:100%;height:100%;object-fit:cover;'
+    );
     d.school = {
-      name:         d.schoolName    || '',
-      shortName:    d.schoolShortName || '',
-      code:         d.schoolCode    || '',
-      tagline:      d.schoolTagline || '',
-      address:      d.schoolAddress || '',
-      phone:        d.schoolPhone   || '',
-      email:        d.schoolEmail   || '',
-      website:      d.schoolWebsite || '',
-      affiliatedTo: d.affiliatedTo  || '',
-      udiseCode:    d.udiseCode     || '',
-      logo:         d.schoolLogo    || '',
-      logoUrl:      d.schoolLogoUrl || '',
+      name: d.schoolName || '',
+      shortName: d.schoolShortName || '',
+      code: d.schoolCode || '',
+      tagline: d.schoolTagline || '',
+      address: d.schoolAddress || '',
+      phone: d.schoolPhone || '',
+      email: d.schoolEmail || '',
+      website: d.schoolWebsite || '',
+      affiliatedTo: d.affiliatedTo || '',
+      udiseCode: d.udiseCode || '',
+      logo: d.schoolLogo || '',
+      logoUrl: d.schoolLogoUrl || '',
       watermarkUrl: d.schoolWatermarkUrl || '',
       signatureUrl: d.schoolSignatureUrl || '',
-      qrCodeUrl:    d.schoolQrCodeUrl    || '',
+      qrCodeUrl: d.schoolQrCodeUrl || '',
     };
 
     // student.* namespace
     // Merge existing student namespace (from AdmissionDataService) with parser defaults.
     // Do NOT overwrite keys already set to non-'N/A' values.
-    const existingStudent = (raw.student && typeof raw.student === 'object') ? raw.student : {};
+    const existingStudent = raw.student && typeof raw.student === 'object' ? raw.student : {};
     d.student = {
-      name:            d.name           || 'N/A',
-      firstName:       d.firstName      || 'N/A',
-      lastName:        d.lastName       || 'N/A',
-      rollNo:          d.rollNo         || d.roll_no      || 'N/A',
-      roll_no:         d.rollNo         || d.roll_no      || 'N/A',
-      scholarNo:       d.scholarNo      || d.scholar_no   || 'N/A',
-      scholar_no:      d.scholarNo      || d.scholar_no   || 'N/A',
-      admissionNo:     d.admissionNo    || d.admissionNumber || 'N/A',
-      pen:             d.pen            || 'N/A',
-      dob:             d.dob            || d.dateOfBirth  || 'N/A',
-      gender:          d.gender         || 'N/A',
-      category:        d.category       || 'N/A',
-      bloodGroup:      d.bloodGroup     || d.blood_group  || 'N/A',
-      religion:        d.religion       || 'N/A',
-      caste:           d.caste          || 'N/A',
-      nationality:     d.nationality    || 'N/A',
-      fatherName:      d.fatherName     || d.father_name  || 'N/A',
-      motherName:      d.motherName     || d.mother_name  || 'N/A',
-      fatherOccupation:d.fatherOccupation || 'N/A',
-      motherOccupation:d.motherOccupation || 'N/A',
-      fatherPhone:     d.fatherPhone    || 'N/A',
+      name: d.name || 'N/A',
+      firstName: d.firstName || 'N/A',
+      lastName: d.lastName || 'N/A',
+      rollNo: d.rollNo || d.roll_no || 'N/A',
+      roll_no: d.rollNo || d.roll_no || 'N/A',
+      scholarNo: d.scholarNo || d.scholar_no || 'N/A',
+      scholar_no: d.scholarNo || d.scholar_no || 'N/A',
+      admissionNo: d.admissionNo || d.admissionNumber || 'N/A',
+      pen: d.pen || 'N/A',
+      dob: d.dob || d.dateOfBirth || 'N/A',
+      gender: d.gender || 'N/A',
+      category: d.category || 'N/A',
+      bloodGroup: d.bloodGroup || d.blood_group || 'N/A',
+      religion: d.religion || 'N/A',
+      caste: d.caste || 'N/A',
+      nationality: d.nationality || 'N/A',
+      fatherName: d.fatherName || d.father_name || 'N/A',
+      motherName: d.motherName || d.mother_name || 'N/A',
+      fatherOccupation: d.fatherOccupation || 'N/A',
+      motherOccupation: d.motherOccupation || 'N/A',
+      fatherPhone: d.fatherPhone || 'N/A',
       // address: keep as string, not object
-      address:         typeof d.address === 'string' ? d.address : (d.fullAddress || 'N/A'),
-      phone:           d.phone          || 'N/A',
-      email:           d.email          || 'N/A',
+      address: typeof d.address === 'string' ? d.address : d.fullAddress || 'N/A',
+      phone: d.phone || 'N/A',
+      email: d.email || 'N/A',
       // Merge any extra keys from AdmissionDataService student namespace
       ...existingStudent,
     };
 
     // academic.* namespace
     d.academic = {
-      session:   d.session     || d.academicYear  || 'N/A',
-      year:      d.academicYear|| d.session       || 'N/A',
-      class:     d.className   || d.class         || 'N/A',
-      section:   d.sectionName || d.section       || 'N/A',
-      year_start:d.year_start  || 'N/A',
-      year_end:  d.year_end    || 'N/A',
+      session: d.session || d.academicYear || 'N/A',
+      year: d.academicYear || d.session || 'N/A',
+      class: d.className || d.class || 'N/A',
+      section: d.sectionName || d.section || 'N/A',
+      year_start: d.year_start || 'N/A',
+      year_end: d.year_end || 'N/A',
     };
 
     // summary.* namespace
     d.summary = {
-      totalMarks:  d.grandTotal    || d.total_marks  || 0,
-      maxMarks:    d.grandMaxTotal || 0,
-      percentage:  d.percentage    || 0,
-      grade:       d.grade         || 'N/A',
-      rank:        d.rank          || 'N/A',
-      result:      d.result        || 'N/A',
-      promotedTo:  d.promotedTo    || d.promoted_to  || 'N/A',
-      attendance:  d.attendance_str|| d.attendance   || 'N/A',
+      totalMarks: d.grandTotal || d.total_marks || 0,
+      maxMarks: d.grandMaxTotal || 0,
+      percentage: d.percentage || 0,
+      grade: d.grade || 'N/A',
+      rank: d.rank || 'N/A',
+      result: d.result || 'N/A',
+      promotedTo: d.promotedTo || d.promoted_to || 'N/A',
+      attendance: d.attendance_str || d.attendance || 'N/A',
     };
 
     // attendance.* namespace
     d.attendance = {
-      total:      d.attendance_total      || d.total_days   || 0,
-      present:    d.attendance_present    || d.present_days || 0,
-      absent:     d.attendance_absent     || d.absent_days  || 0,
-      late:       d.attendance_late       || d.late_days    || 0,
-      leave:      d.attendance_leave      || d.leave_days   || 0,
+      total: d.attendance_total || d.total_days || 0,
+      present: d.attendance_present || d.present_days || 0,
+      absent: d.attendance_absent || d.absent_days || 0,
+      late: d.attendance_late || d.late_days || 0,
+      leave: d.attendance_leave || d.leave_days || 0,
       percentage: d.attendance_percentage || 0,
-      str:        d.attendance_str        || d.attendance   || 'N/A',
+      str: d.attendance_str || d.attendance || 'N/A',
     };
 
     // Enrich subject rows
     if (Array.isArray(d.subjects)) {
-      d.subjects = d.subjects.map(sub => this._enrichSubjectRow(sub));
+      d.subjects = d.subjects.map((sub) => this._enrichSubjectRow(sub));
     }
 
     // co_scholastic + skills
@@ -291,17 +322,17 @@ class TemplateParserService {
     // template tokens incorrectly (e.g. all "Overall Total" rows showing grade "A").
     // Only pick the fields that templates actually need.
     const _pickCoItem = (c) => ({
-      activity:   c.activity  || c.name || c.skillName || '',
-      name:       c.name      || c.skillName || c.activity || '',
-      skillName:  c.skillName || c.name      || c.activity || '',
-      grade:      c.grade     || '',
-      t1_grade:   c.t1_grade  || c.t1       || '',
-      t2_grade:   c.t2_grade  || c.t2       || '',
-      t1:         c.t1        || c.t1_grade  || '',
-      t2:         c.t2        || c.t2_grade  || '',
-      term1:      c.term1     ?? '',
-      term2:      c.term2     ?? '',
-      index:      c.index     || 0,
+      activity: c.activity || c.name || c.skillName || '',
+      name: c.name || c.skillName || c.activity || '',
+      skillName: c.skillName || c.name || c.activity || '',
+      grade: c.grade || '',
+      t1_grade: c.t1_grade || c.t1 || '',
+      t2_grade: c.t2_grade || c.t2 || '',
+      t1: c.t1 || c.t1_grade || '',
+      t2: c.t2 || c.t2_grade || '',
+      term1: c.term1 ?? '',
+      term2: c.term2 ?? '',
+      index: c.index || 0,
     });
 
     if (!d.co_scholastic && Array.isArray(d.skills)) {
@@ -313,10 +344,10 @@ class TemplateParserService {
     d.coScholastic = d.co_scholastic || [];
 
     // misc extra aliases
-    d.promotedTo   = d.promotedTo   || d.summary.promotedTo || 'N/A';
-    d.promoted_to  = d.promotedTo;
-    d.result       = d.result       || d.summary.result  || 'N/A';
-    d.result_status= d.result_status|| d.result;
+    d.promotedTo = d.promotedTo || d.summary.promotedTo || 'N/A';
+    d.promoted_to = d.promotedTo;
+    d.result = d.result || d.summary.result || 'N/A';
+    d.result_status = d.result_status || d.result;
 
     // Ensure address is always a clean formatted string, never an object.
     // AdmissionDataService puts address as a string; this guard handles edge cases.
@@ -329,11 +360,11 @@ class TemplateParserService {
     if (!d.addr && d.address && typeof d.address === 'string') {
       // Build a basic addr object from flat fields
       d.addr = {
-        street:  d.address || '',
-        city:    d.city    || '',
-        state:   d.state   || '',
+        street: d.address || '',
+        city: d.city || '',
+        state: d.state || '',
         pincode: d.pincode || '',
-        full:    d.fullAddress || d.address || '',
+        full: d.fullAddress || d.address || '',
       };
     }
 
@@ -341,25 +372,27 @@ class TemplateParserService {
   }
 
   static _enrichSubjectRow(sub) {
-    const s  = { ...sub };
+    const s = { ...sub };
     const t1 = sub.term1 || {};
     const t2 = sub.term2 || {};
 
     // Collect ALL unique component types (fully dynamic — no hardcoded list)
-    const allTypes = [...new Set([
-      ...Object.keys(t1).filter(k => !['total','max'].includes(k)),
-      ...Object.keys(t2).filter(k => !['total','max'].includes(k)),
-      ...Object.keys(sub.maxMarks || {}).filter(k => k !== 'total'),
-    ])];
+    const allTypes = [
+      ...new Set([
+        ...Object.keys(t1).filter((k) => !['total', 'max'].includes(k)),
+        ...Object.keys(t2).filter((k) => !['total', 'max'].includes(k)),
+        ...Object.keys(sub.maxMarks || {}).filter((k) => k !== 'total'),
+      ]),
+    ];
 
     // Emit t1_<type> / t2_<type> for EVERY discovered component
-    allTypes.forEach(type => {
+    allTypes.forEach((type) => {
       s[`t1_${type}`] = t1[type] ?? null;
       s[`t2_${type}`] = t2[type] ?? null;
     });
 
     // Flat marks — obt_<component> / max_<component> for every component
-    allTypes.forEach(type => {
+    allTypes.forEach((type) => {
       if (s[`obt_${type}`] === undefined) {
         s[`obt_${type}`] = sub[`obt_${type}`] ?? t1[type] ?? t2[type] ?? null;
       }
@@ -373,11 +406,11 @@ class TemplateParserService {
     s.t1_total = t1.total ?? null;
     s.t2_total = t2.total ?? null;
 
-    s.total    = sub.total    ?? sub.grandObt ?? 0;
-    s.grandObt = sub.grandObt ?? sub.total    ?? 0;
+    s.total = sub.total ?? sub.grandObt ?? 0;
+    s.grandObt = sub.grandObt ?? sub.total ?? 0;
     s.grandMax = sub.grandMax ?? (sub.maxMarks?.total || 0);
-    s.grade    = sub.grade    || '';
-    s.remark   = sub.remark   || '';
+    s.grade = sub.grade || '';
+    s.remark = sub.remark || '';
 
     // term_1 / term_2 spelling aliases
     s.term_1 = s.term1 = t1;
@@ -394,12 +427,21 @@ class TemplateParserService {
   static _renderBracketAccess(html, data, missing) {
     return html.replace(/\{\{(\w+)\[(\d+)\](?:\.([^}]+))?\}\}/g, (m, arrName, idxStr, prop) => {
       const arr = data[arrName];
-      if (!Array.isArray(arr)) { missing.push(`${arrName}[${idxStr}]`); return ''; }
+      if (!Array.isArray(arr)) {
+        missing.push(`${arrName}[${idxStr}]`);
+        return '';
+      }
       const item = arr[parseInt(idxStr, 10)];
-      if (item == null) { missing.push(`${arrName}[${idxStr}]`); return ''; }
+      if (item == null) {
+        missing.push(`${arrName}[${idxStr}]`);
+        return '';
+      }
       if (!prop) return this._fmt(item);
       const val = safeResolve(item, prop) ?? safeResolve(item, FieldMappingService.resolve(prop));
-      if (val == null) { missing.push(`${arrName}[${idxStr}].${prop}`); return ''; }
+      if (val == null) {
+        missing.push(`${arrName}[${idxStr}].${prop}`);
+        return '';
+      }
       return this._fmt(val);
     });
   }
@@ -416,7 +458,9 @@ class TemplateParserService {
       // Proper array — iterate normally
       if (Array.isArray(arr)) {
         if (!arr.length) return '';
-        return arr.map((item, i) => this._renderItem(inner, item, i, arrName, data, missing)).join('');
+        return arr
+          .map((item, i) => this._renderItem(inner, item, i, arrName, data, missing))
+          .join('');
       }
 
       // Scalar (truthy string / number) — Handlebars semantics: render block ONCE.
@@ -430,21 +474,26 @@ class TemplateParserService {
     let out = tpl;
     out = out.replace(/\{\{@index\}\}/g, String(idx + 1));
     out = out.replace(/\{\{@first\}\}/g, idx === 0 ? 'true' : 'false');
-    out = out.replace(/\{\{@last\}\}/g,  idx === (parent[arrName]?.length - 1) ? 'true' : 'false');
+    out = out.replace(/\{\{@last\}\}/g, idx === parent[arrName]?.length - 1 ? 'true' : 'false');
 
     // Nested loops inside loops (e.g. {{#components}} inside {{#subjects}})
     out = out.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, innerArr, innerTpl) => {
       const nestedArr = safeResolve(item, innerArr) ?? safeResolve(parent, innerArr);
       if (!Array.isArray(nestedArr) || !nestedArr.length) return '';
-      return nestedArr.map((ni, ni_idx) =>
-        this._renderItem(innerTpl, ni, ni_idx, innerArr, { [innerArr]: nestedArr }, missing)
-      ).join('');
+      return nestedArr
+        .map((ni, ni_idx) =>
+          this._renderItem(innerTpl, ni, ni_idx, innerArr, { [innerArr]: nestedArr }, missing)
+        )
+        .join('');
     });
 
     // Dot-notation inside loop
     out = out.replace(/\{\{(\w+)\.(\w+(?:\.\w+)*)\}\}/g, (m, obj, path) => {
       const v = safeResolve(item[obj], path) ?? safeResolve(parent[obj], path);
-      if (v == null) { missing.push(`${arrName}[${idx}].${obj}.${path}`); return 'N/A'; }
+      if (v == null) {
+        missing.push(`${arrName}[${idx}].${obj}.${path}`);
+        return 'N/A';
+      }
       return this._fmt(v);
     });
 
@@ -462,13 +511,13 @@ class TemplateParserService {
       // 2. Fuzzy normalizeKey fallback — handles t1_oral, t1_half_yearly etc.
       const normField = normalizeKey(field);
       // Check item keys
-      const itemKey = Object.keys(item).find(k => normalizeKey(k) === normField);
+      const itemKey = Object.keys(item).find((k) => normalizeKey(k) === normField);
       if (itemKey !== undefined) {
         const v = item[itemKey];
         if (v != null) return this._fmt(v);
       }
       // Check parent keys
-      const parentKey = Object.keys(parent).find(k => normalizeKey(k) === normField);
+      const parentKey = Object.keys(parent).find((k) => normalizeKey(k) === normField);
       if (parentKey !== undefined) {
         const v = parent[parentKey];
         if (v != null) return this._fmt(v);
@@ -548,12 +597,12 @@ class TemplateParserService {
   // Helpers
 
   static _fmt(v) {
-    if (v == null)                             return '';
-    if (typeof v === 'string')                 return v;
-    if (typeof v === 'number')                 return Number.isInteger(v) ? String(v) : v.toFixed(2);
-    if (typeof v === 'boolean')                return v ? 'Yes' : 'No';
-    if (v instanceof Date)                     return v.toLocaleDateString('en-IN');
-    if (Array.isArray(v))                      return v.join(', ') || '';
+    if (v == null) return '';
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number') return Number.isInteger(v) ? String(v) : v.toFixed(2);
+    if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+    if (v instanceof Date) return v.toLocaleDateString('en-IN');
+    if (Array.isArray(v)) return v.join(', ') || '';
     if (typeof v === 'object') {
       // If object has a 'full' key (address-like), use it directly
       if (v.full && typeof v.full === 'string') return v.full;

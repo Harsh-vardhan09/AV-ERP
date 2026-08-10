@@ -4,6 +4,28 @@ const logger = require('../logging/logger');
 // TODO: own it without an injection point. Pass a user loader into authenticate
 // eslint-disable-next-line import/no-restricted-paths
 const { User } = require('../../modules/identity/models/user');
+// TODO: core -> module. Same injection point as User above — a suspended school
+// TODO: has to be rejected on every request, not only at login
+// eslint-disable-next-line import/no-restricted-paths
+const School = require('../../modules/tenancy/models/School');
+
+// Suspension is rare and a DB read per request is not; 60s is the worst-case
+// delay before a suspended school stops being served.
+const SCHOOL_STATUS_TTL_MS = 60 * 1000;
+const schoolStatusCache = new Map();
+
+const getSchoolStatus = async (schoolId) => {
+  const key = String(schoolId);
+  const hit = schoolStatusCache.get(key);
+  if (hit && hit.expiresAt > Date.now()) return hit.value;
+
+  const school = await School.findById(schoolId).select('isActive name').lean();
+  const value = school ? { isActive: school.isActive !== false, name: school.name } : null;
+  schoolStatusCache.set(key, { value, expiresAt: Date.now() + SCHOOL_STATUS_TTL_MS });
+  return value;
+};
+
+const invalidateSchoolStatus = (schoolId) => schoolStatusCache.delete(String(schoolId));
 
 const authenticate = async (req, res, next) => {
   const token =
@@ -58,6 +80,19 @@ const authenticate = async (req, res, next) => {
       });
     }
 
+    // Login rejects a suspended school, but tokens issued before the suspension
+    // would otherwise keep working until they expire
+    if (user.schoolId) {
+      const school = await getSchoolStatus(user.schoolId);
+      if (school && !school.isActive) {
+        return res.status(403).json({
+          success: false,
+          code: 'SCHOOL_SUSPENDED',
+          message: `${school.name} has been suspended. Please contact your administrator.`,
+        });
+      }
+    }
+
     req.user = user;
     req.userid = user._id; // backward compatibility
     req.schoolId = user.schoolId; // every controller filters on this
@@ -78,4 +113,4 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-module.exports = { authenticate, varifyToken: authenticate };
+module.exports = { authenticate, varifyToken: authenticate, invalidateSchoolStatus };

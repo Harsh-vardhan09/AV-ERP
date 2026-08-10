@@ -6,8 +6,12 @@ import {
   useGetMyStudentAssignmentsQuery,
   useGetMyAttendanceQuery,
   useGetStudentNoticesQuery,
-  useGetMyProfileQuery
+  useGetMyProfileQuery,
+  useRequestEmailChangeMutation,
+  useVerifyEmailChangeMutation
 } from '@modules/people/api/studentApi';
+import { useCheak_authQuery } from '@modules/identity';
+import toast from 'react-hot-toast';
 import {
   Calendar,
   BookOpen,
@@ -547,6 +551,101 @@ const UpcomingExamsWidget = ({ classId }) => {
   );
 };
 
+// Students are provisioned with a rollNo and no email. Login accepts either, so
+// this is the only way for a student to get an email login.
+const LoginEmailCard = ({ rollNo }) => {
+  const { data: authData, refetch } = useCheak_authQuery();
+  const [requestEmailChange, { isLoading: sending }] = useRequestEmailChangeMutation();
+  const [verifyEmailChange, { isLoading: verifying }] = useVerifyEmailChangeMutation();
+
+  const currentEmail = authData?.user?.email || '';
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+
+  const sendOtp = async () => {
+    try {
+      await requestEmailChange({ email }).unwrap();
+      setOtpSent(true);
+      toast.success(`OTP sent to ${email}`);
+    } catch (err) {
+      toast.error(err?.data?.message || 'Could not send OTP');
+    }
+  };
+
+  const confirmOtp = async () => {
+    try {
+      await verifyEmailChange({ email, otp }).unwrap();
+      await refetch();
+      setOtpSent(false);
+      setOtp('');
+      setEmail('');
+      toast.success('Login email added. You can now sign in with it.');
+    } catch (err) {
+      toast.error(err?.data?.message || 'Could not verify OTP');
+    }
+  };
+
+  return (
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs">
+      <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 mb-3">
+        Login &amp; Email
+      </h2>
+
+      <dl className="text-sm text-slate-600 space-y-1 mb-4">
+        <div className="flex gap-2">
+          <dt className="text-slate-400">Roll No</dt>
+          <dd className="font-semibold text-slate-800 tabular-nums">{rollNo || 'N/A'}</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="text-slate-400">Email</dt>
+          <dd className="font-semibold text-slate-800 break-all">
+            {currentEmail || <span className="font-normal text-slate-400">Not set</span>}
+          </dd>
+        </div>
+      </dl>
+
+      <p className="text-xs text-slate-500 mb-3">
+        {currentEmail
+          ? 'You can sign in with either your roll number or this email.'
+          : 'Add an email so you can sign in with it instead of your roll number.'}
+      </p>
+
+      <div className="space-y-2">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); setOtpSent(false); }}
+          placeholder={currentEmail ? 'New email address' : 'your.name@example.com'}
+          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
+
+        {otpSent && (
+          <input
+            type="text"
+            inputMode="numeric"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            placeholder="6-digit OTP"
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        )}
+
+        <button
+          type="button"
+          onClick={otpSent ? confirmOtp : sendOtp}
+          disabled={otpSent ? !otp || verifying : !email || sending}
+          className="w-full py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          {otpSent
+            ? (verifying ? 'Verifying…' : 'Verify & Save')
+            : (sending ? 'Sending OTP…' : 'Send OTP')}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const StudentDashboard = () => {
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const user = useSelector((s) => s.user?.user?.user);
@@ -599,6 +698,8 @@ const StudentDashboard = () => {
 
       {/* Library overdue / due-soon reminder alert */}
       <LibraryReminder />
+
+      <LoginEmailCard rollNo={student?.rollNo} />
 
       {/* ── Equal Height & Width Grid Row: Attendance & Notice Board ──────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

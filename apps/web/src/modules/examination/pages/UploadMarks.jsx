@@ -682,6 +682,16 @@ const UploadMarks = () => {
     selectedExam && selectedClass && selectedSection && selectedSubject;
   const selectedExamObj = exams.find((e) => e._id === selectedExam);
 
+  // Mirrors the server guard in teacher.uploadMarks — the server stays authoritative,
+  // this only keeps the UI from offering a write it will reject.
+  const marksLocked =
+    !!selectedExamObj &&
+    (selectedExamObj.status === 'upcoming' ||
+      (selectedExamObj.startDate && new Date() < new Date(selectedExamObj.startDate)));
+  const marksOpenOn = selectedExamObj?.startDate
+    ? new Date(selectedExamObj.startDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+    : null;
+
   // ─── Error Handling ───
   if (sessionError) {
     return (
@@ -927,6 +937,13 @@ const UploadMarks = () => {
             </span>
           </div>
         )}
+
+        {marksLocked && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            🔒 <strong>{selectedExamObj.name}</strong> has not started yet.{' '}
+            {marksOpenOn ? `Marks entry opens on ${marksOpenOn}.` : 'Marks entry opens once the exam begins.'}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
@@ -1133,10 +1150,13 @@ const UploadMarks = () => {
                 <div className="px-6 py-4 bg-gray-50 border-t flex items-center justify-between flex-wrap gap-4">
                   <button
                     type="submit"
-                    disabled={uploading}
+                    disabled={uploading || marksLocked}
+                    title={marksLocked && marksOpenOn ? `Opens on ${marksOpenOn}` : undefined}
                     className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center"
                   >
-                    {uploading ? (
+                    {marksLocked ? (
+                      marksOpenOn ? `Opens on ${marksOpenOn}` : 'Exam not started'
+                    ) : uploading ? (
                       <>
                         <svg
                           className="animate-spin -ml-1 mr-2 h-4 w-4"
@@ -1217,15 +1237,19 @@ const UploadMarks = () => {
               ref={fileRef}
               type="file"
               accept=".xlsx,.xls,.csv"
-              className="border rounded-lg px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-indigo-700 file:text-sm file:font-medium file:cursor-pointer hover:file:bg-indigo-100 cursor-pointer"
+              disabled={marksLocked}
+              className="border rounded-lg px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-indigo-700 file:text-sm file:font-medium file:cursor-pointer hover:file:bg-indigo-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Select Excel file"
             />
             <button
               onClick={handleExcelUpload}
-              disabled={uploadingExcel}
+              disabled={uploadingExcel || marksLocked}
+              title={marksLocked && marksOpenOn ? `Opens on ${marksOpenOn}` : undefined}
               className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center"
             >
-              {uploadingExcel ? (
+              {marksLocked ? (
+                marksOpenOn ? `Opens on ${marksOpenOn}` : 'Exam not started'
+              ) : uploadingExcel ? (
                 <>
                   <svg
                     className="animate-spin -ml-1 mr-2 h-4 w-4"

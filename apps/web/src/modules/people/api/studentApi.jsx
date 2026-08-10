@@ -20,6 +20,15 @@ export const studentApi = createApi({
       providesTags: ['Profile'],
     }),
 
+    // Login email (two-step OTP)
+    requestEmailChange: builder.mutation({
+      query: (body) => ({ url: '/request-email-change', method: 'POST', body }),
+    }),
+    verifyEmailChange: builder.mutation({
+      query: (body) => ({ url: '/verify-email-change', method: 'POST', body }),
+      invalidatesTags: ['Profile'],
+    }),
+
     // Attendance
     getMyAttendance: builder.query({
       query: (params = {}) => {
@@ -97,6 +106,7 @@ export const studentApi = createApi({
 
 export const {
   useGetMyProfileQuery,
+  useRequestEmailChangeMutation, useVerifyEmailChangeMutation,
   useGetMyAttendanceQuery,
   useGetMyStudentAssignmentsQuery, useSubmitAssignmentMutation,
   useApplyStudentLeaveMutation, useGetMyStudentLeavesQuery,
