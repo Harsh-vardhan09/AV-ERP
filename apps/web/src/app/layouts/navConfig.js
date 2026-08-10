@@ -147,6 +147,13 @@ export const navConfig = {
       label: 'Notices',
       module: 'communication',
     },
+    {
+      to: '/admin/complaints',
+      icon: MdReport,
+      size: 20,
+      label: 'Grievances',
+      module: 'communication',
+    },
     { to: '/admin/staff', icon: MdBadge, size: 20, label: 'Staff Management' },
     // retired: biometric, fee_management — re-add when available
     // The legacy "Report Cards" generator is retired: it used the pre-template

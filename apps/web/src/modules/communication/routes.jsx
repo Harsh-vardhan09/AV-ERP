@@ -14,6 +14,7 @@ export const communicationRoutes = [
 
   { path: 'admin/notices/new', lazy: page(() => import('./pages/news/Notice')), handle: { roles: [ROLES.ADMIN], module: MODULE } },
   { path: 'admin/notices', lazy: page(() => import('./pages/news/Allnoticepage')), handle: { roles: [ROLES.ADMIN], module: MODULE } },
+  { path: 'admin/complaints', lazy: page(() => import('./pages/Complain-Box/complainBox')), handle: { roles: [ROLES.ADMIN], module: MODULE } },
 
   { path: 'teacher/materials', lazy: page(() => import('./pages/TeacherKnowledgeCenter')), handle: { roles: TEACHER, module: MODULE } },
   { path: 'teacher/leave', lazy: page(() => import('./pages/TeacherLeave')), handle: { roles: TEACHER, module: MODULE } },
