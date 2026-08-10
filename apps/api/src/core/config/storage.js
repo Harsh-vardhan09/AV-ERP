@@ -19,12 +19,43 @@ if (!isConfigured) {
   logger.warn('[Cloudinary] Credentials missing — file uploads will fail');
 }
 
+const path = require('path');
+
 const uploadoncloud = async (localfilepath) => {
   try {
     if (!localfilepath) return null;
+
+    // Determine resource type from file extension
+    const ext = (path.extname(localfilepath) || '').toLowerCase();
+    let resource_type = 'raw';
+    if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff'].includes(ext)) {
+      resource_type = 'image';
+    } else if (ext === '.pdf') {
+      // serve PDF via image delivery so Cloudinary doesn't restrict raw/pdf delivery
+      resource_type = 'image';
+    }
+
+    // sanitize filename for public_id: allow a-z0-9._- only
+    const base = path.basename(localfilepath);
+    const nameOnly = base.replace(/\.[^/.]+$/, '');
+    const sanitized = nameOnly
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 120);
+
+    const rand = Math.floor(Math.random() * 90000) + 10000;
+    const publicId = `erp/assignments/${Date.now()}-${rand}-${sanitized}`;
+
     const response = await v2.uploader.upload(localfilepath, {
-      resource_type: 'raw',
+      resource_type,
+      public_id: publicId,
+      folder: undefined,
     });
+
+    // Ensure callers that read `url` get an HTTPS URL (secure_url)
+    if (response && response.secure_url) response.url = response.secure_url;
+
     logger.info(`[Cloudinary] Uploaded: ${response.url}`);
     try {
       fs.unlinkSync(localfilepath);

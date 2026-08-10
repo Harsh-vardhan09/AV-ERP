@@ -187,6 +187,32 @@ async function updateStatus(req, res) {
   }
 }
 
+async function getComplainsStats(req, res) {
+  try {
+    const schoolFilter = { ...req.schoolFilter };
+    const stats = await complainBox.aggregate([
+      { $match: schoolFilter },
+      {
+        $facet: {
+          byStatus: [
+            { $group: { _id: '$status', count: { $sum: 1 } } },
+            { $project: { status: '$_id', count: 1, _id: 0 } },
+          ],
+          byCategory: [
+            { $group: { _id: '$category', count: { $sum: 1 } } },
+            { $project: { category: '$_id', count: 1, _id: 0 } },
+          ],
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, stats: stats[0] || { byStatus: [], byCategory: [] } });
+  } catch (error) {
+    logger.error('Error computing complaints stats:', { error: error.message });
+    res.status(500).json({ success: false, message: 'Failed to compute complaint statistics' });
+  }
+}
+
 async function addSuggestion(req, res) {
   const { id, suggestion, scholar_no, status } = req.body;
   try {
@@ -219,4 +245,5 @@ module.exports = {
   complainForYou,
   updateStatus,
   addSuggestion,
+  getComplainsStats,
 };

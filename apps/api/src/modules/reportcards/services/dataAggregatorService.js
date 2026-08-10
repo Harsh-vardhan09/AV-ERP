@@ -96,6 +96,14 @@ const SLUG_MAP = {
   'business studies': 'bst',
 };
 
+// Component abbreviation aliases for templates that use short tokens
+const COMPONENT_ALIASES = {
+  theory: 'th',
+  practical: 'pr',
+  project: 'proj',
+  internal: 'int',
+};
+
 function subjectSlug(name = '') {
   const lower = name.toLowerCase().trim();
   if (SLUG_MAP[lower]) return SLUG_MAP[lower];
@@ -942,6 +950,12 @@ class DataAggregatorService {
         if (component === 'total') return;
         d[`${safeSlug}_max_${component}`] = sub.maxMarks[component] || 0;
         d[`${safeSlug}_obt_${component}`] = sub[`obt_${component}`] ?? '';
+        // Also emit abbreviated aliases (theory->th, practical->pr, project->proj, internal->int)
+        const alias = COMPONENT_ALIASES[component];
+        if (alias) {
+          d[`${safeSlug}_max_${alias}`] = sub.maxMarks[component] || 0;
+          d[`${safeSlug}_obt_${alias}`] = sub[`obt_${component}`] ?? '';
+        }
       });
       // Expose all t1/t2 component tokens under slug prefix
       ['term1', 'term2'].forEach((termKey, ti) => {
@@ -970,6 +984,11 @@ class DataAggregatorService {
         if (component === 'total') return;
         d[`sub_${i}_max_${component}`] = sub.maxMarks[component] || 0;
         d[`sub_${i}_obt_${component}`] = sub[`obt_${component}`] ?? '';
+        const alias = COMPONENT_ALIASES[component];
+        if (alias) {
+          d[`sub_${i}_max_${alias}`] = sub.maxMarks[component] || 0;
+          d[`sub_${i}_obt_${alias}`] = sub[`obt_${component}`] ?? '';
+        }
       });
 
       // sid_<idSlug>_* tokens — GUARANTEED UNIQUE, use to avoid slug collision
@@ -985,6 +1004,11 @@ class DataAggregatorService {
           if (component === 'total') return;
           d[`${idKey}_max_${component}`] = sub.maxMarks[component] || 0;
           d[`${idKey}_obt_${component}`] = sub[`obt_${component}`] ?? '';
+          const alias = COMPONENT_ALIASES[component];
+          if (alias) {
+            d[`${idKey}_max_${alias}`] = sub.maxMarks[component] || 0;
+            d[`${idKey}_obt_${alias}`] = sub[`obt_${component}`] ?? '';
+          }
         });
       }
     });

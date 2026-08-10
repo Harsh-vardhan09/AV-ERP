@@ -33,10 +33,11 @@ const permissions = {
 
   // bare /api/v1 — complaint box
   'communication.complaints.createSolo': ANY_AUTHENTICATED,
-  'communication.complaints.list': ANY_AUTHENTICATED,
+  'communication.complaints.list': ['admin'],
   'communication.complaints.createForAll': ANY_AUTHENTICATED,
   'communication.complaints.createForSelected': ANY_AUTHENTICATED,
-  'communication.complaints.updateStatus': ANY_AUTHENTICATED,
+  'communication.complaints.updateStatus': ['admin'],
+  'communication.complaints.stats': ['admin'],
   'communication.complaints.listRequested': ANY_AUTHENTICATED,
   'communication.complaints.listByMe': ANY_AUTHENTICATED,
   'communication.complaints.addSuggestion': ANY_AUTHENTICATED,

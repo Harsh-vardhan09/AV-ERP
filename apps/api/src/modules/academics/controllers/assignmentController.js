@@ -28,7 +28,13 @@ exports.createAssignment = async (req, res) => {
     let uploadedFileUrl = null;
     if (photo) {
       const uploadedFile = await uploadoncloud(photo.path);
-      uploadedFileUrl = uploadedFile.url; // Save the URL from Cloudinary
+      if (!uploadedFile) {
+        return res.status(500).json({
+          success: false,
+          message: 'File upload to cloud failed',
+        });
+      }
+      uploadedFileUrl = uploadedFile.url; // Save the HTTPS URL from Cloudinary
     }
 
     const newAssignment = new Assignment({

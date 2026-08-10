@@ -126,8 +126,22 @@ class TemplateParserService {
       // warn, not debug: an unresolved placeholder renders as blank or 'N/A' and
       // is indistinguishable from genuinely absent marks unless the key is logged
       if (uniqueMissing.length > 0) {
+        // Provide nearest-available key suggestions to aid template debugging
+        const suggestions = {};
+        const normalizedMap = enriched._normalizedIndex || {};
+        uniqueMissing.forEach((mk) => {
+          const nm = normalizeKey(mk);
+          const candidates = Object.keys(normalizedMap)
+            .filter((k) => {
+              return k.includes(nm) || nm.includes(k) || k.startsWith(nm) || nm.startsWith(k);
+            })
+            .slice(0, 10)
+            .map((k) => normalizedMap[k]);
+          suggestions[mk] = candidates;
+        });
         logger.warn('[TemplateParser] Unresolved placeholders', {
           keys: uniqueMissing,
+          suggestions,
           availableKeys: Object.keys(enriched).filter((k) => !k.startsWith('_')).length,
         });
       }
