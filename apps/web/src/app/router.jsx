@@ -7,6 +7,7 @@ import SuperAdminLayout from '@app/layouts/SuperAdminLayout';
 import RouteGuard from '@app/guards/RouteGuard';
 import PublicOnlyGuard from '@app/guards/PublicOnlyGuard';
 import SuperAdminGuard from '@app/guards/SuperAdminGuard';
+import ErrorPage from '@shared/ui/ErrorPage';
 
 import {
   appRoutes,
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
 
   {
     element: <PublicLayout />,
+    errorElement: <ErrorPage />,
     children: [
       ...openRoutes,
       superAdminLoginRoute,
@@ -32,6 +34,7 @@ export const router = createBrowserRouter([
 
   {
     element: <RouteGuard />,
+    errorElement: <ErrorPage />,
     children: [
       { element: <DashboardLayout />, children: appRoutes },
       ...bareRoutes,
@@ -41,6 +44,7 @@ export const router = createBrowserRouter([
   {
     path: '/superadmin',
     element: <SuperAdminGuard />,
+    errorElement: <ErrorPage />,
     children: [{ element: <SuperAdminLayout />, children: superAdminRoutes }],
   },
 ]);

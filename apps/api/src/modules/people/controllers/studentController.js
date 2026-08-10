@@ -448,8 +448,13 @@ exports.markMaterialViewed = async (req, res) => {
 
 exports.getNotices = async (req, res) => {
   try {
-    // SECURITY: scope to current school — CRIT-4 fix
-    const notices = await Notice.find({ schoolId: req.schoolId })
+    // SECURITY: scope to current school — CRIT-4 fix.
+    // Legacy notices predate `audience` and carry none; $in misses null, so they
+    // are admitted explicitly rather than vanishing from every student's board.
+    const notices = await Notice.find({
+      schoolId: req.schoolId,
+      $or: [{ audience: { $in: ['all', 'students'] } }, { audience: { $exists: false } }],
+    })
       .populate('createdByID', 'firstName lastName')
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: notices });

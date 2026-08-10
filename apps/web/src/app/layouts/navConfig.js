@@ -140,6 +140,13 @@ export const navConfig = {
       label: 'Teacher Leaves',
       module: 'communication',
     },
+    {
+      to: '/admin/notices',
+      icon: MdNotifications,
+      size: 20,
+      label: 'Notices',
+      module: 'communication',
+    },
     { to: '/admin/staff', icon: MdBadge, size: 20, label: 'Staff Management' },
     // retired: biometric, fee_management — re-add when available
     // The legacy "Report Cards" generator is retired: it used the pre-template
@@ -187,6 +194,13 @@ export const navConfig = {
       icon: MdBook,
       size: 18,
       label: 'Knowledge Center',
+      module: 'communication',
+    },
+    {
+      to: '/teacher/notices',
+      icon: MdNotifications,
+      size: 18,
+      label: 'Notices',
       module: 'communication',
     },
     {

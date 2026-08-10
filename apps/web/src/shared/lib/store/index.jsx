@@ -12,7 +12,7 @@ import { adminApi } from '@shared/lib/api/adminApi';
 import { assignmentApi } from '@modules/academics';
 
 import { authApi, schoolApi } from '@modules/identity';
-import { chatapi, knowlegecenterapi, complainReducer } from '@modules/communication';
+import { chatapi, knowlegecenterapi, noticeapi, complainReducer } from '@modules/communication';
 import { teacherApi, studentApi, staffApi, studentManagementApi, teacherManagementApi } from '@modules/people';
 import { admissionApi, admissionRefApi, admissionTemplateApi, customFormApi } from '@modules/admissions';
 import { feeApi } from '@modules/fees';
@@ -49,6 +49,7 @@ export const store = configureStore({
     [documentTemplateApi.reducerPath]: documentTemplateApi.reducer,
     [templateConfigApi.reducerPath]: templateConfigApi.reducer,
     [generatedDocumentsApi.reducerPath]: generatedDocumentsApi.reducer,
+    [noticeapi.reducerPath]: noticeapi.reducer,
     oasesSettings: oasesSettingsReducer,
     moduleSettings: moduleSettingsReducer,
     user: persistedUserReducer,
@@ -91,6 +92,7 @@ export const store = configureStore({
       .concat(documentTemplateApi.middleware)
       .concat(templateConfigApi.middleware)
       .concat(generatedDocumentsApi.middleware)
+      .concat(noticeapi.middleware)
       .concat(superAdminApi.middleware)
       .concat(staffApi.middleware)
       .concat(notificationApi.middleware)

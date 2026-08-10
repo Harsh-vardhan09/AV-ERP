@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import NoticeModal from './NoticeModal';
+
 function Noticebox({ data }) { 
     const [notice, setNotice] = useState(null); 
     const [showless, setShow] = useState(false); 
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalId, setModalId] = useState(null);
     const navigate = useNavigate();
-    
-   
+
     useEffect(() => {
-        if (data) {
-            setNotice(data); // Set notice when data is available
-        }
-    }, [data]); 
+        if (data) setNotice(data);
+    }, [data]);
 
     const navigateToFullNotice = (id) => {
-        navigate(`/fullnotice/${id}`); 
+        // open modal overlay instead of navigating to legacy route
+        setModalId(id);
+        setModalOpen(true);
     };
 
     if (!notice) {
@@ -32,7 +35,7 @@ function Noticebox({ data }) {
             
             <div className="p-4">
                 <button
-                    onClick={() => setShow(!showless)}
+                    onClick={(e) => { e.stopPropagation(); setShow(!showless); }}
                     className="text-blue-500 hover:underline mb-2"
                 >
                     {showless ? 'Show Less' : 'Show More'}
@@ -148,6 +151,7 @@ function Noticebox({ data }) {
                 }
             `}</style>
         </div>
+            {modalOpen && <NoticeModal id={modalId} onClose={() => setModalOpen(false)} />}
     );
 }
 
