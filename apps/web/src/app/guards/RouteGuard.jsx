@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation, useMatches } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { isModuleEnabled } from '@av-erp/shared';
 import { useCheak_authQuery } from '@modules/identity';
 import ShimmerUi from '@shared/ui/shimmerui';
 import { roleHomePaths } from '@shared/constants/roles';
@@ -49,9 +50,13 @@ const RouteGuard = () => {
     if (h.module === 'oases') {
       if (!oasesSettings?.loaded) return <ShimmerUi />;
       if (!oasesSettings?.isOasesEnabled) return <Navigate to={h.moduleRedirect || home} replace />;
-    } else if (moduleSettings?.loaded && moduleSettings?.modules?.[h.module] === false) {
-      // `=== false` on purpose — the same rule the sidebar uses to hide the link.
-      return <Navigate to={h.moduleRedirect || home} replace />;
+    } else {
+      // Wait rather than decide on an empty store, or the first paint after a
+      // reload flashes a page the school cannot use.
+      if (!moduleSettings?.loaded) return <ShimmerUi />;
+      if (!isModuleEnabled(moduleSettings?.modules, h.module)) {
+        return <Navigate to={h.moduleRedirect || home} replace />;
+      }
     }
   }
 

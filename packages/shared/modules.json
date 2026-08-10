@@ -5,14 +5,16 @@
     "description": "Students, teachers, classes, attendance, marks",
     "defaultEnabled": true,
     "canDisable": false,
+    "available": true,
     "icon": "school"
   },
   "fee_management": {
     "key": "fee_management",
     "label": "Fee Management",
     "description": "Fee structures, payments, receipts, Razorpay",
-    "defaultEnabled": true,
-    "canDisable": true,
+    "defaultEnabled": false,
+    "canDisable": false,
+    "available": false,
     "icon": "payments"
   },
   "report_cards": {
@@ -20,7 +22,8 @@
     "label": "Report Cards",
     "description": "Report card generation and PDF export",
     "defaultEnabled": true,
-    "canDisable": true,
+    "canDisable": false,
+    "available": true,
     "icon": "description"
   },
   "documents": {
@@ -28,7 +31,8 @@
     "label": "Documents (TC/Migration)",
     "description": "Transfer and migration certificate generation",
     "defaultEnabled": true,
-    "canDisable": true,
+    "canDisable": false,
+    "available": true,
     "icon": "article"
   },
   "oases": {
@@ -36,7 +40,8 @@
     "label": "OASES Evaluation",
     "description": "Answer sheet scanning and evaluation system",
     "defaultEnabled": false,
-    "canDisable": true,
+    "canDisable": false,
+    "available": false,
     "icon": "auto_stories"
   },
   "biometric": {
@@ -44,7 +49,8 @@
     "label": "Biometric Attendance",
     "description": "Fingerprint device integration and faculty attendance",
     "defaultEnabled": false,
-    "canDisable": true,
+    "canDisable": false,
+    "available": false,
     "icon": "fingerprint"
   },
   "communication": {
@@ -52,7 +58,8 @@
     "label": "Communication",
     "description": "Chat, notices, complaints, events, knowledge center",
     "defaultEnabled": true,
-    "canDisable": true,
+    "canDisable": false,
+    "available": true,
     "icon": "chat"
   },
   "assignments": {
@@ -60,23 +67,26 @@
     "label": "Assignments",
     "description": "Teacher assignments and student submissions",
     "defaultEnabled": true,
-    "canDisable": true,
+    "canDisable": false,
+    "available": true,
     "icon": "assignment"
   },
   "payroll": {
     "key": "payroll",
     "label": "Payroll",
     "description": "Staff salary, payslips, tax config and bank files",
-    "defaultEnabled": true,
-    "canDisable": true,
+    "defaultEnabled": false,
+    "canDisable": false,
+    "available": false,
     "icon": "account_balance_wallet"
   },
   "library": {
     "key": "library",
     "label": "Library",
     "description": "Book catalogue, issue and return, librarian accounts",
-    "defaultEnabled": true,
-    "canDisable": true,
+    "defaultEnabled": false,
+    "canDisable": false,
+    "available": false,
     "icon": "menu_book"
   },
   "imports": {
@@ -84,7 +94,8 @@
     "label": "Bulk Import",
     "description": "CSV and XLSX import of students, teachers, fees, attendance",
     "defaultEnabled": true,
-    "canDisable": true,
+    "canDisable": false,
+    "available": true,
     "icon": "upload_file"
   },
   "admissions": {
@@ -92,15 +103,17 @@
     "label": "Admissions",
     "description": "Admission forms, templates and applicant registration",
     "defaultEnabled": true,
-    "canDisable": true,
+    "canDisable": false,
+    "available": true,
     "icon": "how_to_reg"
   },
   "custom_forms": {
     "key": "custom_forms",
     "label": "Custom Forms",
     "description": "School-built enquiry forms and their leads",
-    "defaultEnabled": true,
-    "canDisable": true,
+    "defaultEnabled": false,
+    "canDisable": false,
+    "available": false,
     "icon": "dynamic_form"
   }
 }

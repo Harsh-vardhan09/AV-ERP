@@ -6,6 +6,12 @@ const app = require('../src/app');
 const { connect, clear, disconnect } = require('./helpers/db');
 const { createSchool, createUser, authCookie } = require('./helpers/fixtures');
 const LedgerEntry = require('../src/modules/fees/models/LedgerEntry');
+const { MODULES } = require('@av-erp/shared');
+
+// fee_management is retired, so checkModuleAccess answers 403 ahead of the whole
+// /api/v1/fee router and this flow cannot be exercised. Tied to the registry
+// rather than skipped outright, so marking fees available again re-arms it.
+const testIfFeesAvailable = MODULES.fee_management.available === false ? test.skip : test;
 
 beforeAll(connect);
 afterAll(disconnect);
@@ -24,50 +30,53 @@ const sign = (orderId, paymentId) =>
 // gatewayOrderId guard each delivery writes another credit and the student's
 // balance silently drops twice for one payment. Money path — worth a test even
 // in a seven-test net.
-test('verifying the same razorpay_order_id twice leaves exactly one ledger entry', async () => {
-  const school = await createSchool('FEESCH');
-  const admin = await createUser({ school, role: 'admin', email: 'admin@fee.com' });
+testIfFeesAvailable(
+  'verifying the same razorpay_order_id twice leaves exactly one ledger entry',
+  async () => {
+    const school = await createSchool('FEESCH');
+    const admin = await createUser({ school, role: 'admin', email: 'admin@fee.com' });
 
-  const studentFeeId = new mongoose.Types.ObjectId();
-  await mongoose.connection.collection('studentfees').insertOne({
-    _id: studentFeeId,
-    schoolId: school._id,
-    studentId: new mongoose.Types.ObjectId(),
-    sessionId: new mongoose.Types.ObjectId(),
-    feeStructureId: new mongoose.Types.ObjectId(),
-    totalAssigned: 1000,
-    totalPaid: 0,
-    totalDue: 1000,
-    installments: [],
-    createdAt: new Date(),
-  });
+    const studentFeeId = new mongoose.Types.ObjectId();
+    await mongoose.connection.collection('studentfees').insertOne({
+      _id: studentFeeId,
+      schoolId: school._id,
+      studentId: new mongoose.Types.ObjectId(),
+      sessionId: new mongoose.Types.ObjectId(),
+      feeStructureId: new mongoose.Types.ObjectId(),
+      totalAssigned: 1000,
+      totalPaid: 0,
+      totalDue: 1000,
+      installments: [],
+      createdAt: new Date(),
+    });
 
-  const body = {
-    razorpay_order_id: ORDER_ID,
-    razorpay_payment_id: PAYMENT_ID,
-    razorpay_signature: sign(ORDER_ID, PAYMENT_ID),
-    studentFeeId: studentFeeId.toString(),
-    amount: 500,
-  };
+    const body = {
+      razorpay_order_id: ORDER_ID,
+      razorpay_payment_id: PAYMENT_ID,
+      razorpay_signature: sign(ORDER_ID, PAYMENT_ID),
+      studentFeeId: studentFeeId.toString(),
+      amount: 500,
+    };
 
-  const post = () =>
-    request(app)
-      .post('/api/v1/fee/payments/razorpay/verify')
-      .set('Cookie', authCookie(admin))
-      .send(body);
+    const post = () =>
+      request(app)
+        .post('/api/v1/fee/payments/razorpay/verify')
+        .set('Cookie', authCookie(admin))
+        .send(body);
 
-  await post();
+    await post();
 
-  // The second delivery must be recognised and short-circuited, not replayed.
-  const second = await post();
-  expect(second.status).toBe(200);
+    // The second delivery must be recognised and short-circuited, not replayed.
+    const second = await post();
+    expect(second.status).toBe(200);
 
-  // The invariant, asserted on the data rather than the status codes: one
-  // payment, one credit, whatever the callers saw. Deliberately not asserting
-  // the first response's status — see the note at the bottom of this file.
-  const entries = await LedgerEntry.countDocuments({ studentFeeId });
-  expect(entries).toBe(1);
-});
+    // The invariant, asserted on the data rather than the status codes: one
+    // payment, one credit, whatever the callers saw. Deliberately not asserting
+    // the first response's status — see the note at the bottom of this file.
+    const entries = await LedgerEntry.countDocuments({ studentFeeId });
+    expect(entries).toBe(1);
+  }
+);
 
 // KNOWN BUG, left failing-safe rather than patched: on the FIRST verification
 // the handler calls notificationService.createNotification, which does not

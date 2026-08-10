@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { DEFAULT_MODULES } from '@av-erp/shared';
+import { DEFAULT_MODULES, isModuleEnabled } from '@av-erp/shared';
 
 /**
  * moduleSettingsSlice — tracks which modules are enabled for the current school.
@@ -42,4 +42,4 @@ export default moduleSettingsSlice.reducer;
  *   const isFeeEnabled = useSelector(selectModule('fee_management'));
  */
 export const selectModule = (moduleKey) => (state) =>
-  state.moduleSettings?.modules?.[moduleKey] ?? DEFAULT_MODULES[moduleKey] ?? true;
+  isModuleEnabled(state.moduleSettings?.modules, moduleKey);

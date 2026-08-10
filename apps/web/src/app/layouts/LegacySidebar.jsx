@@ -85,11 +85,8 @@
 // export default Sidebar;
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { TbLayoutDashboard } from "react-icons/tb";
 import { BsCalendar2CheckFill } from "react-icons/bs";
 import { MdAssignment } from "react-icons/md";
-import { PiExamFill } from "react-icons/pi";
-import { TfiWrite } from "react-icons/tfi";
 import { IoMdMenu } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { IoCalendarOutline } from "react-icons/io5";
@@ -115,16 +112,14 @@ const Sidebar = () => {
     });
   };
 
-  // Define menu items
+  // Only paths that are actually routed. /dashboard, /online-exam and
+  // /self-learning were dropped — no route has ever matched them.
   const menuItems = [
     { to: '/', icon: <AiOutlineHome size={20} />, label: 'Home' },
-    { to: '/dashboard', icon: <TbLayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/attendance', icon: <BsCalendar2CheckFill size={20} />, label: 'Attendance' },
     { to: '/assignment', icon: <MdAssignment size={20} />, label: 'Assignments' },
     { to: '/timetable', icon: <IoCalendarOutline size={20} />, label: 'Time Table' },
     { to: '/application', icon: <TbFileDescription size={20} />, label: 'Leave Application' },
-    { to: '/online-exam', icon: <PiExamFill size={20} />, label: 'Online Exam' },
-    { to: '/self-learning', icon: <TfiWrite size={20} />, label: 'Self Learning' },
   ];
 
   return (

@@ -24,9 +24,10 @@ const SchoolSettingsProvider = ({ children }) => {
     const settingsModules = settingsData?.data?.modules;
     const oasesEnabled = settingsData?.data?.isOasesEnabled ?? false;
 
-    if (settingsModules) {
-      dispatch(setModules(settingsModules));
-    }
+    // Dispatch even when the response carried no modules — RouteGuard waits on
+    // `loaded`, so leaving it false after a failed fetch shimmers forever. An
+    // empty payload settles the store on the registry defaults.
+    dispatch(setModules(settingsModules || {}));
 
     // Super Admin's modules.oases=true must NOT override the school's own
     // isOasesEnabled toggle. If Super Admin explicitly disabled it, it is off;

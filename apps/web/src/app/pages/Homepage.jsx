@@ -4,9 +4,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toggleSidebar } from '@shared/lib/store/sidebarSlice';
 import { authApi, useLogoutMutation } from '@modules/identity/api/userApi';
 import { userlogout } from '@shared/lib/store/userSlice';
-import { IoMdNotifications, IoMdHome, IoMdCalendar, IoMdSearch, IoMdSettings ,IoMdCheckmark,IoMdWarning ,IoMdExit } from "react-icons/io";
+import { IoMdHome, IoMdCalendar, IoMdSearch, IoMdCheckmark, IoMdWarning, IoMdExit } from "react-icons/io";
 import { FaChalkboardTeacher, FaBook, FaUserGraduate, FaChartLine, FaCalendarAlt, FaRegBell } from "react-icons/fa";
-import { MdAssignment, MdQuiz, MdEvent, MdChat, MdCode, MdOutlineLogout, MdHelp, MdPerson } from "react-icons/md";
+import { MdAssignment, MdQuiz, MdEvent, MdChat, MdCode, MdOutlineLogout } from "react-icons/md";
 
 const HomePage = () => {
   const dispatch = useDispatch();
@@ -56,19 +56,16 @@ const HomePage = () => {
     navigate('/login');
   };
 
-  // Define items with icons and paths
+  // Only paths that are actually routed. /dashboard, /knowlegecentercreate and
+  // /coding were dropped — no route has ever matched them.
   const teacherItems = [
-    { name: 'dashboard', icon: <FaChartLine className="text-blue-600" size={24} />, path: '/dashboard' },
     { name: 'Take Attendance', icon: <FaChalkboardTeacher className="text-green-600" size={24} />, path: '/takeattendance' },
     { name: 'Online Quiz', icon: <MdQuiz className="text-purple-600" size={24} />, path: '/quiz' },
     { name: 'Chat', icon: <MdChat className="text-indigo-600" size={24} />, path: '/chatapp' },
-    { name: 'Knowledge Center', icon: <FaBook className="text-amber-600" size={24} />, path: '/knowlegecentercreate' },
     { name: 'All complain', icon: <IoMdWarning className="text-amber-600" size={24} />, path: '/complaintbox' },
     { name: 'Take Leave', icon: <IoMdExit className="text-amber-600" size={24} />, path: '/application' },
     { name: 'Students Leave', icon: <IoMdCheckmark className="text-amber-600" size={24} />, path: '/leavesection' },
-
     { name: 'Timetable', icon: <IoMdCalendar className="text-teal-600" size={24} />, path: '/timetable' },
-
   ];
 
   const studentItems = [
@@ -79,10 +76,8 @@ const HomePage = () => {
     { name: 'Assignments', icon: <MdAssignment className="text-red-600" size={24} />, path: '/assignment' },
     { name: 'Knowledge Center', icon: <FaBook className="text-amber-600" size={24} />, path: '/knowlegecenter' },
     { name: 'Take Leave', icon: <IoMdExit className="text-amber-600" size={24} />, path: '/application' },
-
     { name: 'complain form', icon: <IoMdWarning className="text-teal-600" size={24} />, path: '/complaintform' },
     { name: 'complain request', icon: <MdCode className="text-teal-600" size={24} />, path: '/request' },
-    { name: 'Coding Practice', icon: <MdCode className="text-teal-600" size={24} />, path: '/coding' },
   ];
 
   const quickAccessItems = role === "teacher" ? teacherItems : studentItems;
@@ -163,21 +158,7 @@ const HomePage = () => {
                 <p className="text-sm text-gray-500">{role === "teacher" ? "Faculty Member" : "Student"}</p>
               </div>
               
-              <NavLink to="/profile" className="flex items-center px-4 py-3 text-gray-600 hover:bg-blue-50 transition-colors">
-                <MdPerson className="text-gray-500 mr-3" size={20} />
-                <span>My Profile</span>
-              </NavLink>
-              
-              <NavLink to="/settings" className="flex items-center px-4 py-3 text-gray-600 hover:bg-blue-50 transition-colors">
-                <IoMdSettings className="text-gray-500 mr-3" size={20} />
-                <span>Settings</span>
-              </NavLink>
-              
-              <NavLink to="/help" className="flex items-center px-4 py-3 text-gray-600 hover:bg-blue-50 transition-colors">
-                <MdHelp className="text-gray-500 mr-3" size={20} />
-                <span>Help Center</span>
-              </NavLink>
-              
+              {/* /profile, /settings and /help had no route — dropped */}
               <div onClick={logouthandler} className="flex items-center px-4 py-3 text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer">
                 <MdOutlineLogout className="text-gray-500 mr-3" size={20} />
                 <span>Logout</span>
@@ -278,9 +259,7 @@ const HomePage = () => {
                     <span className="w-1 h-6 bg-blue-500 rounded-full mr-2 inline-block"></span>
                     Today's Schedule
                   </h2>
-                  <NavLink to="/schedule" className="text-blue-600 hover:text-blue-800 text-sm bg-blue-50 py-1 px-3 rounded-full transition-colors duration-300">
-                    View Full Calendar
-                  </NavLink>
+                  {/* "View Full Calendar" pointed at /schedule, which has no route */}
                 </div>
                 
                 <div className="space-y-4">

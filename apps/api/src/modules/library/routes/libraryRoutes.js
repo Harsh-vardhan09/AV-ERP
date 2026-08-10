@@ -1,15 +1,17 @@
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 
-const { varifyToken }    = require('../../../core/security/authenticate');
+const { varifyToken } = require('../../../core/security/authenticate');
+const { checkModuleAccess } = require('../../../core/security/moduleGate');
 const { authorizeRoles } = require('../../../core/security/authorizeRoles');
-const validateObjectId   = require('../../../core/http/validateObjectId');
-const { uploadMemory }   = require('../../../core/http/upload.disk');
+const validateObjectId = require('../../../core/http/validateObjectId');
+const { uploadMemory } = require('../../../core/http/upload.disk');
 
 const ctrl = require('../controllers/libraryController');
 const { LIBRARIAN_AND_ADMIN, ADMIN_ONLY, STUDENT_ONLY } = require('../permissions');
 
 router.use(varifyToken);
+router.use(checkModuleAccess('library'));
 
 router.get('/dashboard', authorizeRoles(...LIBRARIAN_AND_ADMIN), ctrl.getDashboard);
 
@@ -18,7 +20,12 @@ router.get('/books/search', authorizeRoles(...LIBRARIAN_AND_ADMIN), ctrl.searchB
 
 router.get('/books', authorizeRoles(...LIBRARIAN_AND_ADMIN), ctrl.listBooks);
 
-router.get('/books/:id', authorizeRoles(...LIBRARIAN_AND_ADMIN), validateObjectId('id'), ctrl.getBook);
+router.get(
+  '/books/:id',
+  authorizeRoles(...LIBRARIAN_AND_ADMIN),
+  validateObjectId('id'),
+  ctrl.getBook
+);
 
 router.post(
   '/books',
@@ -69,10 +76,25 @@ router.post('/librarians', authorizeRoles(...ADMIN_ONLY), ctrl.createLibrarian);
 
 router.get('/librarians', authorizeRoles(...ADMIN_ONLY), ctrl.listLibrarians);
 
-router.put('/librarians/:id', authorizeRoles(...ADMIN_ONLY), validateObjectId('id'), ctrl.updateLibrarian);
+router.put(
+  '/librarians/:id',
+  authorizeRoles(...ADMIN_ONLY),
+  validateObjectId('id'),
+  ctrl.updateLibrarian
+);
 
-router.patch('/librarians/:id/status', authorizeRoles(...ADMIN_ONLY), validateObjectId('id'), ctrl.toggleLibrarianStatus);
+router.patch(
+  '/librarians/:id/status',
+  authorizeRoles(...ADMIN_ONLY),
+  validateObjectId('id'),
+  ctrl.toggleLibrarianStatus
+);
 
-router.post('/librarians/:id/resend-credentials', authorizeRoles(...ADMIN_ONLY), validateObjectId('id'), ctrl.resendLibrarianCredentials);
+router.post(
+  '/librarians/:id/resend-credentials',
+  authorizeRoles(...ADMIN_ONLY),
+  validateObjectId('id'),
+  ctrl.resendLibrarianCredentials
+);
 
 module.exports = router;

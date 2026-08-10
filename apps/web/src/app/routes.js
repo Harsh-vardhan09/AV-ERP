@@ -52,16 +52,21 @@ export const appRoutes = [
   ...academicsRoutes,
   ...admissionsRoutes,
   ...attendanceRoutes,
-  ...biometricRoutes,
+  // retired: biometric — re-add when modules.json marks it available
+  // ...biometricRoutes,
   ...communicationRoutes,
   ...dashboardRoutes,
   ...documentsRoutes,
   ...examinationRoutes,
-  ...feesRoutes,
+  // retired: fee_management — re-add when modules.json marks it available
+  // ...feesRoutes,
   ...importsRoutes,
-  ...libraryRoutes,
-  ...oasesRoutes,
-  ...payrollRoutes,
+  // retired: library — re-add when modules.json marks it available
+  // ...libraryRoutes,
+  // retired: oases — re-add when modules.json marks it available
+  // ...oasesRoutes,
+  // retired: payroll — re-add when modules.json marks it available
+  // ...payrollRoutes,
   ...peopleRoutes,
   ...reportcardsRoutes,
   ...tenancyRoutes,

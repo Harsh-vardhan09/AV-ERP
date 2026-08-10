@@ -4,6 +4,7 @@ import { ALL_ROLES } from '@shared/constants/roles';
 // Signed-in users get bounced to their own dashboard by PublicOnlyLayout.
 export const identityPublicOnlyRoutes = [
   { path: '/login', lazy: page(() => import('./pages/Loginpage')) },
+  { path: '/staff-login', lazy: page(() => import('./pages/StaffLogin')) },
   { path: '/otp', lazy: page(() => import('./pages/Otppage')) },
 ];
 

@@ -11,19 +11,16 @@ import {
   MdCheckCircle,
   MdUploadFile,
   MdBook,
-  MdLibraryBooks,
   MdDescription,
   MdReport,
   MdBarChart,
-  MdReceipt,
-  MdGridView,
-  MdOutlineAutoStories,
   MdEmail,
   MdPhone,
   MdBusiness,
   MdPersonPin
 } from 'react-icons/md';
-import { FaCalendarCheck, FaCreditCard, FaChalkboardTeacher, FaUserGraduate } from 'react-icons/fa';
+import { FaCalendarCheck, FaChalkboardTeacher, FaUserGraduate } from 'react-icons/fa';
+import { isModuleEnabled } from '@av-erp/shared';
 import { userlogout } from '@shared/lib/store/userSlice';
 import { authApi, useLogoutMutation, useCheak_authQuery } from '@modules/identity/api/userApi';
 
@@ -36,6 +33,8 @@ const MobileBottomNav = ({ role }) => {
   const { data: authData } = useCheak_authQuery();
   const rawUser = useSelector(state => state?.user);
   const user = authData?.user || rawUser?.user?.user || rawUser?.user || rawUser || {};
+  const enabledModules = useSelector(state => state?.moduleSettings?.modules ?? {});
+  const moduleAllows = (entry) => !entry.module || isModuleEnabled(enabledModules, entry.module);
 
   const handleLogout = async () => {
     setShowMeDrawer(false);
@@ -53,42 +52,40 @@ const MobileBottomNav = ({ role }) => {
   const studentTabs = [
     { to: '/student/dashboard', icon: <MdDashboard size={22} />, label: 'Home' },
     { to: '/student/attendance', icon: <FaCalendarCheck size={20} />, label: 'Attendance' },
-    { to: '/student/assignments', icon: <MdAssignment size={22} />, label: 'Assignments' },
-    { to: '/student/notices', icon: <MdNotifications size={22} />, label: 'Notices' },
+    { to: '/student/assignments', icon: <MdAssignment size={22} />, label: 'Assignments', module: 'assignments' },
+    { to: '/student/notices', icon: <MdNotifications size={22} />, label: 'Notices', module: 'communication' },
   ];
 
   const teacherTabs = [
     { to: '/teacher/dashboard', icon: <MdDashboard size={22} />, label: 'Home' },
     { to: '/teacher/attendance', icon: <FaCalendarCheck size={20} />, label: 'Attendance' },
-    { to: '/teacher/assignments', icon: <MdAssignment size={22} />, label: 'Assignments' },
-    { to: '/teacher/student-leaves', icon: <MdCheckCircle size={22} />, label: 'Leaves' },
+    { to: '/teacher/assignments', icon: <MdAssignment size={22} />, label: 'Assignments', module: 'assignments' },
+    { to: '/teacher/student-leaves', icon: <MdCheckCircle size={22} />, label: 'Leaves', module: 'communication' },
   ];
 
-  const tabs = role === 'student' ? studentTabs : teacherTabs;
+  const tabs = (role === 'student' ? studentTabs : teacherTabs).filter(moduleAllows);
 
+  // retired: library, fee_management — re-add when modules.json marks them available
   const studentQuickLinks = [
     { to: '/student/marks', icon: <MdBarChart size={18} />, label: 'Marks & Results' },
-    { to: '/student/leave', icon: <MdDescription size={18} />, label: 'Apply Leave' },
-    { to: '/student/materials', icon: <MdBook size={18} />, label: 'Knowledge Center' },
-    { to: '/student/library', icon: <MdLibraryBooks size={18} />, label: 'Library' },
-    { to: '/student/fees', icon: <FaCreditCard size={18} />, label: 'My Fees' },
-    { to: '/student/report-card', icon: <MdDescription size={18} />, label: 'Report Card' },
-    { to: '/student/complaints', icon: <MdReport size={18} />, label: 'Complaints' },
+    { to: '/student/leave', icon: <MdDescription size={18} />, label: 'Apply Leave', module: 'communication' },
+    { to: '/student/materials', icon: <MdBook size={18} />, label: 'Knowledge Center', module: 'communication' },
+    { to: '/student/report-card', icon: <MdDescription size={18} />, label: 'Report Card', module: 'report_cards' },
+    { to: '/student/complaints', icon: <MdReport size={18} />, label: 'Complaints', module: 'communication' },
   ];
 
+  // retired: oases, payroll — re-add when modules.json marks them available
   const teacherQuickLinks = [
     { to: '/teacher/marks', icon: <MdUploadFile size={18} />, label: 'Upload Marks' },
     { to: '/teacher/tests', icon: <FaChalkboardTeacher size={18} />, label: 'My Tests' },
-    { to: '/teacher/materials', icon: <MdBook size={18} />, label: 'Knowledge Center' },
-    { to: '/teacher/leave', icon: <MdDescription size={18} />, label: 'My Leave' },
+    { to: '/teacher/materials', icon: <MdBook size={18} />, label: 'Knowledge Center', module: 'communication' },
+    { to: '/teacher/leave', icon: <MdDescription size={18} />, label: 'My Leave', module: 'communication' },
     { to: '/teacher/my-students', icon: <FaUserGraduate size={18} />, label: 'My Students' },
     { to: '/teacher/co-scholastic', icon: <MdCheckCircle size={18} />, label: 'Co-Scholastic Marks' },
-    { to: '/teacher/report-cards', icon: <MdDescription size={18} />, label: 'Report Cards' },
-    { to: '/teacher/oases', icon: <MdOutlineAutoStories size={18} />, label: 'OASES Evaluation' },
-    { to: '/teacher/payroll/my-payslips', icon: <MdReceipt size={18} />, label: 'My Payslips' },
+    { to: '/teacher/report-cards', icon: <MdDescription size={18} />, label: 'Report Cards', module: 'report_cards' },
   ];
 
-  const quickLinks = role === 'student' ? studentQuickLinks : teacherQuickLinks;
+  const quickLinks = (role === 'student' ? studentQuickLinks : teacherQuickLinks).filter(moduleAllows);
 
   return (
     <>

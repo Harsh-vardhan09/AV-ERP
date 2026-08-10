@@ -18,8 +18,15 @@ export const DEFAULT_MODULES = Object.fromEntries(
 
 export const MODULE_KEYS = Object.keys(MODULES);
 
-// Tolerates legacy documents with no modules field by falling back to the default
+// Retired modules: code still ships, but no school can reach them
+export const AVAILABLE_MODULE_KEYS = MODULE_KEYS.filter((key) => MODULES[key].available !== false);
+
+// The registry outranks the database. A school document that predates a module
+// being retired or made always-on still carries its old flag; honouring it would
+// resurrect a module we removed from the UI.
 export const isModuleEnabled = (schoolModules, moduleKey) => {
+  if (MODULES[moduleKey]?.available === false) return false;
+  if (MODULES[moduleKey]?.canDisable === false) return MODULES[moduleKey].defaultEnabled;
   if (!schoolModules) return MODULES[moduleKey]?.defaultEnabled ?? false;
   if (typeof schoolModules[moduleKey] === 'undefined') {
     return MODULES[moduleKey]?.defaultEnabled ?? false;
@@ -29,4 +36,10 @@ export const isModuleEnabled = (schoolModules, moduleKey) => {
 
 export { MODULES };
 
-export default { MODULES, DEFAULT_MODULES, MODULE_KEYS, isModuleEnabled };
+export default {
+  MODULES,
+  DEFAULT_MODULES,
+  MODULE_KEYS,
+  AVAILABLE_MODULE_KEYS,
+  isModuleEnabled,
+};

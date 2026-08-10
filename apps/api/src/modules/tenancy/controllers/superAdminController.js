@@ -450,12 +450,10 @@ exports.updateSchool = async (req, res, next) => {
     if (code !== undefined) {
       const normalizedCode = code.toUpperCase().trim();
       if (!/^[A-Z0-9]{3,12}$/.test(normalizedCode)) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: 'School code must be 3–12 uppercase alphanumeric characters',
-          });
+        return res.status(400).json({
+          success: false,
+          message: 'School code must be 3–12 uppercase alphanumeric characters',
+        });
       }
       if (normalizedCode !== school.code) {
         const existing = await School.findOne({ code: normalizedCode });
@@ -552,9 +550,22 @@ exports.deleteSchool = async (req, res, next) => {
 
 // MODULE MANAGEMENT FUNCTIONS (Phase 2)
 
+// The registry, not the request, decides these keys. Returns an error string for
+// any write that contradicts it, or null when the write is allowed.
+const moduleWriteError = (moduleKey) => {
+  const mod = MODULES[moduleKey];
+  if (mod.available === false) {
+    return `Module "${mod.label}" is retired and cannot be enabled or disabled`;
+  }
+  if (mod.canDisable === false) {
+    return `Module "${mod.label}" is always on and cannot be changed`;
+  }
+  return null;
+};
+
 /**
  * GET /api/super-admin/schools/:id/modules
- * Returns all 8 module definitions merged with this school's current enabled state.
+ * Returns every available module definition merged with this school's state.
  */
 exports.getSchoolModules = async (req, res, next) => {
   try {
@@ -579,18 +590,11 @@ exports.getSchoolModules = async (req, res, next) => {
       });
     }
 
-    // Build response: each module definition + its current enabled value
+    // isModuleEnabled lets the registry override stale stored flags, so a retired
+    // or always-on module reports the same state here as everywhere else
     const moduleStatus = {};
     MODULE_KEYS.forEach((key) => {
-      const schoolVal = settings.modules?.[key];
-      let enabled;
-      // Special backward-compat: if modules.oases is missing, read isOasesEnabled
-      if (key === 'oases' && typeof schoolVal === 'undefined') {
-        enabled = settings.isOasesEnabled ?? false;
-      } else {
-        enabled = typeof schoolVal !== 'undefined' ? schoolVal : MODULES[key].defaultEnabled;
-      }
-      moduleStatus[key] = { ...MODULES[key], enabled };
+      moduleStatus[key] = { ...MODULES[key], enabled: isModuleEnabled(settings.modules, key) };
     });
 
     return res.status(200).json({
@@ -630,23 +634,14 @@ exports.updateSchoolModule = async (req, res, next) => {
         .json({ success: false, message: 'moduleKey (string) and enabled (boolean) are required' });
     }
     if (!MODULE_KEYS.includes(moduleKey)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Invalid module key. Valid keys: ${MODULE_KEYS.join(', ')}`,
-        });
+      return res.status(400).json({
+        success: false,
+        message: `Invalid module key. Valid keys: ${MODULE_KEYS.join(', ')}`,
+      });
     }
-    if (moduleKey === 'core' && enabled === false) {
-      return res.status(400).json({ success: false, message: 'Core module cannot be disabled' });
-    }
-    if (!MODULES[moduleKey].canDisable && enabled === false) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Module "${MODULES[moduleKey].label}" cannot be disabled`,
-        });
+    const writeError = moduleWriteError(moduleKey);
+    if (writeError) {
+      return res.status(400).json({ success: false, message: writeError });
     }
 
     const school = await School.findById(id).select('name code');
@@ -720,12 +715,9 @@ exports.bulkUpdateSchoolModules = async (req, res, next) => {
         errors.push(`Value for ${key} must be boolean`);
         return;
       }
-      if (key === 'core' && value === false) {
-        errors.push('Core module cannot be disabled');
-        return;
-      }
-      if (!MODULES[key].canDisable && !value) {
-        errors.push(`Module "${MODULES[key].label}" cannot be disabled`);
+      const writeError = moduleWriteError(key);
+      if (writeError) {
+        errors.push(writeError);
         return;
       }
       updateObj[`modules.${key}`] = value;
@@ -1451,12 +1443,10 @@ exports.deleteSchoolAdmissionTemplate = async (req, res, next) => {
       deletedBy: req.superAdmin._id,
     });
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: `Admission template "${template.name}" deleted successfully`,
-      });
+    return res.status(200).json({
+      success: true,
+      message: `Admission template "${template.name}" deleted successfully`,
+    });
   } catch (error) {
     logger.error('[SuperAdmin] deleteSchoolAdmissionTemplate error', { error: error.message });
     next(error);

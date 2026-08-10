@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { MdLogout } from 'react-icons/md';
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { isModuleEnabled } from '@av-erp/shared';
 import { navConfig } from '@app/layouts/navConfig';
 
 const SUB_ITEM_STYLE = { fontSize: 13, paddingTop: 7, paddingBottom: 7, gap: 8 };
@@ -90,7 +91,7 @@ const Sidebar = ({ role, isCollapsed, isClassTeacher, onMobileClose, onToggleCol
     // OASES reads its own slice — the school toggle composed with the Super
     // Admin switch, which moduleSettings.oases alone does not capture.
     if (key === 'oases') return isOasesEnabled;
-    return enabledModules[key] !== false;
+    return isModuleEnabled(enabledModules, key);
   };
 
   const entries = (navConfig[role] || []).reduce((kept, entry) => {

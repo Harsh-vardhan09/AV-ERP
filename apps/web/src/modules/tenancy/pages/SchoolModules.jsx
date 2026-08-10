@@ -19,6 +19,8 @@ const MODULE_ICONS = {
   fingerprint:  '🔑',
   chat:         '💬',
   assignment:   '📝',
+  upload_file:  '📤',
+  how_to_reg:   '✅',
 };
 
 // Toggle switch component
@@ -27,7 +29,7 @@ const Toggle = ({ enabled, onToggle, disabled, loading }) => (
     type="button"
     onClick={onToggle}
     disabled={disabled || loading}
-    aria-label={enabled ? 'Disable module' : 'Enable module'}
+    aria-label={disabled ? 'Always on — cannot be changed' : enabled ? 'Disable module' : 'Enable module'}
     style={{
       position: 'relative',
       width: 44, height: 24, borderRadius: 12, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
@@ -109,7 +111,8 @@ const SchoolModules = () => {
     );
   }
 
-  const moduleList = Object.values(modules);
+  // Retired modules still ship in the registry; they are not a school's business
+  const moduleList = Object.values(modules).filter((mod) => mod.available !== false);
   const enabledCount = moduleList.filter(m => m.enabled).length;
 
   return (
@@ -153,7 +156,7 @@ const SchoolModules = () => {
 
       {/* Sub-header */}
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, marginTop: 0 }}>
-        Toggle modules on or off for this school. Changes take effect immediately — no restart needed.
+        Modules included with every school.
         <span style={{ color: 'var(--color-danger)', marginLeft: 6 }}>
           🔒 Locked modules cannot be disabled.
         </span>
