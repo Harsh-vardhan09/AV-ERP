@@ -38,10 +38,17 @@ class ColumnMapper {
     const allFieldsSet = new Set([...expectedFields, ...optionalFields, ...aliasFieldKeys]);
     const allFields = [...allFieldsSet];
 
-    // Normalize headers (remove extra spaces, lowercase for comparison)
+    // Normalize headers (remove extra spaces, lowercase for comparison).
+    // The downloadable template marks required columns as "Admission No *", so the
+    // trailing marker is stripped before matching — otherwise the very template we
+    // hand the school fails to map its own required columns.
+    const stripTemplateMarker = (h) =>
+      String(h)
+        .replace(/\s*\*+\s*$/, '')
+        .trim();
     const normalizedHeaders = fileHeaders.map((h) => ({
       original: h,
-      normalized: caseSensitive ? h.trim() : h.toLowerCase().trim(),
+      normalized: caseSensitive ? stripTemplateMarker(h) : stripTemplateMarker(h).toLowerCase(),
     }));
 
     // Try to map each file header
@@ -74,14 +81,12 @@ class ColumnMapper {
       if (!mapped && allowAliases && Object.keys(entityColumnAliases).length > 0) {
         for (const [field, aliases] of Object.entries(entityColumnAliases)) {
           const aliasMatch = aliases.find((alias) =>
-            caseSensitive
-              ? alias === header.original
-              : alias.toLowerCase() === header.normalized
+            caseSensitive ? alias === header.original : alias.toLowerCase() === header.normalized
           );
 
           if (aliasMatch) {
             mapped = field;
-            matchConfidence = 1.0;  // entity-specific = exact match confidence
+            matchConfidence = 1.0; // entity-specific = exact match confidence
             matchMethod = 'entity_alias_match';
             break;
           }
@@ -281,8 +286,14 @@ class ColumnMapper {
 
     for (const header of headers) {
       // Check if header itself matches any field
-      for (const field of [...(entityConfig.requiredFields || []), ...(entityConfig.optionalFields || [])]) {
-        if (header.toLowerCase().includes(field.toLowerCase()) || field.toLowerCase().includes(header.toLowerCase())) {
+      for (const field of [
+        ...(entityConfig.requiredFields || []),
+        ...(entityConfig.optionalFields || []),
+      ]) {
+        if (
+          header.toLowerCase().includes(field.toLowerCase()) ||
+          field.toLowerCase().includes(header.toLowerCase())
+        ) {
           suggested[header] = field;
           break;
         }
@@ -320,7 +331,10 @@ class ColumnMapper {
     }
 
     // Date detection
-    if (/^\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4}/.test(str) || /^\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}/.test(str)) {
+    if (
+      /^\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4}/.test(str) ||
+      /^\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}/.test(str)
+    ) {
       return 'dateOfBirth';
     }
 

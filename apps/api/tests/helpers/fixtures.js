@@ -33,12 +33,18 @@ const authCookie = (user) =>
 
 // StudentProfile demands a dozen required fields the tenant filter never reads.
 // Inserting through the driver keeps the fixture to the fields under test.
+// studentprofiles carries unique indexes on scholarNo+schoolId and
+// studentId+schoolId, neither sparse. Two fixtures both leaving them unset
+// collide on null, and indexes survive db.clear() (it only deletes documents),
+// so whether it fires depends on which suites ran first. Derive both from rollNo.
 const insertStudent = async ({ school, firstName, rollNo }) =>
   mongoose.connection.collection('studentprofiles').insertOne({
     schoolId: school._id,
     firstName,
     lastName: 'Student',
     rollNo,
+    scholarNo: `SC-${rollNo}`,
+    studentId: `STU-${rollNo}`,
     status: 'active',
     isDeleted: false,
     createdAt: new Date(),

@@ -9,6 +9,8 @@ const ImportController = require('./controller/importController');
 const ImportService = require('./services/importService');
 const STUDENT_IMPORT_CONFIG = require('./configs/studentImportConfig');
 const StudentAdapter = require('./adapters/studentAdapter');
+const ATTENDANCE_IMPORT_CONFIG = require('./configs/attendanceImportConfig');
+const AttendanceAdapter = require('./adapters/attendanceAdapter');
 const logger = require('../../core/logging/logger.js');
 
 class ImportSystemInitializer {
@@ -94,10 +96,18 @@ class ImportSystemInitializer {
     this.service.registerEntityConfig('student', STUDENT_IMPORT_CONFIG);
     logger.info('  ✓ Student adapter registered');
 
+    // Attendance adapter. Until this was registered the config carried a stub
+    // that threw 'Adapter not configured', so every attendance row failed.
+    const attendanceAdapter = new AttendanceAdapter(ATTENDANCE_IMPORT_CONFIG, this.services);
+    ATTENDANCE_IMPORT_CONFIG.adapter = async (rowData, schoolId, context) => {
+      return await attendanceAdapter.importRow(rowData, schoolId, context);
+    };
+    this.service.registerEntityConfig('attendance', ATTENDANCE_IMPORT_CONFIG);
+    logger.info('  ✓ Attendance adapter registered');
+
     // TODO: Register other adapters
     // - TeacherAdapter
     // - FeeAdapter
-    // - AttendanceAdapter
     // - etc.
   }
 

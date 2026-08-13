@@ -17,6 +17,7 @@ const {
   DEFAULT_MIGRATION_LAYOUT,
 } = require('../lib/htmlCertificateRenderer');
 const { generatePdfFromHtml } = require('../../../core/pdf/puppeteerPdf');
+const { getSchoolBranding, toSchoolSnapshot } = require('../services/schoolBrandingService');
 const logger = require('../../../core/logging/logger');
 
 const DOC_TYPES = SchoolCertificate.DOC_TYPES;
@@ -133,7 +134,11 @@ const buildSharedStudentCertificateFields = (profile, req) => {
   };
 };
 
-const buildSchoolSnapshotFromDb = (school, req) => {
+// The certificate header's only source of school branding. Resolution lives in
+// schoolBrandingService so documents and reportcards agree on where a logo comes
+// from — School.logoUrl is declared but never written by any upload path, so
+// reading it alone is why every certificate rendered the dashed "Logo" box.
+const buildSchoolSnapshotFromDb = async (school, req) => {
   if (!school) return {};
   const s = school.toObject ? school.toObject() : school;
   const locParts = [];
@@ -141,13 +146,19 @@ const buildSchoolSnapshotFromDb = (school, req) => {
   if (s.certCircle) locParts.push(`CIRCLE : ${s.certCircle}`);
   if (s.certDistrict) locParts.push(`DIST. : ${s.certDistrict}`);
   if (s.certPin) locParts.push(`PIN : ${s.certPin}`);
-  const logoRaw = s.logoUrl || '';
-  return {
-    schoolName: s.name || '',
-    udiseCode: s.udiseCode || '',
-    schoolLocationLine: locParts.join(', '),
-    logoUrl: req ? toAbsoluteAssetUrl(logoRaw, req) : logoRaw,
-  };
+
+  const branding = await getSchoolBranding(s._id || s.id);
+  const snapshot = toSchoolSnapshot(branding, { schoolLocationLine: locParts.join(', ') });
+
+  // A logo already inlined as a data: URI must not be run through the
+  // request-origin helper — only a bare /uploads path needs absolutising
+  if (req && snapshot.logoUrl && !/^data:/i.test(snapshot.logoUrl)) {
+    snapshot.logoUrl = toAbsoluteAssetUrl(snapshot.logoUrl, req);
+  }
+  if (req && snapshot.signatureUrl && !/^data:/i.test(snapshot.signatureUrl)) {
+    snapshot.signatureUrl = toAbsoluteAssetUrl(snapshot.signatureUrl, req);
+  }
+  return snapshot;
 };
 
 const buildTcDefaults = (profile, req) => {
@@ -196,10 +207,40 @@ const mergeFlat = (defaults, saved) => {
   return out;
 };
 
-const mergeSchoolSnapshot = (live, saved, req) => {
-  const liveSnap = buildSchoolSnapshotFromDb(live, req);
+// Branding keys are resolved live every time. Certificates issued before the
+// logo fix froze these as '' in schoolSnapshot, and a blind `...saved` spread
+// would let those empty strings mask the logo we just resolved.
+const BRANDING_KEYS = [
+  'logoUrl',
+  'signatureUrl',
+  'addressLine',
+  'cityLine',
+  'affiliatedTo',
+  'affiliationNo',
+  'phone',
+  'email',
+  'website',
+];
+
+// Branding is resolved live on every render, so it must not be written back into
+// the stored snapshot. The editor round-trips the whole header object, and
+// logoUrl now holds an inlined data: URI — persisting it would add ~65 KB of
+// base64 to every certificate row and freeze last year's crest onto it.
+const stripResolvedBranding = (snap) => {
+  if (!snap || typeof snap !== 'object') return snap;
+  const out = { ...snap };
+  for (const k of BRANDING_KEYS) delete out[k];
+  return out;
+};
+
+const mergeSchoolSnapshot = async (live, saved, req) => {
+  const liveSnap = await buildSchoolSnapshotFromDb(live, req);
   if (saved && typeof saved === 'object' && Object.keys(saved).length) {
-    return { ...liveSnap, ...saved };
+    const savedMeaningful = { ...saved };
+    for (const k of BRANDING_KEYS) {
+      if (!savedMeaningful[k]) delete savedMeaningful[k];
+    }
+    return { ...liveSnap, ...savedMeaningful };
   }
   return liveSnap;
 };
@@ -351,7 +392,7 @@ exports.getDocument = async (req, res) => {
 
     const defaults =
       type === 'TC' ? buildTcDefaults(profile, req) : buildMigrationDefaults(profile, req);
-    const schoolSnapshot = mergeSchoolSnapshot(school, doc?.schoolSnapshot, req);
+    const schoolSnapshot = await mergeSchoolSnapshot(school, doc?.schoolSnapshot, req);
     const mergedData = mergeFlat(defaults, doc?.editedData || doc?.data);
 
     // Photo: unlocked → live photo; locked → frozen snapshot
@@ -422,7 +463,7 @@ exports.createDocument = async (req, res) => {
     const school = await School.findById(req.schoolId);
     const defaults =
       type === 'TC' ? buildTcDefaults(profile, req) : buildMigrationDefaults(profile, req);
-    const baseSnap = buildSchoolSnapshotFromDb(school, req);
+    const baseSnap = await buildSchoolSnapshotFromDb(school, req);
     const schoolSnapshot =
       snapBody && typeof snapBody === 'object' ? { ...baseSnap, ...snapBody } : baseSnap;
     const mergedData = mergeFlat(defaults, data);
@@ -492,7 +533,7 @@ exports.updateDocument = async (req, res) => {
       pushAuditLog(doc, 'UPDATE', req.user._id, { updatedKeys: Object.keys(data || {}) });
     }
     if (schoolSnapshot !== undefined && typeof schoolSnapshot === 'object') {
-      doc.schoolSnapshot = { ...doc.schoolSnapshot, ...schoolSnapshot };
+      doc.schoolSnapshot = stripResolvedBranding({ ...doc.schoolSnapshot, ...schoolSnapshot });
     }
     if (certificateNumber !== undefined) doc.certificateNumber = String(certificateNumber).trim();
     doc.updatedBy = req.user._id;
@@ -846,7 +887,7 @@ exports.generateFromTemplate = async (req, res) => {
 
     // 4. School snapshot + cert number
     const school = await School.findById(req.schoolId);
-    const schoolSnapshot = buildSchoolSnapshotFromDb(school, req);
+    const schoolSnapshot = await buildSchoolSnapshotFromDb(school, req);
 
     let certNo = doc?.certificateNumber;
     if (!certNo) {
@@ -885,7 +926,7 @@ exports.generateFromTemplate = async (req, res) => {
         data: { ...studentData, generatedSnapshot },
         originalData: { ...studentData },
         editedData: { ...studentData },
-        schoolSnapshot,
+        schoolSnapshot: stripResolvedBranding(schoolSnapshot),
         templateId: template._id,
         templateVersion: template.version,
         isLocked: false,
@@ -907,7 +948,7 @@ exports.generateFromTemplate = async (req, res) => {
       doc.markModified('data');
       doc.markModified('originalData');
       doc.markModified('editedData');
-      doc.schoolSnapshot = schoolSnapshot;
+      doc.schoolSnapshot = stripResolvedBranding(schoolSnapshot);
       doc.templateId = template._id;
       doc.templateVersion = template.version;
       doc.updatedBy = req.user._id;
@@ -978,15 +1019,13 @@ exports.generateBulkFromTemplate = async (req, res) => {
     const validIds = studentIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
     const template = await DocumentTemplate.findOne({ schoolId: req.schoolId, type });
     if (!template || !template.fields?.length) {
-      return res
-        .status(422)
-        .json({
-          success: false,
-          message: `Template for ${type} is missing or has no mapped fields`,
-        });
+      return res.status(422).json({
+        success: false,
+        message: `Template for ${type} is missing or has no mapped fields`,
+      });
     }
     const school = await School.findById(req.schoolId);
-    const schoolSnapshot = buildSchoolSnapshotFromDb(school, req);
+    const schoolSnapshot = await buildSchoolSnapshotFromDb(school, req);
     const results = [];
     for (const studentId of validIds) {
       try {
@@ -1049,7 +1088,7 @@ exports.generateBulkFromTemplate = async (req, res) => {
           doc.data = { ...(doc.data || {}), ...studentData, generatedSnapshot };
           doc.originalData = { ...studentData };
           doc.editedData = { ...(doc.editedData || {}), ...studentData };
-          doc.schoolSnapshot = schoolSnapshot;
+          doc.schoolSnapshot = stripResolvedBranding(schoolSnapshot);
           doc.templateId = template._id;
           doc.templateVersion = template.version;
           pushAuditLog(doc, 'GENERATE', req.user._id, {
@@ -1117,7 +1156,7 @@ exports.downloadCertificatePdf = async (req, res) => {
       }
 
       const school = await School.findById(req.schoolId);
-      const schoolSnapshot = buildSchoolSnapshotFromDb(school, req);
+      const schoolSnapshot = await buildSchoolSnapshotFromDb(school, req);
       const data = doc.editedData || doc.data || {};
 
       pdfBuffer = await renderStructuredPdfBuffer({

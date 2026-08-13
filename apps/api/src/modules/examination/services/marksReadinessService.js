@@ -11,13 +11,20 @@
  * meaningful readiness signal.
  *
  * Exam.evaluationStatus is the cached roll-up across ALL classes on the exam;
- * getExamReadiness() is the per-class source of truth. Always use the latter
- * when gating a single student's report card.
+ * getExamReadiness() is the per-class source of truth.
+ *
+ * SCOPE MATTERS. Called without a student, this answers a CLASS-level question:
+ * "has anyone uploaded for this class+subject?" One student's marks then mark the
+ * subject submitted for everyone, so a classmate with no marks reads as ready and
+ * generates a blank card. To gate ONE student's report card, pass studentId /
+ * studentProfileId — that routes through MarksSourceService, the same read path
+ * DataAggregatorService uses, so the gate and the card can never disagree.
  */
 
 const Exam = require('../models/Exam');
 const ExamSubjectConfig = require('../models/ExamSubjectConfig');
 const Marks = require('../models/MarksModel');
+const MarksSourceService = require('./marksSourceService');
 const { ClassSubjectMap, SubjectMaster } = require('../../academics');
 const SchoolSettings = require('../../tenancy').SchoolSettings;
 const logger = require('../../../core/logging/logger.js');
@@ -42,24 +49,54 @@ async function _requiredSubjectIds({ examId, classId, schoolId, sessionId }) {
   return [...new Set(mapped.filter((m) => m.subjectId).map((m) => String(m.subjectId)))];
 }
 
+// A marks document existing is not the same as a mark being entered. distinct()
+// counted an empty shell as submitted, so the gate reported ready while the card
+// rendered blanks. A doc counts only when it carries a usable number.
+// 0 is a legitimate mark; null/undefined/'' are not (Number(null) === 0).
+const _isNum = (v) => v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
+
+const _hasUsableMarks = (m) => {
+  if (m.fields) {
+    // lean() hands back a plain object, a hydrated doc a Map — handle both, as
+    // the aggregator already has to.
+    const obj = m.fields instanceof Map ? Object.fromEntries(m.fields) : m.fields;
+    if (Object.values(obj).some(_isNum)) return true;
+  }
+  return _isNum(m.marksObtained);
+};
+
 /**
- * Readiness for one class (optionally one section) in one exam.
+ * Readiness for one class (optionally one section) in one exam, or — when a
+ * student is given — for that one student.
  *
  * @param {object}  opts
  * @param {string}  opts.examId
  * @param {string}  opts.classId
- * @param {string}  [opts.sectionId]  scope to a single section
+ * @param {string}  [opts.sectionId]  scope to a single section (class scope only)
  * @param {string}  opts.schoolId
  * @param {string}  [opts.sessionId]
- * @returns {Promise<{ready:boolean, totalSubjects:number, submittedCount:number,
- *                    submitted:Array, missing:Array, percentComplete:number}>}
+ * @param {string}  [opts.studentId]         User._id — switches to student scope
+ * @param {string}  [opts.studentProfileId]  StudentProfile._id, same switch
+ * @returns {Promise<{ready:boolean, scope:'class'|'student', totalSubjects:number,
+ *                    submittedCount:number, submitted:Array, missing:Array,
+ *                    percentComplete:number}>}
  */
-async function getExamReadiness({ examId, classId, sectionId, schoolId, sessionId }) {
+async function getExamReadiness({
+  examId,
+  classId,
+  sectionId,
+  schoolId,
+  sessionId,
+  studentId,
+  studentProfileId,
+}) {
+  const perStudent = Boolean(studentId || studentProfileId);
   const requiredIds = await _requiredSubjectIds({ examId, classId, schoolId, sessionId });
 
   if (!requiredIds.length) {
     return {
       ready: false,
+      scope: perStudent ? 'student' : 'class',
       totalSubjects: 0,
       submittedCount: 0,
       submitted: [],
@@ -69,12 +106,30 @@ async function getExamReadiness({ examId, classId, sectionId, schoolId, sessionI
     };
   }
 
-  // Which of those subjects have at least one marks record?
-  const marksFilter = { examId, classId, schoolId, subjectId: { $in: requiredIds } };
-  if (sectionId) marksFilter.sectionId = sectionId;
+  let marksDocs;
+  if (perStudent) {
+    // MarksSourceService filters on `session`. Passing undefined would match docs
+    // whose session is missing rather than skipping the filter, so resolve it.
+    let sid = sessionId;
+    if (!sid) {
+      const exam = await Exam.findOne({ _id: examId, schoolId }).select('session').lean();
+      sid = exam?.session;
+    }
+    marksDocs = await MarksSourceService.getMarks({
+      studentId: studentId || studentProfileId,
+      studentProfileId,
+      classId,
+      sessionId: sid,
+      schoolId,
+      examIds: [examId],
+    });
+  } else {
+    const marksFilter = { examId, classId, schoolId, subjectId: { $in: requiredIds } };
+    if (sectionId) marksFilter.sectionId = sectionId;
+    marksDocs = await Marks.find(marksFilter).select('subjectId fields marksObtained').lean();
+  }
 
-  const submittedIds = (await Marks.distinct('subjectId', marksFilter)).map(String);
-  const submittedSet = new Set(submittedIds);
+  const submittedSet = new Set(marksDocs.filter(_hasUsableMarks).map((m) => String(m.subjectId)));
   const missingIds = requiredIds.filter((id) => !submittedSet.has(id));
 
   // Resolve names in one round-trip so callers can render the missing list.
@@ -90,6 +145,7 @@ async function getExamReadiness({ examId, classId, sectionId, schoolId, sessionI
 
   return {
     ready: missingIds.length === 0,
+    scope: perStudent ? 'student' : 'class',
     totalSubjects: requiredIds.length,
     submittedCount,
     submitted: requiredIds.filter((id) => submittedSet.has(id)).map(describe),

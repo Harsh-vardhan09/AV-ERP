@@ -10,5 +10,9 @@ apps/api/src-old
 # Hand-written CSS that the PDF renderer depends on byte-for-byte
 apps/api/src/modules/reportcards/templates
 
+# Same reason: the certificate letterhead CSS is authored inline here and the
+# Puppeteer output depends on it exactly as written
+apps/api/src/modules/documents/lib/htmlCertificateRenderer.js
+
 apps/api/uploads
 apps/api/public

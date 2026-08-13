@@ -7,7 +7,7 @@ const express = require('express');
 const multer = require('multer');
 const ImportController = require('../controller/importController');
 const { varifyToken } = require('../../../core/security/authenticate.js');
-const { authorize }   = require('../../../core/security/authorize.js');
+const { authorize } = require('../../../core/security/authorize.js');
 const { fileUploadValidator } = require('../middlewares/fileUploadValidator');
 
 const router = express.Router();
@@ -91,80 +91,65 @@ router.post(
 );
 
 /**
+ * GET /api/v1/import/template/:entity
+ * Download a ready-to-fill CSV template with required-field markers and samples.
+ * Declared BEFORE /:importLogId/* so "template" is not swallowed as an id.
+ */
+router.get('/template/:entity', authorize('admin', 'admission'), async (req, res) => {
+  await importController.downloadTemplate(req, res);
+});
+
+/**
  * GET /api/import/:importLogId/status
  * Get import status
  */
-router.get(
-  '/:importLogId/status',
-  authorize('admin', 'admission'),
-  async (req, res) => {
-    await importController.getImportStatus(req, res);
-  }
-);
+router.get('/:importLogId/status', authorize('admin', 'admission'), async (req, res) => {
+  await importController.getImportStatus(req, res);
+});
 
 /**
  * GET /api/import/:importLogId/errors
  * Get import errors with pagination
  * Query: page, limit
  */
-router.get(
-  '/:importLogId/errors',
-  authorize('admin', 'admission'),
-  async (req, res) => {
-    await importController.getImportErrors(req, res);
-  }
-);
+router.get('/:importLogId/errors', authorize('admin', 'admission'), async (req, res) => {
+  await importController.getImportErrors(req, res);
+});
 
 /**
  * GET /api/import/:importLogId/error-report
  * Download error report
  * Query: format (csv|xlsx)
  */
-router.get(
-  '/:importLogId/error-report',
-  authorize('admin', 'admission'),
-  async (req, res) => {
-    await importController.downloadErrorReport(req, res);
-  }
-);
+router.get('/:importLogId/error-report', authorize('admin', 'admission'), async (req, res) => {
+  await importController.downloadErrorReport(req, res);
+});
 
 /**
  * GET /api/import/history/:entity
  * Get import history for entity
  * Query: days (default 30)
  */
-router.get(
-  '/history/:entity',
-  authorize('admin', 'admission'),
-  async (req, res) => {
-    await importController.getImportHistory(req, res);
-  }
-);
+router.get('/history/:entity', authorize('admin', 'admission'), async (req, res) => {
+  await importController.getImportHistory(req, res);
+});
 
 /**
  * GET /api/import/profiles/:entity
  * Get import profiles (templates) for entity
  */
-router.get(
-  '/profiles/:entity',
-  authorize('admin', 'admission'),
-  async (req, res) => {
-    await importController.getImportProfiles(req, res);
-  }
-);
+router.get('/profiles/:entity', authorize('admin', 'admission'), async (req, res) => {
+  await importController.getImportProfiles(req, res);
+});
 
 /**
  * POST /api/import/profile
  * Save import profile (template)
  * Body: name, description, entity, columnMapping, transformations, settings
  */
-router.post(
-  '/profile',
-  authorize('admin', 'admission'),
-  async (req, res) => {
-    await importController.saveImportProfile(req, res);
-  }
-);
+router.post('/profile', authorize('admin', 'admission'), async (req, res) => {
+  await importController.saveImportProfile(req, res);
+});
 
 // ERROR HANDLERS
 

@@ -8,23 +8,25 @@
  *  - previewImport returns flat structure matching frontend expectations
  */
 
-const ImportService    = require('../services/importService');
-const STUDENT_CONFIG   = require('../configs/studentImportConfig');
-const TEACHER_CONFIG   = require('../configs/teacherImportConfig');
-const StudentAdapter   = require('../adapters/studentAdapter');
-const TeacherAdapter   = require('../adapters/teacherAdapter');
-const XLSXParser       = require('../utils/xlsxParser');
-const CSVParser        = require('../utils/csvParser');
-const ColumnMapper     = require('../utils/columnMapper');
-const logger           = require('../../../core/logging/logger.js');
+const ImportService = require('../services/importService');
+const STUDENT_CONFIG = require('../configs/studentImportConfig');
+const TEACHER_CONFIG = require('../configs/teacherImportConfig');
+const ATTENDANCE_CONFIG = require('../configs/attendanceImportConfig');
+const StudentAdapter = require('../adapters/studentAdapter');
+const TeacherAdapter = require('../adapters/teacherAdapter');
+const AttendanceAdapter = require('../adapters/attendanceAdapter');
+const XLSXParser = require('../utils/xlsxParser');
+const CSVParser = require('../utils/csvParser');
+const ColumnMapper = require('../utils/columnMapper');
+const logger = require('../../../core/logging/logger.js');
 
 class ImportController {
   constructor(dependencies = {}) {
     // ImportService — no external services needed (adapters use models directly)
     this.importService = new ImportService(dependencies.config || {}, {
-      queue:         dependencies.queue,  // null when Redis not configured → sync fallback
+      queue: dependencies.queue, // null when Redis not configured → sync fallback
       entityConfigs: {},
-      services:      {},                  // empty — adapters are self-contained
+      services: {}, // empty — adapters are self-contained
     });
 
     this._registerAdapters();
@@ -50,14 +52,73 @@ class ImportController {
       adapter: async (rowData, schoolId, context) =>
         await teacherAdapter.create(rowData, { schoolId, ...context }),
     });
+
+    // Attendance adapter — previously unregistered, so 'attendance' fell through
+    // to "Unknown entity type" / a stub adapter that threw on every row.
+    const attendanceAdapter = new AttendanceAdapter(ATTENDANCE_CONFIG, {});
+    this.importService.registerEntityConfig('attendance', {
+      ...ATTENDANCE_CONFIG,
+      adapter: async (rowData, schoolId, context) =>
+        await attendanceAdapter.create(rowData, { schoolId, ...context }),
+    });
+  }
+
+  /**
+   * GET /api/v1/import/template/:entity
+   *
+   * Emits a CSV whose headers are exactly what the importer maps and whose sample
+   * rows validate — download it, keep the rows, upload it, get 0 invalid.
+   * Required columns are marked in the header so a school can see at a glance
+   * what it must fill.
+   */
+  async downloadTemplate(req, res) {
+    try {
+      const entity = req.params.entity;
+      const config = this.importService.getEntityConfig(entity);
+      if (!config) {
+        return res.status(400).json({
+          success: false,
+          message: `Unknown entity type: ${entity}. Supported: student, teacher, attendance.`,
+        });
+      }
+
+      // templateColumns is the authored column order. Configs without one fall
+      // back to their required+optional field names.
+      const columns = config.templateColumns || [
+        ...(config.requiredFields || []).map((f) => ({ column: f, field: f, required: true })),
+        ...(config.optionalFields || []).map((f) => ({ column: f, field: f, required: false })),
+      ];
+
+      const esc = (v) => {
+        const s = v === null || v === undefined ? '' : String(v);
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+
+      // The marker lives in the header text because a CSV has nowhere else to put
+      // it. ColumnMapper strips it back off — see stripTemplateMarker.
+      const header = columns.map((c) => esc(c.required ? `${c.column} *` : c.column)).join(',');
+
+      const sampleRows = (config.sampleData || []).map((sample) =>
+        columns.map((c) => esc(sample[c.field] ?? '')).join(',')
+      );
+
+      const csv = [header, ...sampleRows].join('\r\n') + '\r\n';
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${entity}-import-template.csv"`);
+      return res.status(200).send(csv);
+    } catch (error) {
+      logger.error('[ImportController] downloadTemplate error:', error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
   }
 
   // HELPER: build userContext from request
   _buildContext(req) {
     return {
-      userId:   req.user._id,
-      schoolId: req.schoolId,    // ← set by varifyToken middleware (JWT)
-      user:     req.user,
+      userId: req.user._id,
+      schoolId: req.schoolId, // ← set by varifyToken middleware (JWT)
+      user: req.user,
     };
   }
 
@@ -67,8 +128,9 @@ class ImportController {
       mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
       mimetype === 'application/vnd.ms-excel' ||
       mimetype === 'application/octet-stream' ||
-      (originalname && (originalname.toLowerCase().endsWith('.xlsx') ||
-                        originalname.toLowerCase().endsWith('.xls')));
+      (originalname &&
+        (originalname.toLowerCase().endsWith('.xlsx') ||
+          originalname.toLowerCase().endsWith('.xls')));
 
     if (isXlsx) {
       return await XLSXParser.parse(buffer, { maxRows: 100000 });
@@ -85,17 +147,15 @@ class ImportController {
       }
       const entity = req.query.entity || req.body.entity;
       if (!entity) {
-        return res.status(400).json({ success: false, message: 'entity is required (student|teacher)' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'entity is required (student|teacher)' });
       }
 
       // Parse the uploaded file
       let parsed;
       try {
-        parsed = await this._parseBuffer(
-          req.file.buffer,
-          req.file.mimetype,
-          req.file.originalname
-        );
+        parsed = await this._parseBuffer(req.file.buffer, req.file.mimetype, req.file.originalname);
       } catch (parseError) {
         logger.error('[ImportController] File parse error:', parseError);
         return res.status(400).json({
@@ -137,17 +197,15 @@ class ImportController {
         return true;
       });
 
-      let validRows   = 0;
+      let validRows = 0;
       let invalidRows = 0;
 
       for (const r of parsed.rows) {
-        const raw    = r.data || r;
+        const raw = r.data || r;
         const mapped = ColumnMapper.applyMapping(raw, mapping.mapped);
 
         // If fullName is present in this row, it covers firstName + lastName
-        const rowEffectiveRequired = mapped.fullName
-          ? effectiveRequired
-          : requiredFields;
+        const rowEffectiveRequired = mapped.fullName ? effectiveRequired : requiredFields;
 
         const hasAllRequired = rowEffectiveRequired.every(
           (f) => mapped[f] !== undefined && mapped[f] !== null && String(mapped[f]).trim() !== ''
@@ -161,16 +219,16 @@ class ImportController {
 
       // Return flat structure matching frontend StatCards
       return res.json({
-        success:         true,
-        totalRows:       parsed.totalRows,
+        success: true,
+        totalRows: parsed.totalRows,
         validRows,
         invalidRows,
-        columnsFound:    parsed.headers.length,
-        columnMapping:   mapping.mapped,      // {excelCol: internalField}
+        columnsFound: parsed.headers.length,
+        columnMapping: mapping.mapped, // {excelCol: internalField}
         unmappedColumns: mapping.unmapped,
-        warnings:        mapping.warnings,
-        sampleRows,                           // first 5 mapped rows
-        headers:         parsed.headers,      // raw headers from file
+        warnings: mapping.warnings,
+        sampleRows, // first 5 mapped rows
+        headers: parsed.headers, // raw headers from file
       });
     } catch (error) {
       logger.error('[ImportController] previewImport error:', error);
@@ -186,15 +244,17 @@ class ImportController {
       }
       const entity = req.body.entity;
       if (!entity) {
-        return res.status(400).json({ success: false, message: 'entity is required (student|teacher)' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'entity is required (student|teacher)' });
       }
 
       const options = {
-        duplicateMode:  req.body.duplicateMode  || 'skip',
-        strictness:     req.body.strictness     || 'moderate',
+        duplicateMode: req.body.duplicateMode || 'skip',
+        strictness: req.body.strictness || 'moderate',
         autoAssignFees: req.body.autoAssignFees !== 'false',
-        sessionId:      req.body.sessionId      || undefined,
-        priority:       Number(req.body.priority) || 3,
+        sessionId: req.body.sessionId || undefined,
+        priority: Number(req.body.priority) || 3,
       };
 
       const result = await this.importService.startImport(
@@ -216,9 +276,7 @@ class ImportController {
   async getImportStatus(req, res) {
     try {
       const result = await this.importService.getImportStatus(req.params.importLogId);
-      return result.success
-        ? res.json(result)
-        : res.status(404).json(result);
+      return result.success ? res.json(result) : res.status(404).json(result);
     } catch (error) {
       logger.error('[ImportController] getImportStatus error:', error);
       return res.status(500).json({ success: false, message: error.message });
@@ -229,12 +287,8 @@ class ImportController {
   async getImportErrors(req, res) {
     try {
       const { page = 1, limit = 50 } = req.query;
-      const result = await this.importService.getImportErrors(
-        req.params.importLogId, page, limit
-      );
-      return result.success
-        ? res.json(result)
-        : res.status(404).json(result);
+      const result = await this.importService.getImportErrors(req.params.importLogId, page, limit);
+      return result.success ? res.json(result) : res.status(404).json(result);
     } catch (error) {
       logger.error('[ImportController] getImportErrors error:', error);
       return res.status(500).json({ success: false, message: error.message });
@@ -245,9 +299,7 @@ class ImportController {
   async downloadErrorReport(req, res) {
     try {
       const format = req.query.format || 'csv';
-      const result = await this.importService.downloadErrorReport(
-        req.params.importLogId, format
-      );
+      const result = await this.importService.downloadErrorReport(req.params.importLogId, format);
       if (!result.success) return res.status(404).json(result);
       res.setHeader('Content-Type', result.mimeType);
       res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);

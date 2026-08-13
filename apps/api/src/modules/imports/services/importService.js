@@ -339,6 +339,15 @@ class ImportService {
       reference: 'reference_not_found',
     };
     const safeType = validTypeMap[errorType] || 'system_error';
+
+    // Adapters may hand back a structured { field, value, message } instead of a
+    // bare string. Carry field and value onto the row error so the school can see
+    // WHICH column was wrong and WHAT it contained — the schema already has the
+    // columns, they were simply never populated, and a plain String() on the
+    // object would have persisted "[object Object]".
+    const structured = errorMessage && typeof errorMessage === 'object' ? errorMessage : null;
+    const message = structured ? structured.message : errorMessage;
+
     try {
       await ImportError.create({
         importLogId,
@@ -347,7 +356,11 @@ class ImportService {
         rowNumber,
         rowData: String(JSON.stringify(rowData)).slice(0, 2000),
         errorType: safeType,
-        errorMessage: String(errorMessage || 'Unknown error').slice(0, 500),
+        errorMessage: String(message || 'Unknown error').slice(0, 500),
+        ...(structured?.field ? { field: structured.field } : {}),
+        ...(structured && structured.value !== undefined
+          ? { value: String(structured.value).slice(0, 200) }
+          : {}),
         severity: errorType === 'skipped' ? 'warning' : 'error',
       });
     } catch (_) {

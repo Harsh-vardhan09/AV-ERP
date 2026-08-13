@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { showPermissionError } from '@shared/utils/permissionAlert';
 import {
   MdNotificationsNone, MdFilterList, MdDoneAll,
   MdDeleteSweep, MdDelete, MdCheckCircle,
@@ -18,16 +19,20 @@ import {
 import { resetUnreadCount, decrementUnreadCount } from '../store/notificationSlice';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
+// One map, not two. The icon used to live in a separate TYPE_ICONS lookup that
+// was never actually declared, so rendering any notification row threw
+// "TYPE_ICONS is not defined" and the whole page fell through to ErrorPage.
+// Keeping the icon beside the colour it is drawn in means they cannot drift.
 const TYPE_CONFIG = {
-  attendance:   { color: '#3B82F6', bg: '#EFF6FF', label: 'Attendance' },
-  marks:        { color: '#10B981', bg: '#ECFDF5', label: 'Marks' },
-  fee:          { color: '#F59E0B', bg: '#FFFBEB', label: 'Fee' },
-  leave:        { color: '#8B5CF6', bg: '#F5F3FF', label: 'Leave' },
-  assignment:   { color: '#EC4899', bg: '#FDF2F8', label: 'Assignment' },
-  notice:       { color: '#06B6D4', bg: '#ECFEFF', label: 'Notice' },
-  complaint:    { color: '#EF4444', bg: '#FEF2F2', label: 'Complaint' },
-  system:       { color: '#6B7280', bg: '#F9FAFB', label: 'System' },
-  announcement: { color: '#4F46E5', bg: '#EEF2FF', label: 'Announcement' },
+  attendance:   { color: '#3B82F6', bg: '#EFF6FF', label: 'Attendance',   icon: MdCalendarMonth },
+  marks:        { color: '#10B981', bg: '#ECFDF5', label: 'Marks',        icon: MdBarChart      },
+  fee:          { color: '#F59E0B', bg: '#FFFBEB', label: 'Fee',          icon: MdAttachMoney   },
+  leave:        { color: '#8B5CF6', bg: '#F5F3FF', label: 'Leave',        icon: MdEventNote     },
+  assignment:   { color: '#EC4899', bg: '#FDF2F8', label: 'Assignment',   icon: MdAssignment    },
+  notice:       { color: '#06B6D4', bg: '#ECFEFF', label: 'Notice',       icon: MdAnnouncement  },
+  complaint:    { color: '#EF4444', bg: '#FEF2F2', label: 'Complaint',    icon: MdReport        },
+  system:       { color: '#6B7280', bg: '#F9FAFB', label: 'System',       icon: MdSecurity      },
+  announcement: { color: '#4F46E5', bg: '#EEF2FF', label: 'Announcement', icon: MdCampaign      },
 };
 
 
@@ -160,7 +165,8 @@ const NotificationCenter = () => {
     ...(readFilter === 'read'   ? { isRead: true  } : {}),
   };
 
-  const { data, isLoading, isFetching } = useGetNotificationsQuery(queryParams);
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useGetNotificationsQuery(queryParams);
   const [markAsRead]  = useMarkAsReadMutation();
   const [markAllRead] = useMarkAllReadMutation();
   const [deleteNotif] = useDeleteNotificationMutation();
@@ -198,6 +204,24 @@ const NotificationCenter = () => {
     setter(e.target.value);
     setPage(1);
   };
+
+  // A failed list call used to fall through to "You're all caught up!", which
+  // reads as "you have no notifications" rather than "we could not load them".
+  // 403 is called out separately — that is a permission/module problem, not an
+  // outage, and the user can do nothing about it except tell an admin.
+  const status = error?.status;
+  const errorMessage = !isError
+    ? ''
+    : status === 403
+      ? error?.data?.message ||
+        'You do not have permission to view notifications. Ask your school admin to enable access.'
+      : status === 401
+        ? 'Your session has expired. Please sign in again.'
+        : error?.data?.message || 'Could not load notifications. Please try again.';
+
+  useEffect(() => {
+    if (isError && status === 403) showPermissionError(errorMessage);
+  }, [isError, status, errorMessage]);
 
   // Group for display
   const grouped = groupByDate(notifications);
@@ -422,8 +446,31 @@ const NotificationCenter = () => {
         {/* Phase 3: Loading skeleton */}
         {showingFetching && <NotificationSkeleton />}
 
+        {/* A failed load is its own state — never dressed up as "no notifications" */}
+        {isError && !isFetching && (
+          <div style={{ padding: '48px 20px', textAlign: 'center' }}>
+            <MdReport size={48} style={{ color: '#EF4444', marginBottom: 12 }} />
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+              {status === 403 ? 'Access denied' : "Couldn't load notifications"}
+            </div>
+            <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 16 }}>{errorMessage}</div>
+            {status !== 403 && status !== 401 && (
+              <button
+                onClick={refetch}
+                style={{
+                  fontSize: 13, fontWeight: 500, color: '#4F46E5',
+                  background: '#EEF2FF', border: 'none', borderRadius: 8,
+                  padding: '8px 16px', cursor: 'pointer',
+                }}
+              >
+                Try again
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Phase 3: Per-filter empty state */}
-        {!isLoading && !isFetching && notifications.length === 0 && (
+        {!isError && !isLoading && !isFetching && notifications.length === 0 && (
           <div style={{ padding: '64px 20px', textAlign: 'center' }}>
             <MdNotificationsNone size={52} style={{ color: '#D1D5DB', marginBottom: 12 }} />
             <div style={{ fontSize: 16, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
@@ -468,7 +515,7 @@ const NotificationCenter = () => {
                 {/* Type icon — react-icon in coloured circle */}
                 <div style={s.typeIcon(notif.type)}>
                   {(() => {
-                    const Icon = TYPE_ICONS[notif.type] || MdNotifications;
+                    const Icon = TYPE_CONFIG[notif.type]?.icon || MdNotifications;
                     return <Icon size={19} style={{ color: TYPE_CONFIG[notif.type]?.color || '#6B7280' }} />;
                   })()}
                 </div>

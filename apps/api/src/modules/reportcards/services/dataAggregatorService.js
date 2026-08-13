@@ -481,6 +481,29 @@ class DataAggregatorService {
       typeSet.forEach((t) => allDynamicFieldNames.add(t))
     );
 
+    // A stored field key may carry a term prefix ("t1_pertest") while the
+    // configured component is the bare name ("pertest"). The upload path already
+    // treats these as the same thing — teacherController.resolveFieldMax strips
+    // /^t[12]_/ before looking up a component's max. This read path did not, so a
+    // prefixed key missed every lookup below and the mark never reached
+    // row[term].total / grandObt: the card showed 0 while the marks sat in Mongo.
+    const readMark = (examKey, subjectKey, type) => {
+      const direct = toNum(marksIndex[`${examKey}:${subjectKey}:${type}`]);
+      if (direct !== null) return direct;
+      for (const prefix of ['t1_', 't2_']) {
+        const v = toNum(marksIndex[`${examKey}:${subjectKey}:${prefix}${type}`]);
+        if (v !== null) return v;
+      }
+      return null;
+    };
+
+    // Normalized view of every component the config declares, used to spot field
+    // keys that no configured component covers.
+    const stripTerm = (k) =>
+      String(k)
+        .toLowerCase()
+        .replace(/^t[12]_/, '');
+
     logger.debug('[DataAggregator] Total mark records fetched:', marksDocs.length);
     logger.debug(
       '[DataAggregator] MarksIndex keys (sample):',
@@ -546,6 +569,28 @@ class DataAggregatorService {
         let components;
         if (cfg?.marksDistribution?.length > 0) {
           components = cfg.marksDistribution; // [{type, label, maxMarks}]
+
+          // Union in any field key the marks actually carry that no configured
+          // component covers. Without this the aggregator reads ONLY the config's
+          // component names, so marks stored under different keys are invisible and
+          // the subject totals come out 0 while the marks exist. maxMarks is 0 for
+          // these so they contribute obtained marks without inflating grandMax.
+          const covered = new Set(components.map((c) => stripTerm(c.type)));
+          const discovered = subjectMarksTypes[sub.id] ? [...subjectMarksTypes[sub.id]] : [];
+          const extras = discovered.filter((k) => !covered.has(stripTerm(k)));
+          if (extras.length > 0) {
+            logger.warn(
+              `[DataAggregator] Subject "${sub.name}": marks stored under field(s) ` +
+                `[${extras.join(', ')}] that no ExamSubjectConfig component declares ` +
+                `[${[...covered].join(', ')}]. Counting them toward the total, but the ` +
+                `report template cannot address them by name — check the marks-entry ` +
+                `template against the exam's marks distribution.`
+            );
+            components = [
+              ...components,
+              ...extras.map((k) => ({ type: k, label: k, maxMarks: 0 })),
+            ];
+          }
         } else {
           const discoveredTypes = subjectMarksTypes[sub.id] ? [...subjectMarksTypes[sub.id]] : [];
           if (discoveredTypes.length > 0) {
@@ -595,7 +640,7 @@ class DataAggregatorService {
           // Skip auto-calculated total fields — they are display-only sums.
           // Adding them again would double-count (e.g. grandObt = 284 instead of 142).
           const isAutoTotal = /total/i.test(type);
-          const obt = toNum(marksIndex[`${exam._id}:${sub.id}:${type}`]);
+          const obt = readMark(exam._id, sub.id, type);
 
           if (isAutoTotal) {
             // Store for template display only — do not add to sums
@@ -647,7 +692,7 @@ class DataAggregatorService {
             componentMap[type] = { type, label: label || type, marks: null, max: 0 };
           }
           componentMap[type].max += Number(cMax) || 0;
-          const obtained = toNum(marksIndex[`${exam._id}:${sub.id}:${type}`]);
+          const obtained = readMark(exam._id, sub.id, type);
           if (obtained !== null) {
             componentMap[type].marks = (componentMap[type].marks || 0) + obtained;
           }

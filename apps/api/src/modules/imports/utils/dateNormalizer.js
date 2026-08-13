@@ -29,6 +29,24 @@ class DateNormalizer {
       return dateStr.substring(0, 10);
     }
 
+    // Excel serial date. A cell formatted as a date and saved to CSV often comes
+    // through as the raw serial (45672 = 2025-01-15). This has to be handled
+    // BEFORE moment's loose fallback, which read 45672 as the year 45672 and
+    // silently produced "45672-01-01" instead of failing.
+    // Excel's epoch is 1899-12-30 (its 1900 leap-year bug is baked into the offset).
+    // Range 1..2958465 is 1900-01-01 .. 9999-12-31.
+    if (/^\d+(\.\d+)?$/.test(dateStr)) {
+      const serial = Number(dateStr);
+      if (serial >= 1 && serial <= 2958465) {
+        const asDate = moment('1899-12-30', 'YYYY-MM-DD').add(Math.floor(serial), 'days');
+        if (asDate.isValid()) return asDate.format('YYYY-MM-DD');
+      }
+      throw new Error(
+        `Unable to parse date: "${dateStr}" — a bare number is read as an Excel serial date, ` +
+          `and ${dateStr} is outside the supported range (1–2958465).`
+      );
+    }
+
     // Try all known formats
     for (const format of DATE_FORMATS) {
       const parsed = moment(dateStr, format, true); // true = strict parsing
@@ -40,7 +58,9 @@ class DateNormalizer {
     // Try moment's automatic parsing as last resort
     const auto = moment(dateStr);
     if (auto.isValid()) {
-      logger.warn(`Date parsed without explicit format: ${dateStr} -> ${auto.format('YYYY-MM-DD')}`);
+      logger.warn(
+        `Date parsed without explicit format: ${dateStr} -> ${auto.format('YYYY-MM-DD')}`
+      );
       return auto.format('YYYY-MM-DD');
     }
 

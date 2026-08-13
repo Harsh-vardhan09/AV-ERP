@@ -889,12 +889,20 @@ async function _buildOwnReportCard(req) {
     const readiness = await Promise.all(
       exams.map(async (exam) => ({
         examName: exam.name,
+        // Student scope, not class scope: this gates ONE student's card. The
+        // class-level answer ("someone uploaded for this subject") let a student
+        // with no marks of their own through to a blank report.
         ...(await getExamReadiness({
           examId: exam._id,
           classId,
           sectionId: student.sectionId?._id || student.sectionId || null,
           schoolId,
           sessionId: session._id,
+          // From the profile already resolved for this caller, never from the
+          // request — studentReportCardAccess.check.js enforces that, since a
+          // request-supplied studentId here would be a horizontal-privilege hole.
+          studentId: student.userId,
+          studentProfileId: student._id,
         })),
       }))
     );
