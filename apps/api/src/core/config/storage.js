@@ -62,10 +62,13 @@ const uploadoncloud = async (localfilepath) => {
     } catch (_) {}
     return response;
   } catch (error) {
-    logger.error('[Cloudinary] Upload failed', { error: error.message });
-    try {
-      fs.unlinkSync(localfilepath);
-    } catch (_) {}
+    // The temp file is deliberately LEFT ON DISK here. Deleting it on failure
+    // destroys the only copy of what the user uploaded, so the caller cannot
+    // retry and cannot report what was lost. Cleanup only follows a confirmed
+    // upload (above); the failure path is swept by the temp dir, not by us.
+    logger.error('[Cloudinary] Upload failed — temp file kept at ' + localfilepath, {
+      error: error.message,
+    });
     return null;
   }
 };

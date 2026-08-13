@@ -258,6 +258,14 @@ exports.applyLeave = async (req, res) => {
 
     const { leaveType, startDate, endDate, reason } = req.body;
 
+    // SECURITY: without schoolId the row is invisible to the school-scoped
+    // approver queries in teacherController.getStudentLeaves
+    if (!req.schoolId) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Authentication required: Missing school context' });
+    }
+
     const leave = await Leave.create({
       appliedBy: req.user._id,
       role: 'student',
@@ -268,6 +276,7 @@ exports.applyLeave = async (req, res) => {
       classId: profile.classId._id,
       sectionId: profile.sectionId._id,
       session: profile.session._id,
+      schoolId: req.schoolId,
     });
 
     res.status(201).json({ success: true, message: 'Leave applied', data: leave });
@@ -310,7 +319,7 @@ exports.applyLeave = async (req, res) => {
 
 exports.getMyLeaves = async (req, res) => {
   try {
-    const leaves = await studentSelfService.listLeavesForUser(req.user._id);
+    const leaves = await studentSelfService.listLeavesForUser(req.user._id, req.schoolId);
     res.status(200).json({ success: true, data: leaves });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

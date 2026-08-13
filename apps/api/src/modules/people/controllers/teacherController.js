@@ -21,6 +21,7 @@ const { User } = require('../../identity');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
 const { uploadoncloud } = require('../../../core/config/storage.js');
+const ApiError = require('../../../core/http/ApiError.js');
 const logger = require('../../../core/logging/logger.js');
 
 // ── Phase 2: Notification imports ────────────────────────────────────────────
@@ -1065,7 +1066,7 @@ exports.deleteAssignment = async (req, res) => {
 // KNOWLEDGE CENTER
 // ========================
 
-exports.uploadMaterial = async (req, res) => {
+exports.uploadMaterial = async (req, res, next) => {
   try {
     const { title, description, subjectId, customSubjectName, classId, sectionId, session } =
       req.body;
@@ -1075,8 +1076,10 @@ exports.uploadMaterial = async (req, res) => {
     }
 
     const uploaded = await uploadoncloud(req.file.path);
-    if (!uploaded) {
-      return res.status(500).json({ success: false, message: 'File upload to cloud failed' });
+    if (!uploaded || !uploaded.url) {
+      // Never persist a material row with no usable file URL — it lists fine and
+      // fails only when someone tries to open it
+      return next(new ApiError(502, 'File upload to cloud failed'));
     }
 
     const ext = req.file.originalname?.split('.').pop()?.toLowerCase() || '';
@@ -1146,7 +1149,7 @@ exports.getMyMaterials = async (req, res) => {
   }
 };
 
-exports.updateMaterial = async (req, res) => {
+exports.updateMaterial = async (req, res, next) => {
   try {
     // SECURITY: scope by schoolId to prevent cross-tenant material access
     const material = await Knowledgecenter.findOne({
@@ -1165,7 +1168,8 @@ exports.updateMaterial = async (req, res) => {
 
     if (req.file) {
       const uploaded = await uploadoncloud(req.file.path);
-      if (!uploaded) return res.status(500).json({ success: false, message: 'File upload failed' });
+      // Bail before save() so a failed upload can't blank out the existing fileUrl
+      if (!uploaded || !uploaded.url) return next(new ApiError(502, 'File upload failed'));
       material.fileUrl = uploaded.url;
     }
 

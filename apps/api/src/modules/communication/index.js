@@ -31,4 +31,11 @@ module.exports = {
   get leaveController() {
     return require('./controllers/leave_controller');
   },
+
+  // studentSelfServiceService — consumer: people/controllers/studentController
+  // (getMyLeaves, getMyComplaints). It was imported there but never exported
+  // here, so both handlers threw on undefined and answered 500.
+  get studentSelfServiceService() {
+    return require('./services/studentSelfServiceService');
+  },
 };

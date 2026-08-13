@@ -1,9 +1,10 @@
 const Leave = require('../models/leave');
 const ComplainBox = require('../models/ComplainBox');
 
-// A student reading their own leave applications
-const listLeavesForUser = async (userId) =>
-  Leave.find({ appliedBy: userId, role: 'student' })
+// A student reading their own leave applications.
+// schoolId is part of the filter, not a post-check — same reason as below
+const listLeavesForUser = async (userId, schoolId) =>
+  Leave.find({ appliedBy: userId, role: 'student', schoolId })
     .populate('approvedBy', 'firstName lastName')
     .sort({ createdAt: -1 });
 

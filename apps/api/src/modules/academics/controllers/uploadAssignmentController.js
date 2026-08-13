@@ -11,6 +11,7 @@ const { User } = require('../../identity');
 const fs = require('fs');
 const crypto = require('crypto');
 const { uploadoncloud } = require('../../../core/config/storage.js');
+const ApiError = require('../../../core/http/ApiError.js');
 const pdfParse = require('pdf-parse'); // Import pdfParse for metadata extraction
 
 exports.uploadassignment = async (req, res, next) => {
@@ -58,17 +59,16 @@ exports.uploadassignment = async (req, res, next) => {
       });
     }
 
+    // Hash BEFORE uploading: a successful uploadoncloud unlinks the temp file,
+    // so reading photo.path afterwards threw ENOENT and every submission 500'd.
+    const fileHash = generateFileHash(photo.path);
+
     // Upload file to Cloudinary
     const uploadedFile = await uploadoncloud(photo.path);
-    if (!uploadedFile) {
-      return res.status(500).json({
-        success: false,
-        message: 'Error uploading file to Cloudinary',
-      });
+    if (!uploadedFile || !uploadedFile.url) {
+      throw new ApiError(502, 'Error uploading file to Cloudinary');
     }
 
-    // Generate file hash to detect duplicates
-    const fileHash = generateFileHash(photo.path);
     const existingUpload = await Assignmentupload.findOne({
       assignmentid: assignment._id,
       fileHash: fileHash,
@@ -85,8 +85,6 @@ exports.uploadassignment = async (req, res, next) => {
       studentid,
       assignmentid,
     });
-
-    fs.unlinkSync(photo.path);
 
     if (duplicate) {
       duplicate.photo = uploadedFile.url;
@@ -121,6 +119,9 @@ exports.uploadassignment = async (req, res, next) => {
       assignment,
     });
   } catch (error) {
+    // ApiError carries its own status — hand it to errorMiddleware instead of
+    // flattening a failed upload into a generic 500
+    if (error instanceof ApiError) return next(error);
     console.error('Error in assignment upload:', error);
     res.status(500).json({
       success: false,
