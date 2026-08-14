@@ -4,6 +4,9 @@ services:
     env: node
     plan: free
     rootDir: apps/api
+    # PUPPETEER_SKIP_DOWNLOAD stays true on purpose: Puppeteer's own ~150MB
+    # Chromium is still not downloaded. @sparticuz/chromium supplies a compact
+    # Linux build instead, which core/pdf/browserLauncher.js points Puppeteer at.
     buildCommand: PUPPETEER_SKIP_DOWNLOAD=true npm install
     startCommand: npm start
     envVars:
@@ -12,7 +15,7 @@ services:
       - key: PORT
         value: 4000
       - key: PUPPETEER_SKIP_DOWNLOAD
-        value: "true"
+        value: 'true'
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET

@@ -1077,6 +1077,16 @@ exports.downloadMyReportCard = async (req, res) => {
 
     if (!pdf.success) {
       logger.error('[DynamicReport] Student PDF failed:', pdf.error);
+      // A missing browser is an operational fault, not a bad report card. It used
+      // to collapse into the same opaque 500 as a template error, which is why a
+      // broken download gave no clue what was wrong.
+      if (pdf.code === 'PDF_RENDERER_UNAVAILABLE') {
+        return res.status(503).json({
+          success: false,
+          code: pdf.code,
+          message: 'PDF rendering is temporarily unavailable. Please contact your administrator.',
+        });
+      }
       return res.status(500).json({ success: false, message: 'Could not generate the PDF.' });
     }
 

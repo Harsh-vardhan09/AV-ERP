@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const { getLaunchOptions } = require('./browserLauncher');
 const logger = require('../logging/logger');
 const path = require('path');
 const fs = require('fs').promises;
@@ -123,18 +124,18 @@ class PDFService {
   static async _renderToPDF(fullHtml, options = {}) {
     let browser = null;
     try {
-      browser = await puppeteer.launch({
-        headless: 'new',
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--disable-web-security',
-          '--font-render-hinting=none',
-          '--force-color-profile=srgb',
-        ],
-      });
+      // executablePath comes from browserLauncher, not from puppeteer's own
+      // resolution — the Chromium download is disabled on this deploy.
+      const launchOptions = await getLaunchOptions([
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-web-security',
+        '--font-render-hinting=none',
+        '--force-color-profile=srgb',
+      ]);
+      browser = await puppeteer.launch(launchOptions);
 
       const page = await browser.newPage();
 
@@ -165,7 +166,9 @@ class PDFService {
 
       return { success: true, buffer };
     } catch (err) {
-      return { success: false, error: err.message };
+      // Carry the code so a caller can tell "no browser installed" apart from
+      // "this template failed to render" — they need different responses.
+      return { success: false, error: err.message, code: err.code };
     } finally {
       if (browser) await browser.close();
     }

@@ -33,16 +33,23 @@ const authCookie = (user) =>
 
 // StudentProfile demands a dozen required fields the tenant filter never reads.
 // Inserting through the driver keeps the fixture to the fields under test.
-// studentprofiles carries unique indexes on scholarNo+schoolId and
-// studentId+schoolId, neither sparse. Two fixtures both leaving them unset
-// collide on null, and indexes survive db.clear() (it only deletes documents),
-// so whether it fires depends on which suites ran first. Derive both from rollNo.
+//
+// StudentProfile.js:340-343 declares four unique indexes — userId, admissionNumber,
+// studentId, scholarNo, each compounded with schoolId and marked sparse. A COMPOUND
+// sparse index only skips a document when EVERY indexed field is missing, and
+// schoolId is always present, so an absent userId still indexes as null and two
+// such fixtures collide. Indexes also survive helpers/db.clear() (it deletes
+// documents, not indexes), so whether the collision fires depends on which suite
+// first triggered autoIndex — which is why this was intermittent.
+// Every discriminator is therefore given a distinct value.
 const insertStudent = async ({ school, firstName, rollNo }) =>
   mongoose.connection.collection('studentprofiles').insertOne({
     schoolId: school._id,
+    userId: new mongoose.Types.ObjectId(),
     firstName,
     lastName: 'Student',
     rollNo,
+    admissionNumber: `ADM-${rollNo}`,
     scholarNo: `SC-${rollNo}`,
     studentId: `STU-${rollNo}`,
     status: 'active',
