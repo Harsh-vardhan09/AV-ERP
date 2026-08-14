@@ -6,22 +6,26 @@
  *   'digest-scheduler' — fires at 6 PM IST (12:30 UTC) to batch-send digests
  */
 
-const Queue = require('bull');
 const logger = require('../../../core/logging/logger');
+const { createQueue } = require('../../../core/queue/factory');
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-
-// Queue: collect digest emails throughout the day
-const digestQueue = new Queue('digest-emails', REDIS_URL);
-
-// Queue: daily scheduler trigger
-const digestSchedulerQueue = new Queue('digest-scheduler', REDIS_URL);
+// These two queues used to be built with `new Queue(name, REDIS_URL)` directly.
+// That bypassed BOTH safety nets the factory provides:
+//   - it ignored REDIS_DISABLED, so the queues connected regardless;
+//   - it attached no 'error' listener, and a Bull queue is an EventEmitter, so
+//     when Redis started rejecting AUTH (Upstash request quota exhausted) the
+//     ReplyError was rethrown as an uncaught exception and killed the process
+//     before server.listen() — the API went 502 with "No open ports detected".
+// Going through createQueue means a stub when Redis is off, a handled 'error'
+// when it is on, and the low-traffic polling settings either way.
+const digestQueue = createQueue('digest-emails');
+const digestSchedulerQueue = createQueue('digest-scheduler');
 
 // PROCESSOR: collect jobs (no-op — jobs sit until scheduler fires)
 digestQueue.process('collect', async (job) => {
   logger.info('[DigestWorker] Email collected for digest', {
     userId: job.data.userId,
-    type:   job.data.type,
+    type: job.data.type,
   });
   return { collected: true };
 });
@@ -35,9 +39,7 @@ digestSchedulerQueue.process(async () => {
 
   try {
     // Fetch all waiting / delayed jobs from the digest collection queue
-    const waitingJobs = await digestQueue.getJobs([
-      'waiting', 'delayed', 'active',
-    ]);
+    const waitingJobs = await digestQueue.getJobs(['waiting', 'delayed', 'active']);
 
     if (!waitingJobs.length) {
       logger.info('[DigestWorker] No digest emails to send');
@@ -51,15 +53,15 @@ digestSchedulerQueue.process(async () => {
       if (!uid) continue;
       if (!userEmailMap[uid]) {
         userEmailMap[uid] = {
-          to:            j.data.to,
-          schoolId:      j.data.schoolId,
+          to: j.data.to,
+          schoolId: j.data.schoolId,
           notifications: [],
         };
       }
       userEmailMap[uid].notifications.push({
-        type:    j.data.type,
+        type: j.data.type,
         subject: j.data.subject,
-        html:    j.data.html,
+        html: j.data.html,
       });
     }
 
@@ -73,7 +75,7 @@ digestSchedulerQueue.process(async () => {
       const userData = userEmailMap[userId];
       try {
         const { subject, html } = generateDigestEmail({
-          notifications:  userData.notifications,
+          notifications: userData.notifications,
           recipientEmail: userData.to,
         });
 
@@ -83,7 +85,7 @@ digestSchedulerQueue.process(async () => {
 
         await transporter.sendMail({
           from,
-          to:      userData.to,
+          to: userData.to,
           subject,
           html,
         });
@@ -104,7 +106,6 @@ digestSchedulerQueue.process(async () => {
     await digestQueue.clean(0, 'completed');
     await digestQueue.clean(0, 'active');
     await digestQueue.clean(0, 'wait');
-
   } catch (err) {
     logger.error('[DigestWorker] Digest processing failed', {
       error: err.message,
@@ -124,7 +125,7 @@ const scheduleDigestJob = async () => {
     await digestSchedulerQueue.add(
       { trigger: 'daily-digest' },
       {
-        repeat:           { cron: '30 12 * * *' }, // 6 PM IST (UTC+5:30)
+        repeat: { cron: '30 12 * * *' }, // 6 PM IST (UTC+5:30)
         removeOnComplete: true,
       }
     );

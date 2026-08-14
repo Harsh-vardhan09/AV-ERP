@@ -8,13 +8,15 @@
  * no longer crash the entire server.
  */
 const logger = require('../../../core/logging/logger');
-const { REDIS_URL, REDIS_DISABLED, redisOpts } = require('../../../core/config/redis');
+// REDIS_URL/redisOpts are no longer needed here — createQueue owns connection
+// options now, so this file only still cares whether Redis is switched off.
+const { REDIS_DISABLED } = require('../../../core/config/redis');
 
 // Graceful stub (used when Redis is unavailable)
 const makeStub = (name) => ({
   process: () => {},
-  add:     async () => ({ id: null }),
-  on:      () => {},
+  add: async () => ({ id: null }),
+  on: () => {},
 });
 
 // Queue definitions with crash-safe init
@@ -25,31 +27,37 @@ let marksDeadlineQueue;
 try {
   if (REDIS_DISABLED) throw new Error('Redis disabled via REDIS_DISABLED=true');
 
-  const Queue = require('bull');
-  feeReminderQueue   = new Queue('fee-reminders',    REDIS_URL, { redis: redisOpts });
-  feeOverdueQueue    = new Queue('fee-overdue',       REDIS_URL, { redis: redisOpts });
-  marksDeadlineQueue = new Queue('marks-deadline',    REDIS_URL, { redis: redisOpts });
+  // Same low-traffic polling as core/queue/factory — see the note there. Three
+  // queues at Bull's stock intervals cost ~78 idle Redis requests a minute.
+  const { createQueue } = require('../../../core/queue/factory');
+  feeReminderQueue = createQueue('fee-reminders');
+  feeOverdueQueue = createQueue('fee-overdue');
+  marksDeadlineQueue = createQueue('marks-deadline');
 
   const handleQueueError = (queueName, e) => {
     if (e.code === 'ECONNRESET' || (e.message && e.message.includes('ECONNRESET'))) {
-      logger.debug(`[NotifWorker] ${queueName} Redis connection reset (reconnecting automatically)`);
+      logger.debug(
+        `[NotifWorker] ${queueName} Redis connection reset (reconnecting automatically)`
+      );
       return;
     }
     logger.warn(`[NotifWorker] ${queueName} Redis error`, { error: e.message });
   };
 
-  feeReminderQueue.on('error',   (e) => handleQueueError('feeReminderQueue', e));
-  feeOverdueQueue.on('error',    (e) => handleQueueError('feeOverdueQueue', e));
+  feeReminderQueue.on('error', (e) => handleQueueError('feeReminderQueue', e));
+  feeOverdueQueue.on('error', (e) => handleQueueError('feeOverdueQueue', e));
   marksDeadlineQueue.on('error', (e) => handleQueueError('marksDeadlineQueue', e));
 
   logger.info('[NotifWorker] Notification queues initialized');
-
 } catch (err) {
-  logger.warn('[NotifWorker] Failed to init Bull queues — Redis unavailable. Notification queuing disabled.', {
-    error: err.message,
-  });
-  feeReminderQueue   = makeStub('fee-reminders');
-  feeOverdueQueue    = makeStub('fee-overdue');
+  logger.warn(
+    '[NotifWorker] Failed to init Bull queues — Redis unavailable. Notification queuing disabled.',
+    {
+      error: err.message,
+    }
+  );
+  feeReminderQueue = makeStub('fee-reminders');
+  feeOverdueQueue = makeStub('fee-overdue');
   marksDeadlineQueue = makeStub('marks-deadline');
 }
 
@@ -61,10 +69,7 @@ const getServices = () => {
     notifyMultipleUsers,
     sendBulkEmails,
   } = require('../services/notificationService');
-  const {
-    feeDueReminderTemplate,
-    feeOverdueTemplate,
-  } = require('../lib/emailTemplates');
+  const { feeDueReminderTemplate, feeOverdueTemplate } = require('../lib/emailTemplates');
   return {
     createInAppNotification,
     sendEmailNotification,
@@ -79,10 +84,8 @@ const getServices = () => {
 // Job data: { schoolId, studentUserId, studentEmail,
 //             studentName, amount, dueDate, schoolName }
 feeReminderQueue.process(async (job) => {
-  const {
-    schoolId, studentUserId, studentEmail,
-    studentName, amount, dueDate, schoolName,
-  } = job.data;
+  const { schoolId, studentUserId, studentEmail, studentName, amount, dueDate, schoolName } =
+    job.data;
 
   logger.info('[NotifWorker] Processing fee reminder', { studentUserId, amount, dueDate });
 
@@ -102,7 +105,11 @@ feeReminderQueue.process(async (job) => {
 
   // Email notification
   const { subject, html } = svc.feeDueReminderTemplate({
-    studentName, amount, dueDate, schoolName, loginUrl,
+    studentName,
+    amount,
+    dueDate,
+    schoolName,
+    loginUrl,
   });
   await svc.sendEmailNotification({ to: studentEmail, subject, html });
 
@@ -114,8 +121,14 @@ feeReminderQueue.process(async (job) => {
 //             studentName, amount, dueSince, schoolName, adminUserIds }
 feeOverdueQueue.process(async (job) => {
   const {
-    schoolId, studentUserId, studentEmail,
-    studentName, amount, dueSince, schoolName, adminUserIds,
+    schoolId,
+    studentUserId,
+    studentEmail,
+    studentName,
+    amount,
+    dueSince,
+    schoolName,
+    adminUserIds,
   } = job.data;
 
   logger.info('[NotifWorker] Processing fee overdue', { studentUserId, amount, dueSince });
@@ -150,7 +163,11 @@ feeOverdueQueue.process(async (job) => {
 
   // Email student
   const { subject, html } = svc.feeOverdueTemplate({
-    studentName, amount, dueSince, schoolName, loginUrl,
+    studentName,
+    amount,
+    dueSince,
+    schoolName,
+    loginUrl,
   });
   await svc.sendEmailNotification({ to: studentEmail, subject, html });
 
@@ -162,11 +179,21 @@ feeOverdueQueue.process(async (job) => {
 //             teacherName, examName, subjectName, daysLeft, schoolName }
 marksDeadlineQueue.process(async (job) => {
   const {
-    schoolId, teacherUserId, teacherEmail,
-    teacherName, examName, subjectName, daysLeft, schoolName,
+    schoolId,
+    teacherUserId,
+    teacherEmail,
+    teacherName,
+    examName,
+    subjectName,
+    daysLeft,
+    schoolName,
   } = job.data;
 
-  logger.info('[NotifWorker] Processing marks deadline reminder', { teacherUserId, examName, daysLeft });
+  logger.info('[NotifWorker] Processing marks deadline reminder', {
+    teacherUserId,
+    examName,
+    daysLeft,
+  });
 
   const svc = getServices();
   const loginUrl = process.env.CLIENT_URL || 'https://averp.com';
@@ -223,19 +250,23 @@ marksDeadlineQueue.process(async (job) => {
 // Job failure handlers
 feeReminderQueue.on('failed', (job, err) => {
   logger.warn('[NotifWorker] feeReminderQueue job failed', {
-    jobId: job.id, data: job.data, error: err.message,
+    jobId: job.id,
+    data: job.data,
+    error: err.message,
   });
 });
 
 feeOverdueQueue.on('failed', (job, err) => {
   logger.warn('[NotifWorker] feeOverdueQueue job failed', {
-    jobId: job.id, error: err.message,
+    jobId: job.id,
+    error: err.message,
   });
 });
 
 marksDeadlineQueue.on('failed', (job, err) => {
   logger.warn('[NotifWorker] marksDeadlineQueue job failed', {
-    jobId: job.id, error: err.message,
+    jobId: job.id,
+    error: err.message,
   });
 });
 

@@ -127,7 +127,22 @@ const registerModules = (app, { apiLimiter, authLimiter }) => {
 
 // Jobs are collected at registration but required here, so Bull processors start
 // after the DB connection rather than while routes are still mounting.
-const bootJobs = () => jobPaths.forEach((p) => require(p));
+//
+// Each worker is isolated: bootJobs runs BEFORE server.listen(), so an unguarded
+// throw here means the process dies without ever binding a port and the platform
+// reports "No open ports detected" → 502. A background worker failing to start is
+// never worth taking the whole API down for — log it and boot the rest.
+const bootJobs = () =>
+  jobPaths.forEach((p) => {
+    try {
+      require(p);
+    } catch (err) {
+      logger.error('[moduleLoader] Worker failed to start — continuing without it', {
+        job: p,
+        error: err.message,
+      });
+    }
+  });
 
 const getPermissions = (key) => permissionRegistry.get(key);
 
