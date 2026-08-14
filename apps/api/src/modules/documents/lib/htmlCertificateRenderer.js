@@ -61,8 +61,34 @@ const BASE_CSS = `
   table { border-collapse: collapse; width: 100%; table-layout: fixed; }
   td, th { padding: 0; }
 
-  /* ── Cert number ── */
-  .cert-no { text-align: right; font-size: 8.5pt; font-weight: 700; margin-bottom: 6px; }
+  /* The sheet is the positioning context for the watermark, which must sit
+     behind the content without being clipped by any table. */
+  .sheet { position: relative; }
+  .sheet-inner { position: relative; z-index: 1; }
+
+  /* ── Watermark ──
+     The crest at very low opacity behind the body. Kept at 0.05 and greyscaled:
+     anything stronger competes with the value lines and hurts legibility on a
+     laser printer. print-color-adjust forces it to survive "background graphics
+     off" in the print dialog, which would otherwise drop it silently. */
+  .watermark {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 110mm; opacity: 0.05; filter: grayscale(100%);
+    z-index: 0; pointer-events: none;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+
+  /* ── Serial number ──
+     TC / Migration certificates are legally numbered; the number needs a labelled
+     home, not a bare string floated at the corner. */
+  .serial-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px; }
+  .serial-box {
+    border: 1px solid #000; padding: 2px 8px;
+    font-size: 8.5pt; font-weight: 700; letter-spacing: 0.02em;
+  }
+  .serial-box .serial-label { font-weight: 600; margin-right: 4px; }
+  .serial-blank { display: inline-block; min-width: 24mm; border-bottom: 1px solid #000; }
 
   /* ── Letterhead ──
      Three columns: logo | identity block | motto. The logo column collapses to
@@ -154,21 +180,28 @@ const BASE_CSS = `
   /* ── spacer row ── */
   .spacer-row { height: 8px !important; }
 
-  /* ── Photo box ── */
-  .photo-frame {
-    width: 28mm; height: 35mm; margin: 0 auto;
-    border: 1.5px solid #000; overflow: hidden;
-    background: #f8f8f8; position: relative; display: block;
+  /* ── Photo box ──
+     35×45mm is the Indian passport-photo standard, so a physically printed
+     photo affixed to the certificate fits the box exactly. Both the filled and
+     empty states are the SAME size, so the layout does not shift when a student
+     has no stored photo. */
+  .photo-frame, .photo-placeholder {
+    width: 35mm; height: 45mm; margin: 0 auto;
+    border: 1px solid #000; display: block; overflow: hidden;
+    background: #fff;
   }
   .photo-frame img {
     width: 100%; height: 100%; object-fit: cover; display: block;
   }
   .photo-placeholder {
-    width: 28mm; height: 35mm; margin: 0 auto;
-    border: 1.5px solid #000; display: flex;
-    align-items: center; justify-content: center;
-    font-size: 7pt; color: #aaa; text-align: center;
-    line-height: 1.3; padding: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7pt; color: #888; text-align: center;
+    line-height: 1.4; padding: 4px; text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .photo-cap {
+    text-align: center; font-size: 6.5pt; color: #555;
+    margin-top: 2px; text-transform: uppercase; letter-spacing: 0.03em;
   }
 
   /* ── Footer ── */
@@ -176,6 +209,37 @@ const BASE_CSS = `
   .footer-table > tbody > tr > td {
     vertical-align: bottom; padding: 6px 4px;
     font-size: 8.5pt; font-weight: 700; text-transform: uppercase;
+  }
+  /* Place + date, bottom-left, as on an issued document */
+  .issue-block { font-size: 8.5pt; font-weight: 600; text-transform: none; }
+  .issue-block .issue-row { margin-bottom: 4px; white-space: nowrap; }
+  .issue-block .issue-label { font-weight: 700; margin-right: 4px; }
+  .issue-inline {
+    display: inline-block; min-width: 30mm;
+    border-bottom: 1px solid #000; padding: 0 3px;
+    font-weight: 700;
+  }
+
+  /* Round seal area — a real circle, so the office stamp has a marked place to
+     land rather than a dashed rectangle that reads as a missing image. */
+  .seal-round {
+    width: 30mm; height: 30mm; margin: 0 auto;
+    border: 1px dashed #999; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7pt; font-weight: 600; color: #999;
+    text-align: center; line-height: 1.3; padding: 4px;
+    text-transform: uppercase; letter-spacing: 0.03em;
+  }
+
+  /* Three-signature row: each cell is rule + printed caption, equal height */
+  .sig-table { margin-top: 4px; }
+  .sig-table > tbody > tr > td {
+    width: 33.33%; vertical-align: bottom; padding: 0 6px;
+    text-align: center;
+  }
+  .sig-cap {
+    font-size: 8pt; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.02em; margin-top: 3px;
   }
   .stamp-box {
     text-align: center; font-size: 8pt; font-weight: 600; color: #555;
@@ -200,9 +264,20 @@ const BASE_CSS = `
      also pad the body or the two stack up. 12mm top/bottom, 14mm sides keeps
      the letterhead clear of the printable edge on a standard office printer. */
   @page { size: A4 portrait; margin: 12mm 14mm; }
+
+  /* Keep the document on ONE sheet.
+     A table that splits across pages orphans a signature row or a lone value
+     line onto a second, otherwise-blank page — which on a numbered legal
+     document reads as a printing fault. Blocks that must never split say so. */
+  .hdr-table, .footer-table, .sig-table, .main-outer, .ack { break-inside: avoid; page-break-inside: avoid; }
+  .fields-table > tbody > tr { break-inside: avoid; page-break-inside: avoid; }
+  .cert-title, .serial-row { break-after: avoid; page-break-after: avoid; }
+
   @media print {
     html, body { width: auto; }
     body { padding: 0; }
+    /* Backgrounds off in the print dialog would otherwise drop the watermark */
+    .watermark { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 `;
 
