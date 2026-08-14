@@ -44,10 +44,20 @@ const examSchema = new mongoose.Schema(
     endDate: {
       type: Date,
     },
+    // Display only. Nothing transitions this — there is no scheduler — so it must
+    // never gate anything; see lib/marksWindow.js.
     status: {
       type: String,
       enum: ['upcoming', 'ongoing', 'completed'],
       default: 'upcoming',
+    },
+    // Admin override for the marks-entry window, for when a school reschedules.
+    // null = follow the dates. Kept separate from `status` precisely because a
+    // schema default cannot be told apart from a deliberate setting.
+    marksEntryOverride: {
+      type: String,
+      enum: ['open', 'closed'],
+      default: null,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

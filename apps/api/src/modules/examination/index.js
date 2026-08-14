@@ -44,4 +44,10 @@ module.exports = {
   get marksValidation() {
     return require('./lib/marksValidation');
   },
+
+  // consumers: people's teacher/admin controllers. The ONLY place the marks-entry
+  // window is decided — keep the decision and its message together.
+  get marksWindow() {
+    return require('./lib/marksWindow');
+  },
 };

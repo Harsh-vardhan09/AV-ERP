@@ -17,6 +17,7 @@ const StudentProfile = require('../models/StudentProfile');
 const ReportTemplate = require('../../reportcards').ReportTemplate;
 const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
 const { refreshExamEvaluationStatus } = require('../../examination').marksReadinessService;
+const { evaluateMarksWindow } = require('../../examination').marksWindow;
 const { User } = require('../../identity');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
@@ -46,25 +47,17 @@ const validateExamContext = async ({ examId, classId, sessionId, schoolId }) =>
     session: sessionId,
     classIds: classId,
   })
-    .select('_id name startDate status evaluationLocked')
+    .select('_id name startDate status evaluationLocked marksEntryOverride')
     .lean();
 
-const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', { dateStyle: 'medium' });
+// Thin wrapper over the shared window rule — the message returned here IS the
+// message the decision produced, so the two can never drift apart again.
+const marksWindowError = (exam) => evaluateMarksWindow(exam).message;
 
-// Marks may only be entered once the exam has actually started and before the
-// exam controller locks evaluation. Returns a message, or null when writes are allowed.
-const marksWindowError = (exam) => {
-  if (exam.evaluationLocked) {
-    return `Evaluation is locked for "${exam.name}". Marks can no longer be changed.`;
-  }
-  const notStarted = exam.startDate && new Date() < new Date(exam.startDate);
-  if (exam.status === 'upcoming' || notStarted) {
-    return exam.startDate
-      ? `"${exam.name}" has not started yet. Marks entry opens on ${fmtDate(exam.startDate)}.`
-      : `"${exam.name}" has not started yet. Marks entry opens once the exam begins.`;
-  }
-  return null;
-};
+// Ship the verdict with the exam so the UI never recomputes it. The client used
+// to re-implement the rule (UploadMarks.jsx), which is a second place for it to
+// go wrong and disagree with the server.
+const withMarksWindow = (exam) => ({ ...exam, marksWindow: evaluateMarksWindow(exam) });
 
 exports.marksWindowError = marksWindowError;
 
@@ -1984,8 +1977,9 @@ exports.getMyExams = async (req, res) => {
         .populate('classIds', 'name numericOrder')
         .populate('createdBy', 'firstName lastName')
         .populate('session', 'name year')
-        .sort({ createdAt: -1 });
-      return res.status(200).json({ success: true, data: exams });
+        .sort({ createdAt: -1 })
+        .lean();
+      return res.status(200).json({ success: true, data: exams.map(withMarksWindow) });
     }
 
     // ── Teacher path: session is required ─────────────────────────────────────
@@ -2014,9 +2008,10 @@ exports.getMyExams = async (req, res) => {
       .populate('classIds', 'name numericOrder')
       .populate('createdBy', 'firstName lastName')
       .populate('session', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    res.status(200).json({ success: true, data: exams });
+    res.status(200).json({ success: true, data: exams.map(withMarksWindow) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

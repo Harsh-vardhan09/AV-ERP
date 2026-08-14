@@ -10,6 +10,7 @@ const {
   ClassTeacherAssignment,
 } = require('../../academics');
 const { Exam, ExamSubjectConfig, MarksModel: Marks, MarksAuditLog } = require('../../examination');
+const { evaluateMarksWindow } = require('../../examination').marksWindow;
 const StudentProfile = require('../models/StudentProfile');
 const TeacherProfile = require('../models/TeacherProfile');
 const { User } = require('../../identity');
@@ -193,12 +194,10 @@ exports.assignTeacherToSubject = async (req, res) => {
       .json({ success: true, message: 'Teacher assigned to subject', data: assignment });
   } catch (error) {
     if (error.code === 11000) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'This teacher is already assigned to this subject in this class/section',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'This teacher is already assigned to this subject in this class/section',
+      });
     }
     res.status(500).json({ success: false, message: error.message });
   }
@@ -257,12 +256,10 @@ exports.assignClassTeacher = async (req, res) => {
     res.status(201).json({ success: true, message: 'Class teacher assigned', data: assignment });
   } catch (error) {
     if (error.code === 11000) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'A class teacher is already assigned to this class/section',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'A class teacher is already assigned to this class/section',
+      });
     }
     res.status(500).json({ success: false, message: error.message });
   }
@@ -578,6 +575,50 @@ exports.deleteExam = async (req, res) => {
   }
 };
 
+// Schools reschedule. When they do, the exam's dates no longer describe when
+// marks may be entered, and an admin needs to say so directly rather than
+// backdating startDate. 'follow-dates' clears the override.
+exports.setMarksEntryOverride = async (req, res) => {
+  try {
+    const { override } = req.body;
+    if (!['open', 'closed', 'follow-dates'].includes(override)) {
+      return res.status(400).json({
+        success: false,
+        message: "override must be 'open', 'closed' or 'follow-dates'",
+      });
+    }
+
+    const exam = await Exam.findOneAndUpdate(
+      { _id: req.params.id, schoolId: req.schoolId },
+      { $set: { marksEntryOverride: override === 'follow-dates' ? null : override } },
+      { new: true, runValidators: true }
+    )
+      .select('name startDate evaluationLocked marksEntryOverride')
+      .lean();
+
+    if (!exam) return res.status(404).json({ success: false, message: 'Exam not found' });
+
+    // evaluationLocked outranks the override — say so instead of implying the
+    // override took effect.
+    const window = evaluateMarksWindow(exam);
+    logger.info(`[Admin] Marks-entry override for "${exam.name}" set to ${override}`, {
+      schoolId: String(req.schoolId),
+      examId: String(exam._id),
+      resultingWindow: window.code,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: window.open
+        ? `Marks entry is now open for "${exam.name}".`
+        : `Marks entry is closed for "${exam.name}". ${window.message}`,
+      data: { ...exam, marksWindow: window },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.startEvaluation = async (req, res) => {
   try {
     const exam = await Exam.findOne({ _id: req.params.id, schoolId: req.schoolId });
@@ -629,12 +670,10 @@ exports.addExamSubject = async (req, res) => {
     res.status(201).json({ success: true, message: 'Subject added to exam', data: config });
   } catch (error) {
     if (error.code === 11000) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'This subject is already configured for this class in this exam',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'This subject is already configured for this class in this exam',
+      });
     }
     res.status(500).json({ success: false, message: error.message });
   }
@@ -1495,12 +1534,10 @@ exports.linkTemplateToExam = async (req, res) => {
         .select('_id name')
         .lean();
       if (!tpl) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message: 'Template not found or does not belong to this school',
-          });
+        return res.status(404).json({
+          success: false,
+          message: 'Template not found or does not belong to this school',
+        });
       }
     }
 

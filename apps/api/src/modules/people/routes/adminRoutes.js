@@ -120,6 +120,13 @@ router.patch(
   validateObjectId('id'),
   admin.completeEvaluation
 );
+// Force the marks-entry window open/closed, or hand it back to the dates
+router.patch(
+  '/exam/:id/marks-window',
+  writeGuard,
+  validateObjectId('id'),
+  admin.setMarksEntryOverride
+);
 // Link / unlink a report template to an exam (PATCH /exam/:id/template)
 router.patch('/exam/:id/template', writeGuard, validateObjectId('id'), admin.linkTemplateToExam);
 

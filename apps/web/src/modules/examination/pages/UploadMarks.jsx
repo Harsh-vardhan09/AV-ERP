@@ -682,14 +682,15 @@ const UploadMarks = () => {
     selectedExam && selectedClass && selectedSection && selectedSubject;
   const selectedExamObj = exams.find((e) => e._id === selectedExam);
 
-  // Mirrors the server guard in teacher.uploadMarks — the server stays authoritative,
-  // this only keeps the UI from offering a write it will reject.
-  const marksLocked =
-    !!selectedExamObj &&
-    (selectedExamObj.status === 'upcoming' ||
-      (selectedExamObj.startDate && new Date() < new Date(selectedExamObj.startDate)));
-  const marksOpenOn = selectedExamObj?.startDate
-    ? new Date(selectedExamObj.startDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+  // The server ships the verdict on each exam (marksWindow). Do NOT recompute it
+  // here: this used to mirror the server expression, and when the rule changed on
+  // one side the button and the API disagreed. Absent field (older API) = unlocked,
+  // and the server still rejects the write with the real reason.
+  const marksWindow = selectedExamObj?.marksWindow;
+  const marksLocked = !!marksWindow && marksWindow.open === false;
+  const marksLockReason = marksWindow?.message || null;
+  const marksOpenOn = marksWindow?.opensOn
+    ? new Date(marksWindow.opensOn).toLocaleDateString('en-IN', { dateStyle: 'medium' })
     : null;
 
   // ─── Error Handling ───
@@ -940,8 +941,7 @@ const UploadMarks = () => {
 
         {marksLocked && (
           <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            🔒 <strong>{selectedExamObj.name}</strong> has not started yet.{' '}
-            {marksOpenOn ? `Marks entry opens on ${marksOpenOn}.` : 'Marks entry opens once the exam begins.'}
+            🔒 {marksLockReason}
           </div>
         )}
       </div>
@@ -1151,11 +1151,11 @@ const UploadMarks = () => {
                   <button
                     type="submit"
                     disabled={uploading || marksLocked}
-                    title={marksLocked && marksOpenOn ? `Opens on ${marksOpenOn}` : undefined}
+                    title={marksLockReason || undefined}
                     className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center"
                   >
                     {marksLocked ? (
-                      marksOpenOn ? `Opens on ${marksOpenOn}` : 'Exam not started'
+                      marksOpenOn ? `Opens on ${marksOpenOn}` : 'Marks entry closed'
                     ) : uploading ? (
                       <>
                         <svg
@@ -1244,11 +1244,11 @@ const UploadMarks = () => {
             <button
               onClick={handleExcelUpload}
               disabled={uploadingExcel || marksLocked}
-              title={marksLocked && marksOpenOn ? `Opens on ${marksOpenOn}` : undefined}
+              title={marksLockReason || undefined}
               className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center"
             >
               {marksLocked ? (
-                marksOpenOn ? `Opens on ${marksOpenOn}` : 'Exam not started'
+                marksOpenOn ? `Opens on ${marksOpenOn}` : 'Marks entry closed'
               ) : uploadingExcel ? (
                 <>
                   <svg
