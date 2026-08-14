@@ -66,18 +66,19 @@ const BASE_CSS = `
   .sheet { position: relative; }
   .sheet-inner { position: relative; z-index: 1; }
 
-  /* ── Watermark ──
-     The crest at very low opacity behind the body. Kept at 0.05 and greyscaled:
-     anything stronger competes with the value lines and hurts legibility on a
-     laser printer. print-color-adjust forces it to survive "background graphics
-     off" in the print dialog, which would otherwise drop it silently. */
-  .watermark {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 110mm; opacity: 0.05; filter: grayscale(100%);
-    z-index: 0; pointer-events: none;
-    -webkit-print-color-adjust: exact; print-color-adjust: exact;
-  }
+  /* ── Watermark: deliberately NOT implemented ──
+     A crest watermark behind the body was tried and removed. The logo is an
+     arbitrary upload, and only a transparent PNG watermarks cleanly:
+       - opacity alone leaves a school that uploaded a JPEG with a visible grey
+         RECTANGLE across the particulars;
+       - mix-blend-mode:multiply fixes a WHITE background only, so a photographic
+         logo still prints as a block over the text.
+     Both were verified against a photographic logo and both hurt legibility, so
+     the feature is omitted rather than shipped conditionally. Revisit only if
+     logo uploads are constrained to transparent PNGs, at which point
+     opacity:.07 plus filter:grayscale(1) on an absolutely-positioned img inside
+     .sheet is enough. (No backticks in this comment — BASE_CSS is a template
+     literal and a stray backtick terminates it.) */
 
   /* ── Serial number ──
      TC / Migration certificates are legally numbered; the number needs a labelled
@@ -429,18 +430,48 @@ function renderFooter(sections = {}, data = {}, opts = {}, schoolSnapshot = {}) 
     ? `<div class="sig-slot"><img class="sig-img" src="${esc(sigUrl)}" alt=""></div>`
     : `<div class="sig-slot">&nbsp;</div>`;
 
+  // Place of issue: the school's city when known, otherwise a printed blank for
+  // the office to complete by hand — never an empty gap.
+  const place = schoolSnapshot.cityLine || schoolSnapshot.addressLine || '';
+
   return `
     <table class="footer-table"><tbody><tr>
-      <td style="width:28%">
-        <div style="font-size:8pt;font-weight:700;margin-bottom:2px">${dateLabel}</div>
-        <div class="value-line">${esc(dateVal)}&nbsp;</div>
+      <td style="width:34%">
+        <div class="issue-block">
+          <div class="issue-row">
+            <span class="issue-label">Place:</span>
+            <span class="issue-inline">${esc(place)}&nbsp;</span>
+          </div>
+          <div class="issue-row">
+            <span class="issue-label">${dateLabel}:</span>
+            <span class="issue-inline">${esc(dateVal)}&nbsp;</span>
+          </div>
+        </div>
       </td>
-      <td style="width:38%;text-align:center">
-        <div class="stamp-box">Principal's stamp / seal</div>
+      <td style="width:32%;text-align:center">
+        <div class="seal-round">School<br>Seal</div>
       </td>
-      <td style="width:34%;text-align:center">
+      <td style="width:34%"></td>
+    </tr></tbody></table>
+
+    <!-- Signatures. A receiving institution expects the issuing school's internal
+         chain (prepared → checked → approved), not the head's signature alone.
+         Only the last cell can be pre-signed, from the stored authority
+         signature; the other two are always hand-signed. This is the ONLY
+         signature block — the head used to be captioned here and again in the
+         row above, which printed the same title twice. -->
+    <table class="sig-table"><tbody><tr>
+      <td>
+        <div class="sig-slot">&nbsp;</div>
+        <div class="sig-cap">Class Teacher</div>
+      </td>
+      <td>
+        <div class="sig-slot">&nbsp;</div>
+        <div class="sig-cap">Checked By</div>
+      </td>
+      <td>
         ${sigSlot}
-        <div style="font-size:8pt;font-weight:700;margin-top:2px">${sigLabel}</div>
+        <div class="sig-cap">${sigLabel}</div>
       </td>
     </tr></tbody></table>`;
 }
@@ -484,16 +515,20 @@ function renderAcknowledgement(data) {
 
 // PHOTO BLOCK
 function renderPhoto(photoUrl) {
+  // Filled and empty states are the same 35×45mm box, so the page does not
+  // reflow depending on whether a student has a stored photo.
   if (photoUrl && typeof photoUrl === 'string' && photoUrl.trim()) {
     return `
       <div class="photo-frame">
-        <img src="${esc(photoUrl.trim())}" alt="Student photo">
-      </div>`;
+        <img src="${esc(photoUrl.trim())}" alt="">
+      </div>
+      <div class="photo-cap">Student Photograph</div>`;
   }
   return `
     <div class="photo-placeholder">
-      Affix<br>Passport<br>Size<br>Photo
-    </div>`;
+      Affix<br>Passport<br>Size<br>Photograph
+    </div>
+    <div class="photo-cap">35 &times; 45 mm</div>`;
 }
 
 // MAIN RENDER FUNCTION
@@ -518,9 +553,17 @@ function renderCertificateHtml({ layout, sections = {}, data = {}, schoolSnapsho
 
   const isMigration = type === 'MIGRATION';
 
-  const certNoHtml = certNumber
-    ? `<div class="cert-no">Cert. No.: ${esc(certNumber)}</div>`
-    : '';
+  // Serial number. These are legally numbered documents, so the box is printed
+  // whether or not a number has been assigned — an unnumbered certificate gets a
+  // ruled blank for the office to fill in by hand, not a missing field.
+  const serialLabel = isMigration ? 'Migration No.' : 'TC No.';
+  const certNoHtml = `
+    <div class="serial-row">
+      <div class="serial-box">
+        <span class="serial-label">${serialLabel}</span>
+        ${certNumber ? esc(certNumber) : '<span class="serial-blank">&nbsp;</span>'}
+      </div>
+    </div>`;
 
   const titleHtml = `<div class="cert-title">${isMigration ? 'Migration Certificate' : 'Transfer Certificate'}</div>`;
 
@@ -535,7 +578,9 @@ function renderCertificateHtml({ layout, sections = {}, data = {}, schoolSnapsho
   const footerHtml   = renderFooter(sections, data, { type }, schoolSnapshot);
   const ackHtml      = !isMigration ? renderAcknowledgement(data) : '';
 
-  const sheetStyle = isMigration ? 'border:3px double #000;' : '';
+  // Both certificate types now carry the double rule — a bordered sheet is what
+  // makes a certificate read as a document rather than a printout.
+  const sheetStyle = 'border:3px double #000;padding:6mm;';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -545,7 +590,9 @@ function renderCertificateHtml({ layout, sections = {}, data = {}, schoolSnapsho
   <title>${isMigration ? 'Migration' : 'Transfer'} Certificate — ${esc(certNumber)}</title>
   <style>${BASE_CSS}</style>
 </head>
-<body style="${sheetStyle}">
+<body>
+ <div class="sheet" style="${sheetStyle}">
+  <div class="sheet-inner">
   ${certNoHtml}
   ${headerHtml}
   ${titleHtml}
@@ -564,6 +611,8 @@ function renderCertificateHtml({ layout, sections = {}, data = {}, schoolSnapsho
 
   ${footerHtml}
   ${ackHtml}
+  </div>
+ </div>
 </body>
 </html>`;
 }
