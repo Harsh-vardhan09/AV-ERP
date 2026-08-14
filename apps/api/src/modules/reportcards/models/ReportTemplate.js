@@ -28,35 +28,43 @@ const reportTemplateSchema = new mongoose.Schema(
       default: '',
     },
     // Auto-extracted fields from template (legacy — simple list)
-    extractedFields: [{
-      name: String,
-      type: {
-        type: String,
-        // Must cover every type TemplateFieldExtractor.extractFields() emits.
-        // 'hyphenated' ({{student-name}}, {{school-logo}}) and 'bracket_access'
-        // ({{subjects[0].total}}) were missing, so saving any template that used
-        // those token styles failed validation with a 500.
-        enum: ['simple', 'object', 'array', 'array_item', 'hyphenated', 'bracket_access'],
-        default: 'simple',
+    extractedFields: [
+      {
+        name: String,
+        type: {
+          type: String,
+          // Must cover every type TemplateFieldExtractor.extractFields() emits.
+          // 'hyphenated' ({{student-name}}, {{school-logo}}) and 'bracket_access'
+          // ({{subjects[0].total}}) were missing, so saving any template that used
+          // those token styles failed validation with a 500.
+          enum: ['simple', 'object', 'array', 'array_item', 'hyphenated', 'bracket_access'],
+          default: 'simple',
+        },
+        parentArray: String,
       },
-      parentArray: String,
-    }],
+    ],
 
     // Template-driven schema (NEW)
     // Populated automatically on upload via TemplateFieldExtractor.extractAndClassify()
     templateSchema: {
-      fields: [{
-        name:       { type: String },          // raw name: "math_theory"
-        normalized: { type: String },          // "maththeory"
-        label:      { type: String },          // "Math Theory"
-        category:   { type: String, enum: ['marks', 'meta', 'attendance', 'derived', 'other'], default: 'other' },
-        subject:    { type: String, default: '' },   // "math" (from prefix)
-        component:  { type: String, default: '' },   // "theory" (from suffix)
-        isLoop:     { type: Boolean, default: false }, // inside {{#subjects}}
-      }],
-      marksFields:  [String],   // names of all marks-category fields
-      metaFields:   [String],   // names of all meta-category fields
-      extractedAt:  { type: Date },
+      fields: [
+        {
+          name: { type: String }, // raw name: "math_theory"
+          normalized: { type: String }, // "maththeory"
+          label: { type: String }, // "Math Theory"
+          category: {
+            type: String,
+            enum: ['marks', 'meta', 'attendance', 'derived', 'other'],
+            default: 'other',
+          },
+          subject: { type: String, default: '' }, // "math" (from prefix)
+          component: { type: String, default: '' }, // "theory" (from suffix)
+          isLoop: { type: Boolean, default: false }, // inside {{#subjects}}
+        },
+      ],
+      marksFields: [String], // names of all marks-category fields
+      metaFields: [String], // names of all meta-category fields
+      extractedAt: { type: Date },
     },
     // Field mappings (template field → database field)
     fieldMappings: {
@@ -100,13 +108,26 @@ const reportTemplateSchema = new mongoose.Schema(
       default: 'custom',
     },
     // For which exam types this template is applicable
-    applicableExams: [{
-      type: String,
-      trim: true,
-    }],
+    applicableExams: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
+    },
+    // Soft-delete flag. Four call sites already filter on `isDeleted: { $ne: true }`
+    // (globalTemplateController list/get/update, reportTemplateController list) and
+    // deleteGlobalTemplate sets it — but the path was never declared here. Under
+    // Mongoose strict mode the assignment was silently discarded, so a deleted
+    // template kept its isDeleted-less shape and `$ne: true` matched it forever:
+    // the Super Admin pressed Delete and the template stayed in the list.
+    isDeleted: {
+      type: Boolean,
+      default: false,
       index: true,
     },
     isDefault: {
@@ -152,10 +173,12 @@ const reportTemplateSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
-    applicableClassIds: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Class',
-    }],
+    applicableClassIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Class',
+      },
+    ],
     // Usage statistics
     usageCount: {
       type: Number,
@@ -184,7 +207,9 @@ const reportTemplateSchema = new mongoose.Schema(
       ref: 'School',
       default: null,
       required: [
-        function () { return !this.isGlobal; },
+        function () {
+          return !this.isGlobal;
+        },
         'School context is required for a non-global template',
       ],
       index: true,
@@ -211,11 +236,13 @@ reportTemplateSchema.index({ schoolId: 1, classRangeFrom: 1, classRangeTo: 1, is
 reportTemplateSchema.index({ schoolId: 1, templateStatus: 1, isActive: 1 });
 // Global template lookups (school admins browsing the shared gallery)
 reportTemplateSchema.index({ isGlobal: 1, isActive: 1, templateType: 1 });
+// The Super Admin gallery query: isGlobal + not-soft-deleted
+reportTemplateSchema.index({ isGlobal: 1, isDeleted: 1 });
 
 // Ensure only one default template per school per (type + class range).
 // Class-specific groups (e.g., Class 1-5 and Class 9-10) can each have their
 // own default without conflicting with each other.
-reportTemplateSchema.pre('save', async function(next) {
+reportTemplateSchema.pre('save', async function (next) {
   if (this.isDefault) {
     const rangeFilter = {
       schoolId: this.schoolId,
@@ -226,11 +253,11 @@ reportTemplateSchema.pre('save', async function(next) {
     // null classRangeFrom/To is treated as "global" — a separate bucket.
     if (this.classRangeFrom !== null && this.classRangeTo !== null) {
       rangeFilter.classRangeFrom = this.classRangeFrom;
-      rangeFilter.classRangeTo   = this.classRangeTo;
+      rangeFilter.classRangeTo = this.classRangeTo;
     } else {
       // Global template — only clear other global defaults (no range set)
       rangeFilter.classRangeFrom = null;
-      rangeFilter.classRangeTo   = null;
+      rangeFilter.classRangeTo = null;
     }
     await this.constructor.updateMany(rangeFilter, { isDefault: false });
   }

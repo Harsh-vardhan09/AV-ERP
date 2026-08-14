@@ -9,6 +9,7 @@ import {
   useExtractGlobalTemplateFieldsMutation,
   usePreviewGlobalTemplateMutation,
 } from '../api/superAdminApi';
+import { STARTER_TEMPLATE } from '../lib/starterReportTemplate';
 
 /**
  * Global report card template authoring — SUPER ADMIN ONLY.
@@ -138,7 +139,16 @@ export default function SuperAdminGlobalTemplates() {
             <h1>Global Report Templates</h1>
             <p>Authored once, shared by every school. Schools adopt one — they cannot edit.</p>
           </div>
-          <button className="sa-btn sa-btn-primary" onClick={() => setEditingId('new')}>
+          <button
+            className="sa-btn sa-btn-primary"
+            onClick={() => {
+              // Start from the worked example rather than an empty box — the
+              // placeholder names are not guessable, and a blank editor is where
+              // hand-typed tokens that never resolve come from.
+              setForm({ ...BLANK, htmlContent: STARTER_TEMPLATE });
+              setEditingId('new');
+            }}
+          >
             + New Template
           </button>
         </div>
@@ -238,7 +248,26 @@ export default function SuperAdminGlobalTemplates() {
           </label>
 
           <label className="sa-field">
-            <span>HTML Content * <em>(inline CSS only — no separate stylesheet)</em></span>
+            <span>
+              HTML Content * <em>(inline CSS only — no separate stylesheet)</em>
+              <button
+                type="button"
+                className="sa-btn sa-btn-link"
+                style={{ marginLeft: 8 }}
+                onClick={() => {
+                  if (
+                    form.htmlContent.trim() &&
+                    !window.confirm('Replace the current HTML with the example template?')
+                  ) {
+                    return;
+                  }
+                  setForm((f) => ({ ...f, htmlContent: STARTER_TEMPLATE }));
+                  toast.success('Example template loaded — every placeholder in it resolves.');
+                }}
+              >
+                Load example
+              </button>
+            </span>
             <textarea
               className="sa-code"
               rows={22}
