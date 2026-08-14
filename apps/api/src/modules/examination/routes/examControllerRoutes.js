@@ -19,6 +19,7 @@ const validateObjectId = require('../../../core/http/validateObjectId.js');
 const { adminController: admin, teacherController: teacher } = require('../../people');
 const { sessionController, classController, sectionController } = require('../../academics');
 const uploadMemory = require('../../../core/http/upload.memory.js');
+const examController = require('../controllers/examController');
 
 // ── Security guard ────────────────────────────────────────────────────────────
 router.use(varifyToken, authorize('exam_controller'));
@@ -48,8 +49,12 @@ router.get('/marks-audit-log', admin.getMarksAuditLog);
 router.post('/exam', admin.createExam);
 router.get('/exams', admin.getAllExams);
 router.get('/exam/:id', validateObjectId('id'), admin.getExam);
-router.put('/exam/:id', validateObjectId('id'), admin.updateExam);
-router.delete('/exam/:id', validateObjectId('id'), admin.deleteExam);
+router.put('/exam/:id', validateObjectId('id'), examController.updateExam);
+router.delete('/exam/:id', validateObjectId('id'), examController.deleteExam);
+router.patch('/exam/:id/archive', validateObjectId('id'), examController.archiveExam);
+router.patch('/exam/:id/restore', validateObjectId('id'), examController.restoreExam);
+router.patch('/exam/:id/unlock', validateObjectId('id'), examController.unlockExam);
+router.get('/exam-audit-log', examController.getExamAuditLog);
 router.patch('/exam/:id/start-evaluation', validateObjectId('id'), admin.startEvaluation);
 router.patch('/exam/:id/complete-evaluation', validateObjectId('id'), admin.completeEvaluation);
 router.patch('/exam/:id/template', validateObjectId('id'), admin.linkTemplateToExam);

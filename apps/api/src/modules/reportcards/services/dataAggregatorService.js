@@ -392,6 +392,8 @@ class DataAggregatorService {
       $or: [{ classIds: classId }, { classId: classId }],
       session: sessionId,
       schoolId,
+      // Archiving an exam takes its marks off newly generated report cards
+      isArchived: { $ne: true },
     })
       .select('name type startDate')
       .lean();

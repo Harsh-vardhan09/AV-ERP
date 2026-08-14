@@ -5,6 +5,8 @@ const { authorize } = require('../../../core/security/roleMiddleware.js');
 const teacher = require('../controllers/teacherController');
 const upload = require('../../../core/http/upload.disk.js');
 const uploadMemory = require('../../../core/http/upload.memory.js');
+const validateObjectId = require('../../../core/http/validateObjectId.js');
+const { examController } = require('../../examination');
 
 // All teacher routes are protected
 router.use(varifyToken, authorize('teacher'));
@@ -52,6 +54,10 @@ router.get('/template', teacher.getTemplateForExam);
 // Teacher test creation
 router.post('/test', teacher.createTeacherTest);
 router.get('/my-exams', teacher.getMyExams);
+// Teachers could create a test but never correct or remove it. The service
+// restricts them to their own tests, before marks entry opens, with no marks.
+router.put('/test/:id', validateObjectId('id'), examController.updateExam);
+router.delete('/test/:id', validateObjectId('id'), examController.deleteExam);
 
 // Class teacher specific
 router.get('/my-students', teacher.getMyClassStudents);

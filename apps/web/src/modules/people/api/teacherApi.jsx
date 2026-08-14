@@ -172,6 +172,15 @@ export const teacherApi = createApi({
       },
       providesTags: ['Exam'],
     }),
+    // Server restricts these to the teacher's own tests, before marks entry opens
+    updateTeacherTest: builder.mutation({
+      query: ({ id, ...data }) => ({ url: `/test/${id}`, method: 'PUT', body: data }),
+      invalidatesTags: ['Exam', 'Marks'],
+    }),
+    deleteTeacherTest: builder.mutation({
+      query: (id) => ({ url: `/test/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Exam', 'Marks'],
+    }),
 
     // Class teacher features
     getMyClassStudents: builder.query({
@@ -235,6 +244,7 @@ export const {
   useUploadMarksMutation, useUploadMarksExcelMutation, useGetMarksQuery,
   useGetExamTemplateQuery, useGetTemplateFieldsQuery,
   useCreateTeacherTestMutation, useGetMyExamsQuery,
+  useUpdateTeacherTestMutation, useDeleteTeacherTestMutation,
   useGetMyClassStudentsQuery, useGetClassMarksQuery,
   useGetNotSubmittedStudentsQuery,
   useGetStudentPerformanceQuery,

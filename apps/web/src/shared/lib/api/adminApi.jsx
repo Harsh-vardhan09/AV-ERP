@@ -208,8 +208,29 @@ export const adminApi = createApi({
       query: ({ id, ...data }) => ({ url: `/exam/${id}`, method: 'PUT', body: data }),
       invalidatesTags: ['Exam'],
     }),
+    // confirmDeleteMarks must equal the server's current count — the server
+    // refuses a bare delete when marks exist rather than destroying them.
     deleteExam: builder.mutation({
-      query: (id) => ({ url: `/exam/${id}`, method: 'DELETE' }),
+      query: (arg) => {
+        const { id, confirmDeleteMarks } = typeof arg === 'object' ? arg : { id: arg };
+        return {
+          url: `/exam/${id}`,
+          method: 'DELETE',
+          params: confirmDeleteMarks != null ? { confirmDeleteMarks } : undefined,
+        };
+      },
+      invalidatesTags: ['Exam', 'Marks'],
+    }),
+    archiveExam: builder.mutation({
+      query: (id) => ({ url: `/exam/${id}/archive`, method: 'PATCH' }),
+      invalidatesTags: ['Exam', 'Marks'],
+    }),
+    restoreExam: builder.mutation({
+      query: (id) => ({ url: `/exam/${id}/restore`, method: 'PATCH' }),
+      invalidatesTags: ['Exam', 'Marks'],
+    }),
+    unlockExam: builder.mutation({
+      query: (id) => ({ url: `/exam/${id}/unlock`, method: 'PATCH' }),
       invalidatesTags: ['Exam'],
     }),
     startExamEvaluation: builder.mutation({
@@ -355,6 +376,7 @@ export const {
   useAssignTeacherToSubjectMutation, useGetTeacherAssignmentsQuery, useRemoveTeacherAssignmentMutation, useUpdateTeacherAssignmentMutation,
   useAssignClassTeacherMutation, useGetClassTeachersQuery, useRemoveClassTeacherMutation, useUpdateClassTeacherMutation,
   useCreateExamMutation, useGetExamsQuery, useGetExamQuery, useUpdateExamMutation, useDeleteExamMutation, useStartExamEvaluationMutation, useCompleteExamEvaluationMutation,
+  useArchiveExamMutation, useRestoreExamMutation, useUnlockExamMutation,
   useLinkTemplateToExamMutation, useGetAdminTemplatesQuery,
   useAddExamSubjectMutation, useGetExamSubjectsQuery, useUpdateExamSubjectMutation, useRemoveExamSubjectMutation,
   useGetMarksAuditLogQuery,

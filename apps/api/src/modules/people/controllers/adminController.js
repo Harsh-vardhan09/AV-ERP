@@ -494,7 +494,8 @@ exports.getAllExams = async (req, res) => {
     if (!session) {
       return res.status(400).json({ success: false, message: 'session is required' });
     }
-    const filter = { schoolId: req.schoolId, session };
+    // $ne: true, not false — rows created before isArchived existed have no field
+    const filter = { schoolId: req.schoolId, session, isArchived: { $ne: true } };
     // classId is optional — when provided, filter to exams that include that class
     if (classId) filter.classIds = classId;
     // excludeCompleted: when true, filter out exams with evaluationStatus = 'completed'
@@ -1400,6 +1401,7 @@ exports.getAdminTeacherDetail = async (req, res) => {
     const examFilter = {
       createdBy: teacher.userId,
       schoolId: req.schoolId,
+      isArchived: { $ne: true },
     };
     if (req.query.session) examFilter.session = req.query.session;
     if (req.query.classId) examFilter.classIds = req.query.classId;

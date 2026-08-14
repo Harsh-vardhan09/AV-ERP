@@ -4,6 +4,7 @@ import {
   useGetExamSubjectsQuery, useRemoveExamSubjectMutation, useUpdateExamSubjectMutation,
   useGetClassesQuery, useGetClassSubjectsQuery, useGetActiveSessionQuery,
   useLinkTemplateToExamMutation, useGetAdminTemplatesQuery,
+  useArchiveExamMutation, useRestoreExamMutation, useUnlockExamMutation,
 } from '@shared/lib/api/adminApi';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import toast from 'react-hot-toast';
@@ -350,6 +351,9 @@ const ExamManager = () => {
   const [removeExamSubject] = useRemoveExamSubjectMutation();
   const [updateExamSubject, { isLoading: updatingExamSubject }] = useUpdateExamSubjectMutation();
   const [linkTemplate, { isLoading: linkingTemplate }] = useLinkTemplateToExamMutation();
+  const [archiveExam] = useArchiveExamMutation();
+  const [restoreExam] = useRestoreExamMutation();
+  const [unlockExam] = useUnlockExamMutation();
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -450,17 +454,80 @@ const ExamManager = () => {
     } catch (err) { toast.error(err?.data?.message || 'Error'); }
   };
 
+  // The server refuses a bare delete when marks exist and replies 409 with the
+  // count. Only then do we offer the two real choices — archive (keeps the marks)
+  // or a destructive delete that names the number.
   const handleDelete = (exam) => {
     setConfirmModal({
       open: true, title: 'Delete Exam',
-      message: `Delete "${exam.name}"? All subject configs, marks, and audit logs will also be deleted.`,
+      message: `Delete "${exam.name}"? Its subject configs will also be removed.`,
       onConfirm: async () => {
+        setConfirmModal({ open: false });
         try {
-          await deleteExam(exam._id).unwrap();
+          await deleteExam({ id: exam._id }).unwrap();
           toast.success('Exam deleted');
           if (selectedExam === exam._id) setSelectedExam(null);
-        } catch (err) { toast.error(err?.data?.message || 'Error'); }
+        } catch (err) {
+          const marksAffected = err?.data?.details?.marksAffected;
+          if (err?.status === 409 && marksAffected > 0) {
+            promptMarksDelete(exam, marksAffected);
+            return;
+          }
+          toast.error(err?.data?.message || 'Error');
+        }
+      }
+    });
+  };
+
+  const promptMarksDelete = (exam, marksAffected) => {
+    setConfirmModal({
+      open: true,
+      title: `Delete ${marksAffected} mark(s)?`,
+      message:
+        `"${exam.name}" has ${marksAffected} mark(s) entered. Deleting the exam destroys them and ` +
+        `their audit trail permanently — this cannot be undone. Archive it instead to hide the exam ` +
+        `and keep the marks.`,
+      confirmLabel: `Delete exam and ${marksAffected} mark(s)`,
+      onConfirm: async () => {
         setConfirmModal({ open: false });
+        try {
+          await deleteExam({ id: exam._id, confirmDeleteMarks: marksAffected }).unwrap();
+          toast.success(`Exam and ${marksAffected} mark(s) deleted`);
+          if (selectedExam === exam._id) setSelectedExam(null);
+        } catch (err) { toast.error(err?.data?.message || 'Error'); }
+      },
+      onAlternative: async () => {
+        setConfirmModal({ open: false });
+        try {
+          await archiveExam(exam._id).unwrap();
+          toast.success('Exam archived — marks kept');
+          if (selectedExam === exam._id) setSelectedExam(null);
+        } catch (err) { toast.error(err?.data?.message || 'Error'); }
+      },
+      alternativeLabel: 'Archive instead',
+    });
+  };
+
+  const handleArchive = async (exam) => {
+    try {
+      await archiveExam(exam._id).unwrap();
+      toast.success('Exam archived');
+      if (selectedExam === exam._id) setSelectedExam(null);
+    } catch (err) { toast.error(err?.data?.message || 'Error'); }
+  };
+
+  // completeEvaluation sets evaluationLocked and, outside OASES, nothing used to
+  // clear it — the exam became permanently uneditable and undeletable.
+  const handleUnlock = (exam) => {
+    setConfirmModal({
+      open: true, title: 'Unlock Evaluation',
+      message: `Reopen "${exam.name}" for edits and marks entry? Evaluation goes back to in-progress.`,
+      onConfirm: async () => {
+        setConfirmModal({ open: false });
+        try {
+          await unlockExam(exam._id).unwrap();
+          toast.success('Evaluation unlocked');
+        } catch (err) { toast.error(err?.data?.message || 'Error'); }
       }
     });
   };
@@ -486,7 +553,14 @@ const ExamManager = () => {
 
   const handleSaveEditExam = async (data) => {
     try {
-      await updateExam({ id: editingExam._id, ...data }).unwrap();
+      // '' from an empty date input means "no date", not "cast this to null" —
+      // the server rejects '' outright so a blank box cannot silently wipe a date.
+      const payload = {
+        ...data,
+        startDate: data.startDate || null,
+        endDate: data.endDate || null,
+      };
+      await updateExam({ id: editingExam._id, ...payload }).unwrap();
       toast.success('Exam updated');
       setEditingExam(null);
     } catch (err) { toast.error(err?.data?.message || 'Failed to update exam'); }
@@ -725,10 +799,18 @@ const ExamManager = () => {
                   {!exam.evaluationLocked ? (
                     <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                       <button onClick={(e) => handleEditExam(e, exam)} className="text-indigo-500 text-xs hover:text-indigo-700 font-medium">Edit</button>
+                      <button onClick={(e) => { e.stopPropagation(); handleArchive(exam); }} className="text-amber-600 text-xs hover:text-amber-700" title="Hide this exam but keep its marks">Archive</button>
                       <button onClick={(e) => { e.stopPropagation(); handleDelete(exam); }} className="text-red-500 text-xs hover:text-red-700">Delete</button>
                     </div>
                   ) : (
-                    <span className="text-gray-400 text-xs ml-2 cursor-not-allowed" title="Locked: Evaluation Completed">Locked</span>
+                    // Used to be a dead "Locked" label with no way out.
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleUnlock(exam); }}
+                      className="text-amber-600 text-xs hover:text-amber-700 font-medium ml-2 flex-shrink-0"
+                      title="Evaluation completed — unlock to edit, delete, or reopen marks entry"
+                    >
+                      🔒 Unlock
+                    </button>
                   )}
                 </div>
               </div>
@@ -814,6 +896,8 @@ const ExamManager = () => {
 
       <ConfirmModal
         isOpen={confirmModal.open} title={confirmModal.title} message={confirmModal.message}
+        confirmLabel={confirmModal.confirmLabel}
+        onAlternative={confirmModal.onAlternative} alternativeLabel={confirmModal.alternativeLabel}
         onConfirm={confirmModal.onConfirm} onCancel={() => setConfirmModal({ open: false })}
       />
     </div>

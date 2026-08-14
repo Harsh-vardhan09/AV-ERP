@@ -1,6 +1,13 @@
 import React from 'react';
 
-const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmLabel, variant }) => {
+// onAlternative/alternativeLabel are optional: they add a third, non-destructive
+// button for cases where refusing outright is wrong but so is the destructive
+// action (e.g. "archive instead" next to "delete N marks"). Omit both and the
+// modal renders exactly as before.
+const ConfirmModal = ({
+  isOpen, title, message, onConfirm, onCancel, confirmLabel, variant,
+  onAlternative, alternativeLabel,
+}) => {
   if (!isOpen) return null;
 
   const isPrimary = variant === 'primary';
@@ -30,7 +37,16 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmLabe
         <p className="text-sm text-gray-600 text-center mb-6">{message || 'Are you sure you want to delete this? This action cannot be undone.'}</p>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className={`flex gap-3 ${onAlternative ? 'flex-col' : ''}`}>
+          {onAlternative && (
+            <button
+              onClick={onAlternative}
+              className="w-full px-4 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors"
+            >
+              {alternativeLabel || 'Alternative'}
+            </button>
+          )}
+          <div className="flex gap-3">
           <button
             onClick={onCancel}
             className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
@@ -45,6 +61,7 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmLabe
           >
             {confirmLabel || 'Delete'}
           </button>
+          </div>
         </div>
       </div>
 

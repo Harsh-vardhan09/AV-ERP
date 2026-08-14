@@ -78,6 +78,22 @@ const examSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Soft delete. An exam carrying marks must never be hard-deleted by default:
+    // deleting it cascades Marks and MarksAuditLog, and those rows cannot be
+    // reconstructed. Archived exams stay resolvable by id so already-generated
+    // report cards keep rendering; they only drop out of the pick-lists.
+    isArchived: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    archivedAt: { type: Date, default: null },
+    archivedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+
     // Multi-tenancy
     schoolId: {
       type: mongoose.Schema.Types.ObjectId,

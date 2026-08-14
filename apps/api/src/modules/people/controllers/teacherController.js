@@ -1229,7 +1229,7 @@ exports.getMyExams = async (req, res) => {
     // ── EXAM_CONTROLLER: MARKS_ALL_ACCESS — skip assignment filter, see all school exams ──
     const hasAllAccess = req.user.role === 'exam_controller';
 
-    let filter = { schoolId: req.schoolId };
+    let filter = { schoolId: req.schoolId, isArchived: { $ne: true } };
     if (session) filter.session = toObjectId(session);
 
     if (!hasAllAccess) {
@@ -1971,7 +1971,7 @@ exports.getMyExams = async (req, res) => {
     // ── EXAM_CONTROLLER: MARKS_ALL_ACCESS — return ALL school exams ────────────
     // EC has no TeacherSubjectAssignment rows, so we skip that filter entirely
     if (req.user.role === 'exam_controller') {
-      const filter = { schoolId: req.schoolId };
+      const filter = { schoolId: req.schoolId, isArchived: { $ne: true } };
       if (session) filter.session = session;
       const exams = await Exam.find(filter)
         .populate('classIds', 'name numericOrder')
@@ -2004,6 +2004,7 @@ exports.getMyExams = async (req, res) => {
       schoolId: req.schoolId,
       session,
       classIds: { $in: myClassIds },
+      isArchived: { $ne: true },
     })
       .populate('classIds', 'name numericOrder')
       .populate('createdBy', 'firstName lastName')

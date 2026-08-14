@@ -186,6 +186,7 @@ const fetchClassExams = async (classId, sessionId, schoolId) => {
     classIds: classId,
     session: sessionId,
     schoolId,
+    isArchived: { $ne: true },
   })
     .select('name type startDate createdAt evaluationStatus evaluationLocked')
     .sort({ startDate: 1, createdAt: 1, name: 1 });
@@ -674,6 +675,7 @@ const ensureAllExamsEvaluated = async (classId, sessionId, schoolId) => {
     classIds: classId,
     session: sessionId,
     schoolId,
+    isArchived: { $ne: true },
   }).select('_id evaluationStatus');
 
   return exams.every((exam) => exam.evaluationStatus === 'completed');
@@ -751,12 +753,10 @@ exports.getReportCard = async (req, res) => {
         req.schoolId
       );
       if (!allowed) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: 'You are not assigned as class teacher for this student.',
-          });
+        return res.status(403).json({
+          success: false,
+          message: 'You are not assigned as class teacher for this student.',
+        });
       }
     }
 
@@ -847,12 +847,10 @@ exports.updateReportCard = async (req, res) => {
         req.schoolId
       );
       if (!allowed) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: 'You are not assigned as class teacher for this student.',
-          });
+        return res.status(403).json({
+          success: false,
+          message: 'You are not assigned as class teacher for this student.',
+        });
       }
     }
 
@@ -1231,12 +1229,10 @@ exports.generateReportCards = async (req, res) => {
         sectionId || null
       );
       if (!assignments.length) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: 'You are not assigned as class teacher for this class.',
-          });
+        return res.status(403).json({
+          success: false,
+          message: 'You are not assigned as class teacher for this class.',
+        });
       }
     }
 
@@ -1330,12 +1326,10 @@ exports.finalizeReportCard = async (req, res) => {
         req.schoolId
       );
       if (!allowed) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: 'You are not assigned as class teacher for this student.',
-          });
+        return res.status(403).json({
+          success: false,
+          message: 'You are not assigned as class teacher for this student.',
+        });
       }
     }
 
@@ -1522,12 +1516,10 @@ exports.getClassReportCards = async (req, res) => {
         sectionId || null
       );
       if (!assignments.length) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: 'You are not assigned as class teacher for this class.',
-          });
+        return res.status(403).json({
+          success: false,
+          message: 'You are not assigned as class teacher for this class.',
+        });
       }
     }
 
@@ -1664,7 +1656,12 @@ exports.getMarksReadiness = async (req, res) => {
       }
     }
 
-    const examFilter = { classIds: classId, session: sessionId, schoolId: req.schoolId };
+    const examFilter = {
+      classIds: classId,
+      session: sessionId,
+      schoolId: req.schoolId,
+      isArchived: { $ne: true },
+    };
     if (examId) examFilter._id = examId;
 
     const exams = await Exam.find(examFilter)

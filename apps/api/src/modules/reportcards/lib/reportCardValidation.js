@@ -43,6 +43,7 @@ const canGenerateReportWithOases = async (classId, sessionId, schoolId) => {
     classIds: classId,
     session: sessionId,
     schoolId,
+    isArchived: { $ne: true },
   }).select('_id evaluationStatus');
 
   if (!exams.length) {
@@ -116,6 +117,7 @@ const fetchExamsForReportCard = async (classId, sessionId, schoolId, isOasesEnab
     classIds: classId,
     session: sessionId,
     schoolId,
+    isArchived: { $ne: true },
   })
     .select('name type startDate createdAt evaluationStatus evaluationLocked maxMarks')
     .sort({ startDate: 1, createdAt: 1, name: 1 })

@@ -50,4 +50,19 @@ module.exports = {
   get marksWindow() {
     return require('./lib/marksWindow');
   },
+
+  // consumers: people's admin + teacher routers, examination's own EC router.
+  // Exam edit/archive/delete/unlock — one implementation behind all three.
+  get examController() {
+    return require('./controllers/examController');
+  },
+
+  // consumers: reportcards (exam pick-lists must exclude archived exams)
+  get examService() {
+    return require('./services/examService');
+  },
+
+  get ExamAuditLog() {
+    return require('./models/ExamAuditLog');
+  },
 };

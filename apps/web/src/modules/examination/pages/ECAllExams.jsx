@@ -4,6 +4,7 @@ import {
   useGetECActiveSessionQuery, useGetECAllExamsQuery, useGetECClassesQuery,
   useGetECExamSubjectsQuery, useCreateECExamMutation, useUpdateECExamMutation,
   useDeleteECExamMutation, useUpdateECExamSubjectMutation, useRemoveECExamSubjectMutation,
+  useArchiveECExamMutation, useUnlockECExamMutation,
   useLinkECTemplateToExamMutation, useGetECTemplatesQuery,
 } from '../api/examControllerApi';
 
@@ -154,6 +155,8 @@ const ECAllExams = () => {
 
   const [updateExam, { isLoading: updating }] = useUpdateECExamMutation();
   const [deleteExam] = useDeleteECExamMutation();
+  const [archiveExam] = useArchiveECExamMutation();
+  const [unlockExam] = useUnlockECExamMutation();
   const [updateSubject, { isLoading: updatingSub }] = useUpdateECExamSubjectMutation();
   const [removeSubject] = useRemoveECExamSubjectMutation();
   const [linkTemplate, { isLoading: linking }] = useLinkECTemplateToExamMutation();
@@ -178,10 +181,36 @@ const ECAllExams = () => {
     return g;
   }, [subjects]);
 
+  // The server refuses a bare delete when marks exist (409 + the count), so the
+  // second prompt is the only one that can destroy anything.
   const doDelete = exam => setConfirm({ msg: `Delete "${exam.name}"? This cannot be undone.`, onOk: async () => {
-    try { await deleteExam(exam._id).unwrap(); toast.success('Exam deleted'); if (selectedId===exam._id) setSelectedId(null); }
-    catch(err) { toast.error(err?.data?.message||'Error'); }
     setConfirm(null);
+    try { await deleteExam({ id: exam._id }).unwrap(); toast.success('Exam deleted'); if (selectedId===exam._id) setSelectedId(null); }
+    catch(err) {
+      const n = err?.data?.details?.marksAffected;
+      if (err?.status === 409 && n > 0) return promptMarksDelete(exam, n);
+      toast.error(err?.data?.message||'Error');
+    }
+  }});
+
+  const promptMarksDelete = (exam, n) => setConfirm({
+    msg: `"${exam.name}" has ${n} mark(s). Deleting destroys them and their audit trail permanently. Cancel and use Archive to keep them.`,
+    onOk: async () => {
+      setConfirm(null);
+      try { await deleteExam({ id: exam._id, confirmDeleteMarks: n }).unwrap(); toast.success(`Exam and ${n} mark(s) deleted`); if (selectedId===exam._id) setSelectedId(null); }
+      catch(err) { toast.error(err?.data?.message||'Error'); }
+    }
+  });
+
+  const doArchive = async exam => {
+    try { await archiveExam(exam._id).unwrap(); toast.success('Exam archived — marks kept'); if (selectedId===exam._id) setSelectedId(null); }
+    catch(err) { toast.error(err?.data?.message||'Error'); }
+  };
+
+  const doUnlock = exam => setConfirm({ msg: `Reopen "${exam.name}" for edits and marks entry?`, onOk: async () => {
+    setConfirm(null);
+    try { await unlockExam(exam._id).unwrap(); toast.success('Evaluation unlocked'); }
+    catch(err) { toast.error(err?.data?.message||'Error'); }
   }});
 
   const doSaveEdit = async data => {
@@ -281,10 +310,17 @@ const ECAllExams = () => {
                 {!exam.evaluationLocked && (
                   <div style={{display:'flex',gap:10}} onClick={e=>e.stopPropagation()}>
                     <button onClick={()=>setEditExam(exam)} style={{flex:1,padding:'6px',borderRadius:8,border:'1.5px solid #6366f1',background:'#eef2ff',color:'#6366f1',fontWeight:600,fontSize:12,cursor:'pointer'}}>✏️ Edit</button>
+                    <button onClick={()=>doArchive(exam)} title="Hide this exam but keep its marks" style={{flex:1,padding:'6px',borderRadius:8,border:'1.5px solid #d97706',background:'#fffbeb',color:'#d97706',fontWeight:600,fontSize:12,cursor:'pointer'}}>📦 Archive</button>
                     <button onClick={()=>doDelete(exam)} style={{flex:1,padding:'6px',borderRadius:8,border:'1.5px solid #ef4444',background:'#fef2f2',color:'#ef4444',fontWeight:600,fontSize:12,cursor:'pointer'}}>🗑️ Delete</button>
                   </div>
                 )}
-                {exam.evaluationLocked && <div style={{fontSize:11,color:'#94a3b8',marginTop:4}}>🔒 Evaluation locked</div>}
+                {/* Was a dead label — a locked exam had no route back to editable */}
+                {exam.evaluationLocked && (
+                  <div onClick={e=>e.stopPropagation()}>
+                    <button onClick={()=>doUnlock(exam)} title="Evaluation completed — unlock to edit, delete, or reopen marks entry"
+                      style={{width:'100%',padding:'6px',borderRadius:8,border:'1.5px solid #d97706',background:'#fffbeb',color:'#d97706',fontWeight:600,fontSize:12,cursor:'pointer',marginTop:4}}>🔒 Unlock Evaluation</button>
+                  </div>
+                )}
 
                 {/* Subjects panel */}
                 {selected && (

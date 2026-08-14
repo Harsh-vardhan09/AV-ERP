@@ -93,8 +93,25 @@ export const examControllerApi = createApi({
       query: ({ id, ...data }) => ({ url: `/exam/${id}`, method: 'PUT', body: data }),
       invalidatesTags: ['ECExams'],
     }),
+    archiveECExam: builder.mutation({
+      query: (id) => ({ url: `/exam/${id}/archive`, method: 'PATCH' }),
+      invalidatesTags: ['Exam'],
+    }),
+    unlockECExam: builder.mutation({
+      query: (id) => ({ url: `/exam/${id}/unlock`, method: 'PATCH' }),
+      invalidatesTags: ['Exam'],
+    }),
     deleteECExam: builder.mutation({
-      query: (id) => ({ url: `/exam/${id}`, method: 'DELETE' }),
+      // confirmDeleteMarks must match the server's count; a bare delete is refused
+      // with a 409 when marks exist.
+      query: (arg) => {
+        const { id, confirmDeleteMarks } = typeof arg === 'object' ? arg : { id: arg };
+        return {
+          url: `/exam/${id}`,
+          method: 'DELETE',
+          params: confirmDeleteMarks != null ? { confirmDeleteMarks } : undefined,
+        };
+      },
       invalidatesTags: ['ECExams'],
     }),
     startECExamEvaluation: builder.mutation({
@@ -189,6 +206,8 @@ export const {
   useGetECExamQuery,
   useUpdateECExamMutation,
   useDeleteECExamMutation,
+  useArchiveECExamMutation,
+  useUnlockECExamMutation,
   useStartECExamEvaluationMutation,
   useCompleteECExamEvaluationMutation,
   useLinkECTemplateToExamMutation,

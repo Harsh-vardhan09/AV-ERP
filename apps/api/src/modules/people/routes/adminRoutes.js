@@ -5,6 +5,7 @@ const { sessionController, classController, sectionController } = require('../..
 const { varifyToken } = require('../../../core/security/authenticate.js');
 const { authorize } = require('../../../core/security/roleMiddleware.js');
 const validateObjectId = require('../../../core/http/validateObjectId.js');
+const { examController } = require('../../examination');
 
 // ── Guards ────────────────────────────────────────────────────────────────────
 // All admin routes require authentication
@@ -106,8 +107,16 @@ router.delete('/class-teacher/:id', writeGuard, admin.removeClassTeacher);
 router.post('/exam', writeGuard, admin.createExam);
 router.get('/exams', readGuard, admin.getAllExams);
 router.get('/exam/:id', readGuard, validateObjectId('id'), admin.getExam);
-router.put('/exam/:id', writeGuard, validateObjectId('id'), admin.updateExam);
-router.delete('/exam/:id', writeGuard, validateObjectId('id'), admin.deleteExam);
+// Edit/archive/delete/unlock live in the examination module — same implementation
+// the exam_controller and teacher routers use, so the rules cannot drift.
+router.put('/exam/:id', writeGuard, validateObjectId('id'), examController.updateExam);
+router.delete('/exam/:id', writeGuard, validateObjectId('id'), examController.deleteExam);
+router.patch('/exam/:id/archive', writeGuard, validateObjectId('id'), examController.archiveExam);
+router.patch('/exam/:id/restore', writeGuard, validateObjectId('id'), examController.restoreExam);
+// completeEvaluation sets evaluationLocked and nothing outside OASES ever cleared
+// it — a locked exam could not be edited, deleted or marked, with no way back.
+router.patch('/exam/:id/unlock', writeGuard, validateObjectId('id'), examController.unlockExam);
+router.get('/exam-audit-log', readGuard, examController.getExamAuditLog);
 router.patch(
   '/exam/:id/start-evaluation',
   writeGuard,
