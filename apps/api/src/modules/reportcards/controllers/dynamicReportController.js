@@ -5,10 +5,17 @@
  */
 
 const path = require('path');
-const uuidv4 = async () => {
-  const { v4 } = await import('uuid');
-  return v4();
-};
+// Synchronous on purpose. This was an async wrapper around a dynamic import(),
+// and every call site used it WITHOUT await — so `reportId` was assigned a
+// Promise and Mongoose threw "Cast to string failed ... (type Promise) at path
+// reportId", breaking the download for admin, teacher and student alike.
+//
+// Node's own randomUUID, not the `uuid` package: uuid@13 is ESM-only, so a plain
+// require() of it only works on Node >=22.12 and throws ERR_REQUIRE_ESM on Node 20
+// — and nothing here pins a Node version (no engines field, no .nvmrc, no
+// NODE_VERSION on Render), so that would risk the API failing to boot at all.
+// randomUUID is built in since Node 14.17 and emits the same UUIDv4 format.
+const { randomUUID: uuidv4 } = require('crypto');
 
 const ReportTemplate = require('../models/ReportTemplate');
 const GeneratedReport = require('../models/GeneratedReport');

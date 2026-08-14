@@ -13,20 +13,20 @@
  * AdmissionTemplate model and AdmissionDataService — no coupling to report cards.
  */
 
-const path   = require('path');
-const uuidv4 = async () => {
-  const { v4 } = await import('uuid');
-  return v4();
-};
+const path = require('path');
+// Synchronous — see dynamicReportController for the full note. The async
+// wrapper's callers never awaited it, so a Promise reached a String path.
+// Node's randomUUID rather than the ESM-only uuid package, which cannot be
+// require()d on Node 20.
+const { randomUUID: uuidv4 } = require('crypto');
 
-
-const AdmissionTemplate      = require('../models/AdmissionTemplate');
-const AdmissionFormSettings  = require('../models/AdmissionFormSettings');
+const AdmissionTemplate = require('../models/AdmissionTemplate');
+const AdmissionFormSettings = require('../models/AdmissionFormSettings');
 const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
-const TemplateParserService  = require('../../reportcards').TemplateParserService;
-const AdmissionDataService   = require('../services/admissionDataService');
-const PDFService             = require('../../../core/pdf/htmlToPdf.js');
-const logger                 = require('../../../core/logging/logger.js');
+const TemplateParserService = require('../../reportcards').TemplateParserService;
+const AdmissionDataService = require('../services/admissionDataService');
+const PDFService = require('../../../core/pdf/htmlToPdf.js');
+const logger = require('../../../core/logging/logger.js');
 const { serviceError } = require('../lib/respond');
 
 const OUTPUT_DIR = path.join(__dirname, '../../output/admission-forms');
@@ -41,7 +41,7 @@ exports.createTemplate = async (req, res) => {
       name,
       description = '',
       htmlContent,
-      cssContent  = '',
+      cssContent = '',
       config,
       templateStatus = 'published',
     } = req.body;
@@ -51,17 +51,17 @@ exports.createTemplate = async (req, res) => {
     }
 
     const schoolId = req.schoolId;
-    const userId   = req.user._id;
+    const userId = req.user._id;
 
     // Auto-extract fields
     let extractedFields = [];
-    let fieldAnalysis   = {};
+    let fieldAnalysis = {};
     try {
       extractedFields = TemplateFieldExtractor.extractFields(htmlContent) || [];
 
       // Validate extracted field names against admission registry
       const AdmissionFieldRegistry = require('../services/admissionFieldRegistry');
-      const fieldNames = (extractedFields.fields || []).map(f => f.name);
+      const fieldNames = (extractedFields.fields || []).map((f) => f.name);
       fieldAnalysis = AdmissionFieldRegistry.validate(fieldNames);
       fieldAnalysis.schemaValidation = TemplateFieldExtractor.validateAgainstSchema(htmlContent);
     } catch (e) {
@@ -97,24 +97,17 @@ exports.createTemplate = async (req, res) => {
  */
 exports.getTemplates = async (req, res) => {
   try {
-    const {
-      page   = 1,
-      limit  = 50,
-      isActive,
-      isDefault,
-      search,
-      templateStatus,
-    } = req.query;
+    const { page = 1, limit = 50, isActive, isDefault, search, templateStatus } = req.query;
 
     const schoolId = req.schoolId;
-    const query    = { schoolId, isActive: { $ne: false }, isDeleted: { $ne: true } };
+    const query = { schoolId, isActive: { $ne: false }, isDeleted: { $ne: true } };
 
-    if (isActive    !== undefined) query.isActive      = isActive === 'true';
-    if (isDefault   !== undefined) query.isDefault     = isDefault === 'true';
-    if (templateStatus)            query.templateStatus = templateStatus;
+    if (isActive !== undefined) query.isActive = isActive === 'true';
+    if (isDefault !== undefined) query.isDefault = isDefault === 'true';
+    if (templateStatus) query.templateStatus = templateStatus;
     if (search) {
       query.$or = [
-        { name:        { $regex: search, $options: 'i' } },
+        { name: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
       ];
     }
@@ -122,7 +115,7 @@ exports.getTemplates = async (req, res) => {
     const skip = (Number(page) - 1) * Number(limit);
     const [templates, total] = await Promise.all([
       AdmissionTemplate.find(query)
-        .select('-htmlContent -cssContent')      // omit heavy content for list
+        .select('-htmlContent -cssContent') // omit heavy content for list
         .sort({ isDefault: -1, createdAt: -1 })
         .skip(skip)
         .limit(Number(limit))
@@ -134,7 +127,7 @@ exports.getTemplates = async (req, res) => {
       success: true,
       data: templates,
       pagination: {
-        page:  Number(page),
+        page: Number(page),
         limit: Number(limit),
         total,
         pages: Math.ceil(total / Number(limit)),
@@ -169,27 +162,20 @@ exports.getTemplate = async (req, res) => {
 exports.updateTemplate = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      name,
-      description,
-      htmlContent,
-      cssContent,
-      config,
-      templateStatus,
-      isActive,
-    } = req.body;
+    const { name, description, htmlContent, cssContent, config, templateStatus, isActive } =
+      req.body;
 
     const template = await AdmissionTemplate.findOne({ _id: id, schoolId: req.schoolId });
     if (!template) {
       return res.status(404).json({ success: false, message: 'Admission template not found' });
     }
 
-    if (name          !== undefined) template.name          = name;
-    if (description   !== undefined) template.description   = description;
-    if (cssContent    !== undefined) template.cssContent    = cssContent;
-    if (config        !== undefined) template.config        = { ...template.config, ...config };
+    if (name !== undefined) template.name = name;
+    if (description !== undefined) template.description = description;
+    if (cssContent !== undefined) template.cssContent = cssContent;
+    if (config !== undefined) template.config = { ...template.config, ...config };
     if (templateStatus !== undefined) template.templateStatus = templateStatus;
-    if (isActive      !== undefined) template.isActive      = isActive;
+    if (isActive !== undefined) template.isActive = isActive;
 
     // Re-extract fields whenever HTML changes
     if (htmlContent !== undefined) {
@@ -209,7 +195,7 @@ exports.updateTemplate = async (req, res) => {
     if (htmlContent !== undefined) {
       try {
         const AdmissionFieldRegistry = require('../services/admissionFieldRegistry');
-        const fieldNames = (template.extractedFields?.fields || []).map(f => f.name);
+        const fieldNames = (template.extractedFields?.fields || []).map((f) => f.name);
         fieldAnalysis = AdmissionFieldRegistry.validate(fieldNames);
         fieldAnalysis.schemaValidation = TemplateFieldExtractor.validateAgainstSchema(htmlContent);
       } catch (e) {
@@ -242,12 +228,14 @@ exports.deleteTemplate = async (req, res) => {
     }
 
     // Soft delete: mark inactive, clear default flag
-    template.isActive  = false;
+    template.isActive = false;
     template.isDefault = false;
     template.updatedBy = req.user._id;
     await template.save();
 
-    return res.status(200).json({ success: true, message: 'Admission template deleted successfully' });
+    return res
+      .status(200)
+      .json({ success: true, message: 'Admission template deleted successfully' });
   } catch (err) {
     return serviceError(res, '[AdmissionTemplate] Delete error:', err);
   }
@@ -286,17 +274,19 @@ exports.previewTemplate = async (req, res) => {
 
     // Get template HTML (from request body OR stored template)
     let tplHtml = htmlContent;
-    let tplCss  = cssContent;
+    let tplCss = cssContent;
 
     if (!tplHtml && templateId) {
       const tpl = await AdmissionTemplate.findOne({ _id: templateId, schoolId }).lean();
       if (!tpl) return res.status(404).json({ success: false, message: 'Template not found' });
       tplHtml = tpl.htmlContent;
-      tplCss  = tpl.cssContent || '';
+      tplCss = tpl.cssContent || '';
     }
 
     if (!tplHtml) {
-      return res.status(400).json({ success: false, message: 'htmlContent or templateId is required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'htmlContent or templateId is required' });
     }
 
     // Build data: real student > custom sampleData > built-in sample
@@ -306,9 +296,16 @@ exports.previewTemplate = async (req, res) => {
         // Optionally load school settings for branding
         const AdmissionFormSettings = require('../models/AdmissionFormSettings');
         const settings = await AdmissionFormSettings.findOne({ schoolId }).lean();
-        data = await AdmissionDataService.getStudentSnapshot(studentId, schoolId, settings?.schoolProfile || {});
+        data = await AdmissionDataService.getStudentSnapshot(
+          studentId,
+          schoolId,
+          settings?.schoolProfile || {}
+        );
       } catch (e) {
-        logger.warn('[AdmissionTemplate] Preview: real student load failed, using sample:', e.message);
+        logger.warn(
+          '[AdmissionTemplate] Preview: real student load failed, using sample:',
+          e.message
+        );
       }
     }
 
@@ -368,7 +365,6 @@ exports.previewSavedTemplate = async (req, res) => {
       tpl = looseTpl;
     }
 
-
     // Load school settings for branding (schoolName, logo)
     let schoolProfile = {};
     try {
@@ -382,22 +378,30 @@ exports.previewSavedTemplate = async (req, res) => {
       try {
         data = await AdmissionDataService.getStudentSnapshot(studentId, schoolId, schoolProfile);
       } catch (e) {
-        logger.warn('[AdmissionTemplate] previewSavedTemplate: student load failed, using sample:', e.message);
+        logger.warn(
+          '[AdmissionTemplate] previewSavedTemplate: student load failed, using sample:',
+          e.message
+        );
       }
     }
 
-    const renderResult = TemplateParserService.render(tpl.htmlContent, data, { css: tpl.cssContent || '' });
+    const renderResult = TemplateParserService.render(tpl.htmlContent, data, {
+      css: tpl.cssContent || '',
+    });
     const { html: renderedHtml, missingFields = [] } = renderResult;
 
     // Build diagnostic banner for missing fields
     let diagnosticBanner = '';
     if (missingFields.length > 0) {
       const diagnostics = AdmissionDataService.diagnoseMissing(missingFields, data);
-      const rows = diagnostics.map(d =>
-        `<tr><td style="padding:2px 8px;color:#b94a48;font-family:monospace">${d.field}</td>` +
-        `<td style="padding:2px 8px;color:#333">${d.reason}</td>` +
-        `<td style="padding:2px 8px;color:#888;font-size:10px">${d.description}</td></tr>`
-      ).join('');
+      const rows = diagnostics
+        .map(
+          (d) =>
+            `<tr><td style="padding:2px 8px;color:#b94a48;font-family:monospace">${d.field}</td>` +
+            `<td style="padding:2px 8px;color:#333">${d.reason}</td>` +
+            `<td style="padding:2px 8px;color:#888;font-size:10px">${d.description}</td></tr>`
+        )
+        .join('');
       diagnosticBanner = `
         <div style="background:#fff3cd;border:1px solid #ffc107;padding:10px 14px;margin-bottom:12px;font-size:11px;border-radius:4px">
           <strong>⚠ Missing Fields (${missingFields.length}) — template data not found for these placeholders:</strong>
@@ -471,13 +475,15 @@ exports.generatePDF = async (req, res) => {
     // Attempt 3: latest published template
     if (!tpl) {
       tpl = await AdmissionTemplate.findOne({ schoolId, templateStatus: 'published' })
-        .sort({ createdAt: -1 }).lean();
+        .sort({ createdAt: -1 })
+        .lean();
     }
 
     // Attempt 4: any non-deleted template for the school
     if (!tpl) {
       tpl = await AdmissionTemplate.findOne({ schoolId, isDeleted: { $ne: true } })
-        .sort({ createdAt: -1 }).lean();
+        .sort({ createdAt: -1 })
+        .lean();
     }
 
     if (!tpl) {
@@ -511,16 +517,18 @@ exports.generatePDF = async (req, res) => {
       options: {
         format: tpl.config?.pageSize || 'A4',
         margin: {
-          top:    `${tpl.config?.marginTop    || 10}mm`,
-          right:  `${tpl.config?.marginRight  || 10}mm`,
+          top: `${tpl.config?.marginTop || 10}mm`,
+          right: `${tpl.config?.marginRight || 10}mm`,
           bottom: `${tpl.config?.marginBottom || 10}mm`,
-          left:   `${tpl.config?.marginLeft   || 10}mm`,
+          left: `${tpl.config?.marginLeft || 10}mm`,
         },
       },
     });
 
     if (!pdfResult.success) {
-      return res.status(500).json({ success: false, message: 'PDF generation failed', error: pdfResult.error });
+      return res
+        .status(500)
+        .json({ success: false, message: 'PDF generation failed', error: pdfResult.error });
     }
 
     // Update usage stats
@@ -620,13 +628,14 @@ exports.cloneTemplate = async (req, res) => {
     const schoolId = req.schoolId;
 
     const src = await AdmissionTemplate.findOne({ _id: id, schoolId }).lean();
-    if (!src) return res.status(404).json({ success: false, message: 'Admission template not found' });
+    if (!src)
+      return res.status(404).json({ success: false, message: 'Admission template not found' });
 
     const { _id, createdAt, updatedAt, usageCount, lastUsedAt, isDefault, ...rest } = src;
 
     const cloned = await AdmissionTemplate.create({
       ...rest,
-      name:      newName || `${src.name} (Copy)`,
+      name: newName || `${src.name} (Copy)`,
       isDefault: false,
       usageCount: 0,
       lastUsedAt: null,
@@ -658,15 +667,19 @@ exports.cloneTemplate = async (req, res) => {
 exports.getActiveTemplate = async (req, res) => {
   try {
     const schoolId = req.schoolId;
-    const SELECT   = '-htmlContent -cssContent';   // skip heavy fields
+    const SELECT = '-htmlContent -cssContent'; // skip heavy fields
     let tpl = null;
 
     // Attempt 1: explicit activeTemplateId stored in AdmissionFormSettings
     const settings = await AdmissionFormSettings.findOne({ schoolId }).lean();
     if (settings?.activeTemplateId) {
-      tpl = await AdmissionTemplate
-        .findOne({ _id: settings.activeTemplateId, schoolId, isDeleted: { $ne: true } })
-        .select(SELECT).lean();
+      tpl = await AdmissionTemplate.findOne({
+        _id: settings.activeTemplateId,
+        schoolId,
+        isDeleted: { $ne: true },
+      })
+        .select(SELECT)
+        .lean();
       // If the saved ID points to a deleted template, clear it so the fallback
       // picks a live template and re-syncs the pointer.
       if (!tpl && settings.activeTemplateId) {
@@ -681,25 +694,23 @@ exports.getActiveTemplate = async (req, res) => {
     // Attempt 2: isDefault flag (ignore isActive — super admin may have
     //              uploaded without explicitly activating it)
     if (!tpl) {
-      tpl = await AdmissionTemplate
-        .findOne({ schoolId, isDefault: true })
-        .select(SELECT).lean();
+      tpl = await AdmissionTemplate.findOne({ schoolId, isDefault: true }).select(SELECT).lean();
     }
 
     // Attempt 3: latest published template
     if (!tpl) {
-      tpl = await AdmissionTemplate
-        .findOne({ schoolId, templateStatus: 'published' })
+      tpl = await AdmissionTemplate.findOne({ schoolId, templateStatus: 'published' })
         .sort({ createdAt: -1 })
-        .select(SELECT).lean();
+        .select(SELECT)
+        .lean();
     }
 
     // Attempt 4: any template for this school (last resort)
     if (!tpl) {
-      tpl = await AdmissionTemplate
-        .findOne({ schoolId, isDeleted: { $ne: true } })
+      tpl = await AdmissionTemplate.findOne({ schoolId, isDeleted: { $ne: true } })
         .sort({ createdAt: -1 })
-        .select(SELECT).lean();
+        .select(SELECT)
+        .lean();
     }
 
     // If we found a template via fallback but settings didn't point to it,
@@ -709,7 +720,7 @@ exports.getActiveTemplate = async (req, res) => {
         { schoolId },
         { $set: { activeTemplateId: tpl._id } },
         { upsert: true }
-      ).catch(() => {});  // fire-and-forget, non-critical
+      ).catch(() => {}); // fire-and-forget, non-critical
     }
 
     return res.status(200).json({ success: true, data: tpl || null });
@@ -738,4 +749,3 @@ exports.getStats = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
-

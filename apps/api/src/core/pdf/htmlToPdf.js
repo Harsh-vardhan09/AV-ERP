@@ -3,10 +3,12 @@ const { getLaunchOptions } = require('./browserLauncher');
 const logger = require('../logging/logger');
 const path = require('path');
 const fs = require('fs').promises;
-const uuidv4 = async () => {
-  const { v4 } = await import('uuid');
-  return v4();
-};
+// Synchronous — see dynamicReportController for the full note. Un-awaited here
+// it produced `report_[object Promise].pdf`, so every concurrent generation
+// wrote to the SAME filename and overwrote the previous one.
+// Node's randomUUID rather than the ESM-only uuid package, which cannot be
+// require()d on Node 20.
+const { randomUUID: uuidv4 } = require('crypto');
 
 // A4 at 96 dpi: 210mm × 297mm → 794 × 1123 px
 const A4_W = 794;
