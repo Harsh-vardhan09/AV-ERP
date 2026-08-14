@@ -92,3 +92,34 @@ test('the shared Redis probe client has an error listener', () => {
   const probe = src.slice(src.indexOf('const testRedisConnection'));
   expect(probe).toMatch(/client\.on\(\s*['"]error['"]/);
 });
+
+// REDIS_DISABLED silenced the queues but NOT core/config/redis's client, which
+// OASES calls on every request (auth middleware, evaluation cache, pdfService).
+// So the flag did not stop the request burn that exhausted the Upstash quota.
+test('REDIS_DISABLED makes the shared client a true no-op', () => {
+  const src = fs.readFileSync(path.join(SRC, 'core/config/redis.js'), 'utf8');
+  const getter = src.slice(src.indexOf('const getRedisClient'), src.indexOf('const safeRedisOp'));
+
+  // Must bail out before constructing a client
+  expect(getter).toMatch(/if\s*\(\s*REDIS_DISABLED\s*\)/);
+  expect(getter).toMatch(/return null/);
+
+  // …and safeRedisOp must skip the operation rather than call it with null
+  const safe = src.slice(
+    src.indexOf('const safeRedisOp'),
+    src.indexOf('const testRedisConnection')
+  );
+  expect(safe).toMatch(/if\s*\(!client\)\s*return null/);
+});
+
+// Narrow, deliberate net: a Redis fault must never kill the process, but a real
+// bug still must. If this ever swallows everything, the guard is too broad.
+test('the process-level guard is narrow — only Redis faults are swallowed', () => {
+  const main = fs.readFileSync(path.join(SRC, 'main.js'), 'utf8');
+
+  expect(main).toMatch(/uncaughtException/);
+  expect(main).toMatch(/isRedisFault/);
+  // Non-Redis exceptions must still exit
+  const handler = main.slice(main.indexOf("process.on('uncaughtException'"));
+  expect(handler).toMatch(/process\.exit\(1\)/);
+});

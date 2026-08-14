@@ -22,7 +22,26 @@ const redisConfig = { redis: redisOpts };
 
 let _client = null;
 
+let _disabledWarned = false;
+
+/**
+ * Returns null when REDIS_DISABLED is set.
+ *
+ * This used to connect regardless of the flag, and OASES calls it on EVERY
+ * request (auth middleware, evaluation cache, pdfService). So REDIS_DISABLED=true
+ * silenced the queues but left this client hammering Redis — which is a large
+ * part of how a testing deployment burned a 500,000-request quota, and why
+ * flipping the flag did not stop the bleeding. Callers already handle a failed
+ * op via safeRedisOp; returning null makes the flag mean what it says.
+ */
 const getRedisClient = () => {
+  if (REDIS_DISABLED) {
+    if (!_disabledWarned) {
+      _disabledWarned = true;
+      logger.warn('[Redis] REDIS_DISABLED=true — client disabled, all ops no-op');
+    }
+    return null;
+  }
   if (!_client) {
     _client = new Redis(REDIS_URL, {
       ...redisOpts,
@@ -53,6 +72,10 @@ const getRedisClient = () => {
 const safeRedisOp = async (operation) => {
   try {
     const client = getRedisClient();
+    // null = Redis switched off. Skip the operation entirely rather than calling
+    // it with a null client and relying on the catch below — that would turn
+    // every cache read into a thrown TypeError on the hot path.
+    if (!client) return null;
     return await operation(client);
   } catch (err) {
     logger.warn('[Redis] safeRedisOp failed (non-fatal)', {

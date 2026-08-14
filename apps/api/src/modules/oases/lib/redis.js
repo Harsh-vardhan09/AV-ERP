@@ -19,7 +19,8 @@ const getRedis = () => getRedisClient();
 const isRedisConnected = () => {
   try {
     const client = getRedisClient();
-    return client.status === 'ready';
+    // null when REDIS_DISABLED is set — not connected, and not an error either
+    return client ? client.status === 'ready' : false;
   } catch {
     return false;
   }
