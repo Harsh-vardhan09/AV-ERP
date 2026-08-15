@@ -49,5 +49,8 @@ test('every file under src/ requires with no unresolved module', () => {
 
   const app = require('../src/app.js');
   const mounted = app._router.stack.filter((l) => l.handle && l.handle.stack);
-  expect(mounted.length).toBe(33);
+  // 34 since the attendance module gained its own router (it was routes: null,
+  // read through people's controllers) when marking moved to one record per
+  // student per day.
+  expect(mounted.length).toBe(34);
 });

@@ -1,18 +1,27 @@
-// Models only. Attendance has no routes of its own yet — it is read through
-// people's controllers and written by biometric. The manifest exists so other
-// modules can declare dependsOn 'attendance' and have it resolve.
-// See docs/attendance-merge-plan.md for the three-model overlap.
+// Student attendance is one record per student per day, marked by the section's
+// class teacher. See docs/attendance-merge-plan.md for the three-model overlap:
+// DailyAttendance (students) is separate from TeacherAttendance / FacultyAttendance
+// (staff), which biometric owns.
 module.exports = {
-  key:            'attendance',
-  label:          'Attendance',
-  description:    'Student class-period attendance and staff daily attendance',
+  key: 'attendance',
+  label: 'Attendance',
+  description: 'Daily student attendance and staff attendance records',
   defaultEnabled: true,
-  canDisable:     false,
-  dependsOn:      ['core', 'people'],
-  basePath:       '/api/v1/attendance',
-  routes:         null,
+  canDisable: false,
+  dependsOn: ['core', 'people', 'academics'],
+  basePath: '/api/v1/attendance',
 
-  permissions: {},
-  jobs:        [],
-  events:      [],
+  // Mounted ABOVE the bare /api/v1 complaint router (order 130), which applies a
+  // router-level token guard to everything below it.
+  order: 70,
+
+  // 'router' — routes/index.js applies varifyToken + authorize itself. The
+  // per-section rule needs the request body, so the loader cannot express it.
+  auth: 'router',
+  limiter: 'api',
+
+  routes: require('./routes'),
+  permissions: require('./permissions'),
+  jobs: [],
+  events: [],
 };

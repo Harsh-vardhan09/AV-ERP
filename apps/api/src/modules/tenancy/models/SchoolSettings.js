@@ -23,6 +23,12 @@ const schoolSettingsSchema = new mongoose.Schema(
     // Attendance settings
     allowHallAttendance: { type: Boolean, default: false },
 
+    // The school's local timezone, used to decide which calendar day a mark
+    // belongs to. Render runs UTC; a naive new Date() would put anything marked
+    // after 18:30 IST onto the following day and split one school day in two.
+    // An IANA zone name, validated on write — see attendance/lib/schoolDay.js.
+    timezone: { type: String, default: 'Asia/Kolkata', trim: true },
+
     // OASES workflow toggle — PRESERVED for backward compatibility.
     isOasesEnabled: { type: Boolean, default: false },
 

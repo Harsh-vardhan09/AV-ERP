@@ -1,7 +1,7 @@
 // Legacy god-controller. Being extracted into domain modules — see
 // docs/GOD-CONTROLLER-PLAN.md. Do not add to this file.
 const StudentProfile = require('../models/StudentProfile');
-const { Attendance } = require('../../attendance');
+const { Attendance, DailyAttendance, attendanceService } = require('../../attendance');
 const {
   Assignment,
   Assignmentupload,
@@ -58,60 +58,51 @@ exports.getMyAttendance = async (req, res) => {
         .json({ success: false, message: 'Authentication required: Missing school context' });
     }
 
+    // DAYS, not class periods. subjectId / attendanceType are gone with the
+    // per-period model: a day has one status, not one per subject.
     const filter = {
-      classId: profile.classId._id,
-      sectionId: profile.sectionId._id,
-      session: profile.session._id,
       schoolId: req.schoolId,
+      studentId: profile._id,
+      session: profile.session._id,
     };
-    if (req.query.subjectId) filter.subjectId = req.query.subjectId;
-    if (req.query.attendanceType) filter.attendanceType = req.query.attendanceType;
     if (req.query.from && req.query.to) {
-      filter.date = {
-        $gte: new Date(req.query.from),
-        $lte: new Date(req.query.to),
-      };
+      filter.date = { $gte: new Date(req.query.from), $lte: new Date(req.query.to) };
     } else if (req.query.month) {
       const [year, month] = req.query.month.split('-');
       filter.date = {
-        $gte: new Date(year, month - 1, 1),
-        $lt: new Date(year, month, 1),
+        $gte: new Date(Date.UTC(Number(year), Number(month) - 1, 1)),
+        $lt: new Date(Date.UTC(Number(year), Number(month), 1)),
       };
     }
 
-    const records = await Attendance.find(filter)
-      .populate('subjectId', 'name code')
-      .populate('takenBy', 'firstName lastName')
-      .sort({ date: -1 });
+    const records = await DailyAttendance.find(filter)
+      .populate('markedBy', 'firstName lastName')
+      .sort({ date: -1 })
+      .lean();
 
-    // Extract only this student's record from each attendance session
-    const myAttendance = records
-      .map((record) => {
-        const myRecord = record.records.find(
-          (r) => r.studentId?.toString() === profile._id.toString()
-        );
-        return {
-          _id: record._id,
-          date: record.date,
-          subject: record.subjectId,
-          attendanceType: record.attendanceType,
-          status: myRecord ? myRecord.status : null, // null if student not in record
-          teacher: record.takenBy,
-        };
-      })
-      .filter((r) => r.status !== null); // only include records where student appears
+    const myAttendance = records.map((r) => ({
+      _id: r._id,
+      date: r.date,
+      status: r.status,
+      remarks: r.remarks || '',
+      teacher: r.markedBy,
+    }));
 
-    // Summary
-    const total = myAttendance.length;
-    const present = myAttendance.filter((a) => a.status === 'present').length;
-    const absent = myAttendance.filter((a) => a.status === 'absent').length;
-    const late = myAttendance.filter((a) => a.status === 'late').length;
-    const leave = myAttendance.filter((a) => a.status === 'leave').length;
-    const percentage = total > 0 ? (((present + late) / total) * 100).toFixed(1) : 0;
+    const s = attendanceService.summarise(records);
 
     res.status(200).json({
       success: true,
-      summary: { total, present, absent, late, leave, percentage },
+      // `total` stays the count of rows returned, as before; `countedDays` is the
+      // percentage denominator (approved leave is excluded from it).
+      summary: {
+        total: s.totalDays,
+        present: s.presentDays,
+        absent: s.absentDays,
+        late: s.lateDays,
+        leave: s.leaveDays,
+        countedDays: s.countedDays,
+        percentage: String(s.percentage),
+      },
       data: myAttendance,
     });
   } catch (error) {
@@ -542,25 +533,19 @@ exports.getMyReport = async (req, res) => {
         .json({ success: false, message: 'Authentication required: Missing school context' });
     }
 
-    // Attendance stats
-    const attendanceRecords = await Attendance.find({
-      classId: profile.classId._id,
-      sectionId: profile.sectionId._id,
-      session: profile.session._id,
+    // Attendance stats — DAYS, not class periods. Queried by studentId so a
+    // section change mid-session no longer erases the earlier history.
+    const attendanceRows = await DailyAttendance.find({
       schoolId: req.schoolId,
-    });
+      studentId: profile._id,
+      session: profile.session._id,
+    })
+      .select('status')
+      .lean();
 
-    let totalClasses = 0,
-      presentCount = 0;
-    attendanceRecords.forEach((record) => {
-      const myRecord = record.records.find(
-        (r) => r.studentId.toString() === profile._id.toString()
-      );
-      if (myRecord) {
-        totalClasses++;
-        if (myRecord.status === 'present') presentCount++;
-      }
-    });
+    const attSummary = attendanceService.summarise(attendanceRows);
+    const totalClasses = attSummary.countedDays;
+    const presentCount = attSummary.presentDays + attSummary.lateDays;
 
     // Assignment stats
     const totalAssignments = await Assignment.countDocuments({

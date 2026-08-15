@@ -25,6 +25,7 @@ import { notificationApi, notificationPreferenceApi, notificationReducer } from 
 import { libraryApi } from '@modules/library';
 import { payrollApi } from '@modules/payroll';
 import { examControllerApi } from '@modules/examination';
+import { attendanceApi } from '@modules/attendance';
 
 const persistConfig = {
   key: 'root',
@@ -73,6 +74,7 @@ export const store = configureStore({
     [admissionRefApi.reducerPath]: admissionRefApi.reducer,
     [payrollApi.reducerPath]: payrollApi.reducer,
     [examControllerApi.reducerPath]: examControllerApi.reducer,
+    [attendanceApi.reducerPath]: attendanceApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -108,6 +110,7 @@ export const store = configureStore({
       .concat(admissionRefApi.middleware)
       .concat(payrollApi.middleware)
       .concat(examControllerApi.middleware)
+      .concat(attendanceApi.middleware)
       .concat(suspensionMiddleware),
 });
 

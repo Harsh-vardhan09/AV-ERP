@@ -970,7 +970,7 @@ exports.getDashboardStats = async (req, res) => {
 exports.getDashboardAnalytics = async (req, res) => {
   try {
     const sid = req.schoolId;
-    const { Attendance } = require('../../attendance');
+    const { DailyAttendance } = require('../../attendance');
     const { FeeReceipt } = require('../../fees');
     const MONTH_LABELS = [
       'Jan',
@@ -1021,20 +1021,20 @@ exports.getDashboardAnalytics = async (req, res) => {
     sevenDaysAgo.setDate(now.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    const attDocs = await Attendance.find({ schoolId: sid, date: { $gte: sevenDaysAgo } })
-      .select('date records')
+    // One row per student per day, so a "day" on this trend is a real day rather
+    // than the sum of however many periods the timetable happened to have.
+    const attDocs = await DailyAttendance.find({ schoolId: sid, date: { $gte: sevenDaysAgo } })
+      .select('date status')
       .lean();
 
     const dayMap = {};
-    attDocs.forEach((doc) => {
-      const key = new Date(doc.date).toISOString().slice(0, 10);
+    attDocs.forEach((row) => {
+      const key = new Date(row.date).toISOString().slice(0, 10);
       if (!dayMap[key]) dayMap[key] = { present: 0, absent: 0, late: 0, total: 0 };
-      doc.records.forEach((r) => {
-        dayMap[key].total++;
-        if (r.status === 'present') dayMap[key].present++;
-        else if (r.status === 'absent') dayMap[key].absent++;
-        else if (r.status === 'late') dayMap[key].late++;
-      });
+      dayMap[key].total++;
+      if (row.status === 'present') dayMap[key].present++;
+      else if (row.status === 'absent') dayMap[key].absent++;
+      else if (row.status === 'late') dayMap[key].late++;
     });
 
     const attendanceTrend = Array.from({ length: 7 }, (_, i) => {
@@ -1246,7 +1246,7 @@ exports.getKnowledgeCenterMaterials = async (req, res, next) => {
 // ========================
 // ADMIN: STUDENT DIRECTORY
 // ========================
-const { Attendance } = require('../../attendance');
+const { DailyAttendance, attendanceService } = require('../../attendance');
 const { Assignment } = require('../../academics');
 
 exports.getAdminStudents = async (req, res, next) => {
@@ -1305,22 +1305,23 @@ exports.getAdminStudentDetail = async (req, res) => {
     };
     if (student.sectionId?._id) attFilter.sectionId = student.sectionId._id;
 
-    const attendanceRecords = await Attendance.find(attFilter);
-    let present = 0,
-      absent = 0,
-      late = 0,
-      leave = 0;
-    attendanceRecords.forEach((record) => {
-      const myRec = record.records.find((r) => r.studentId?.toString() === student._id.toString());
-      if (myRec) {
-        if (myRec.status === 'present') present++;
-        else if (myRec.status === 'absent') absent++;
-        else if (myRec.status === 'late') late++;
-        else if (myRec.status === 'leave') leave++;
-      }
-    });
-    const total = present + absent + late + leave;
-    const percentage = total > 0 ? (((present + late) / total) * 100).toFixed(1) : 0;
+    // DAYS, not class periods. Queried by studentId, so a mid-session section
+    // change no longer erases the student's earlier attendance.
+    const attendanceRows = await DailyAttendance.find({
+      schoolId: req.schoolId,
+      studentId: student._id,
+      ...(student.session?._id && { session: student.session._id }),
+    })
+      .select('status')
+      .lean();
+
+    const attSummary = attendanceService.summarise(attendanceRows);
+    const present = attSummary.presentDays;
+    const absent = attSummary.absentDays;
+    const late = attSummary.lateDays;
+    const leave = attSummary.leaveDays;
+    const total = attSummary.totalDays;
+    const percentage = String(attSummary.percentage);
 
     // Assignment counts — scoped to school (FIX 11A)
     // Guard: sectionId may be null

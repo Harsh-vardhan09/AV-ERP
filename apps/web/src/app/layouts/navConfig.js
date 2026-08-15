@@ -155,6 +155,12 @@ export const navConfig = {
       module: 'communication',
     },
     { to: '/admin/staff', icon: MdBadge, size: 20, label: 'Staff Management' },
+    {
+      to: '/admin/attendance/unassigned',
+      icon: FaCalendarCheck,
+      size: 20,
+      label: 'Unmarked Sections',
+    },
     // retired: biometric, fee_management — re-add when available
     // The legacy "Report Cards" generator is retired: it used the pre-template
     // renderer. Template Report Cards is the single generator, Report Card
@@ -186,7 +192,7 @@ export const navConfig = {
 
   teacher: [
     { to: '/teacher/dashboard', icon: MdDashboard, size: 18, label: 'Dashboard' },
-    { to: '/teacher/attendance', icon: FaCalendarCheck, size: 18, label: 'Take Attendance' },
+    { to: '/teacher/attendance', icon: FaCalendarCheck, size: 18, label: 'Daily Attendance' },
     {
       to: '/teacher/assignments',
       icon: MdAssignment,

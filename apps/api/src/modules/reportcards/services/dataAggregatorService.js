@@ -26,7 +26,8 @@ const {
   CoScholasticMark,
   marksSourceService: MarksSourceService, // OASES-ready abstraction
 } = require('../../examination');
-const Attendance = require('../../attendance').Attendance;
+const DailyAttendance = require('../../attendance').DailyAttendance;
+const attendanceService = require('../../attendance').attendanceService;
 const School = require('../../tenancy').School;
 const SchoolSettings = require('../../tenancy').SchoolSettings;
 const logger = require('../../../core/logging/logger.js');
@@ -334,43 +335,33 @@ class DataAggregatorService {
     return CoScholasticMark.find({ reportCardId: rc._id, schoolId }).lean();
   }
 
+  /**
+   * Attendance is counted in DAYS, from DailyAttendance — one row per student
+   * per school day.
+   *
+   * It used to read the per-period Attendance model and count one "day" per
+   * period document, so the denominator was periods, not days. It also matched
+   * on the student's CURRENT classId/sectionId, so a student who changed section
+   * mid-session lost their earlier attendance entirely — one of the ways this
+   * came out as 0/0.
+   *
+   * DailyAttendance is queried by studentId, so section changes no longer erase
+   * history, and the denominator is days the school actually marked.
+   */
   static async _fetchAttendance(studentId, schoolId, sessionId) {
-    const student = await StudentProfile.findOne({ _id: studentId, schoolId })
-      .select('classId sectionId')
+    const rows = await DailyAttendance.find({ schoolId, studentId, session: sessionId })
+      .select('status')
       .lean();
-    if (!student) return null;
 
-    const records = await Attendance.find({
-      classId: student.classId,
-      sectionId: student.sectionId,
-      session: sessionId,
-      schoolId,
-    }).lean();
-
-    let total = 0,
-      present = 0,
-      absent = 0,
-      late = 0,
-      leave = 0;
-    records.forEach((rec) => {
-      const sr = (rec.records || []).find((r) => String(r.studentId) === String(studentId));
-      if (sr) {
-        total++;
-        if (sr.status === 'present') present++;
-        else if (sr.status === 'absent') absent++;
-        else if (sr.status === 'late') late++;
-        else if (sr.status === 'leave') leave++;
-      }
-    });
-
-    const pct = total > 0 ? Math.round((present / total) * 100) : 0;
+    const s = attendanceService.summarise(rows);
     return {
-      totalDays: total,
-      presentDays: present,
-      absentDays: absent,
-      lateDays: late,
-      leaveDays: leave,
-      percentage: pct,
+      totalDays: s.totalDays,
+      presentDays: s.presentDays,
+      absentDays: s.absentDays,
+      lateDays: s.lateDays,
+      leaveDays: s.leaveDays,
+      countedDays: s.countedDays,
+      percentage: s.percentage,
     };
   }
 
