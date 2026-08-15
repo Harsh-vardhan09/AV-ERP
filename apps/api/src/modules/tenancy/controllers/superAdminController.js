@@ -981,10 +981,16 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'name and htmlContent are required' });
     }
 
+    // Templates are usually pasted from a chat window, wrapped in ``` fences.
+    // Stored verbatim they foster-parent out of <table> and render as stray text
+    // above every table. Strip before extracting so the schema matches what is saved.
+    const { sanitizeTemplateHtml } = require('../../reportcards').sanitizeTemplateHtml;
+    const { html: cleanHtml, warning: fenceWarning } = sanitizeTemplateHtml(htmlContent);
+
     // Extract dynamic fields + run advisory schema validation
-    const extraction = TemplateFieldExtractor.extractFields(htmlContent);
-    const classified = TemplateFieldExtractor.extractAndClassify(htmlContent);
-    const validation = TemplateFieldExtractor.validateAgainstSchema(htmlContent);
+    const extraction = TemplateFieldExtractor.extractFields(cleanHtml);
+    const classified = TemplateFieldExtractor.extractAndClassify(cleanHtml);
+    const validation = TemplateFieldExtractor.validateAgainstSchema(cleanHtml);
 
     // If this template is set as default, unset any existing default of same type for this school
     if (isDefault) {
@@ -997,7 +1003,7 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
     const template = await ReportTemplate.create({
       name: name.trim(),
       description: description || '',
-      htmlContent,
+      htmlContent: cleanHtml,
       cssContent: cssContent || '',
       extractedFields: extraction.fields,
       // NEW: store classified schema for teacher form generation
@@ -1027,9 +1033,18 @@ exports.uploadTemplateForSchool = async (req, res, next) => {
       marksFields: classified.marksFields,
     });
 
+    if (fenceWarning) {
+      logger.warn('[SuperAdmin] Stripped markdown fences from uploaded template', {
+        templateId: template._id,
+        templateName: template.name,
+      });
+    }
+
     return res.status(201).json({
       success: true,
       message: `Template "${name}" uploaded for ${school.name}`,
+      // Surfaced so the author knows their paste was cleaned, not silently altered
+      ...(fenceWarning && { warning: fenceWarning }),
       data: {
         templateId: template._id,
         name: template.name,

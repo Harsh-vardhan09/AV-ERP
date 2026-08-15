@@ -138,6 +138,17 @@ function classifyTerm(examName = '', examType = '') {
 // Safe number
 const toNum = (v) => (v !== null && v !== undefined && isFinite(Number(v)) ? Number(v) : null);
 
+/**
+ * Marks shown on a certificate must never carry spurious decimals. Rounds to at
+ * most 2 places and drops a trailing .00, so an integer total stays an integer
+ * (128, not 128.00) while a genuine half-mark survives (7.5).
+ */
+const round2 = (v) => {
+  const n = toNum(v);
+  if (n === null) return v;
+  return Number(n.toFixed(2));
+};
+
 // Grade
 function gradeOf(pct) {
   if (pct >= 91) return 'A+';
@@ -183,11 +194,12 @@ class DataAggregatorService {
     if (!studentData) throw new Error(`Student not found: ${studentId}`);
 
     // Always fetch ALL exams — never scope to a single examId
-    const { rows: subjectRows, flatDynamicFields } = await this._aggregateMarks(
-      studentData,
-      schoolId,
-      sessionId
-    );
+    const {
+      rows: subjectRows,
+      flatDynamicFields,
+      examColumns,
+      examColumnsOverflow,
+    } = await this._aggregateMarks(studentData, schoolId, sessionId);
 
     const calc = this._calcTotals(subjectRows);
     const flatMap = this._buildFlat({
@@ -200,6 +212,20 @@ class DataAggregatorService {
       attendance,
       school,
     });
+
+    // Header row for the per-exam layout. Top-level so {{#examColumns}} can build
+    // the <th> cells that {{#subjects}}{{#exams}} then fills, column for column.
+    flatMap.examColumns = examColumns;
+    // Term-split headers, matching subject.term1Exams / term2Exams cell-for-cell
+    flatMap.examColumnsTerm1 = examColumns.filter((c) => c.term === 'term1');
+    flatMap.examColumnsTerm2 = examColumns.filter((c) => c.term === 'term2');
+    flatMap.examCountTerm1 = flatMap.examColumnsTerm1.length;
+    flatMap.examCountTerm2 = flatMap.examColumnsTerm2.length;
+    flatMap.examColumnsOverflow = examColumnsOverflow;
+    // Templates branch on this to fall back to term totals: a section renders when
+    // truthy, so the pair reads as {{#examColumnsFit}}…{{/examColumnsFit}}.
+    flatMap.examColumnsFit = examColumnsOverflow ? null : true;
+    flatMap.examCount = examColumns.length;
 
     // NOTE: flatDynamicFields is intentionally NOT injected into the root flatMap
     // Injecting it (Object.assign) caused all subjects to show the same marks because
@@ -396,6 +422,10 @@ class DataAggregatorService {
       isArchived: { $ne: true },
     })
       .select('name type startDate')
+      // Exam-date order: subject.exams and the top-level examColumns must line up
+      // column-for-column, so both are built from this one ordering. Summing is
+      // order-independent, so the totals below are unaffected.
+      .sort({ startDate: 1, createdAt: 1 })
       .lean();
 
     const examIds = exams.map((e) => e._id);
@@ -672,6 +702,45 @@ class DataAggregatorService {
         });
       });
 
+      // ── Per-exam breakdown ────────────────────────────────────────────────
+      // Schools that run FA1 / FA2 / SA-I as SEPARATE exam documents, each with a
+      // single aggregate mark, have no components to show — the roll-up above
+      // collapses all of them into one 'theory' entry and the fact that there
+      // were several exams becomes unrecoverable. This exposes the axis the
+      // roll-up throws away, so a template can render one column per exam.
+      //
+      // Purely additive: term1/term2/components/t1_*/grandObt are untouched.
+      row.exams = exams
+        .map((exam) => {
+          const examMax = toNum(maxMap[`${exam._id}:${sub.id}`]);
+          const types = subjectMarksTypes[sub.id] ? [...subjectMarksTypes[sub.id]] : ['theory'];
+
+          let obtained = null;
+          for (const t of types) {
+            // Auto-calculated totals are display-only sums of their siblings;
+            // adding them here would double the exam's mark.
+            if (/total/i.test(t)) continue;
+            const v = readMark(exam._id, sub.id, t);
+            if (v !== null) obtained = (obtained ?? 0) + v;
+          }
+
+          // An exam this subject was never assessed in is not a zero — it is a
+          // blank cell. Dropping it keeps the column count honest per subject,
+          // and examColumns below keeps the header aligned.
+          if (obtained === null && examMax === null) return null;
+
+          return {
+            examId: String(exam._id),
+            examName: exam.name,
+            examType: exam.type || '',
+            term: classifyTerm(exam.name, exam.type),
+            obtained: obtained === null ? '' : round2(obtained),
+            maxMarks: examMax ?? '',
+            grade: obtained !== null && examMax > 0 ? gradeOf((obtained / examMax) * 100) : '',
+          };
+        })
+        .filter(Boolean);
+
       // Build components[] array (dynamic, no hardcoding)
       // Collect all unique component types encountered across exams
       const componentMap = {}; // type → { type, label, marks: null|number, max: number }
@@ -781,6 +850,16 @@ class DataAggregatorService {
         if (row[`t2_${fieldName}`] === undefined) row[`t2_${fieldName}`] = 0;
       });
 
+      // Round every displayed figure once, here, rather than trusting each
+      // arithmetic path to stay integral. Marks on a certificate must never show
+      // spurious decimals, and a stored total can arrive fractional.
+      row.grandObt = round2(row.grandObt);
+      row.grandMax = round2(row.grandMax);
+      row.term1.total = round2(row.term1.total);
+      row.term1.max = round2(row.term1.max);
+      row.term2.total = round2(row.term2.total);
+      row.term2.max = round2(row.term2.max);
+
       row.total = row.grandObt;
       row.grandTotal = row.grandObt; // per-subject alias — prevents Mustache parent fallback
       row.grand_total = row.grandObt;
@@ -794,7 +873,62 @@ class DataAggregatorService {
       return row;
     });
 
-    return { rows, flatDynamicFields };
+    // ── Column headers for the per-exam layout ────────────────────────────────
+    // The union of exams any subject was assessed in, in the same exam-date order
+    // the rows used, so a header cell and a body cell at index i always describe
+    // the same exam even when a subject skipped one.
+    const seen = new Set();
+    let examColumns = [];
+    for (const row of rows) {
+      for (const e of row.exams || []) {
+        if (seen.has(e.examId)) continue;
+        seen.add(e.examId);
+        examColumns.push({
+          examId: e.examId,
+          examName: e.examName,
+          examType: e.examType,
+          term: e.term,
+          maxMarks: e.maxMarks,
+        });
+      }
+    }
+
+    // A4 portrait stops fitting somewhere past half a dozen mark columns plus the
+    // subject name, term totals and grade. Decide that here rather than hoping a
+    // media query rescues the layout: past the limit the template renders term
+    // totals only, which always fits.
+    const MAX_EXAM_COLUMNS = 6;
+    const examColumnsOverflow = examColumns.length > MAX_EXAM_COLUMNS;
+    if (examColumnsOverflow) {
+      logger.info(
+        `[DataAggregator] ${examColumns.length} exam columns exceeds ${MAX_EXAM_COLUMNS} — ` +
+          `templates should fall back to term totals`
+      );
+    }
+
+    // Align every subject to the full column set so a subject that skipped an exam
+    // renders a blank cell in the right place instead of shifting the row left.
+    if (examColumns.length) {
+      for (const row of rows) {
+        const byId = Object.fromEntries((row.exams || []).map((e) => [e.examId, e]));
+        row.exams = examColumns.map(
+          (c) =>
+            byId[c.examId] || {
+              examId: c.examId,
+              examName: c.examName,
+              examType: c.examType,
+              term: c.term,
+              obtained: '',
+              maxMarks: c.maxMarks,
+              grade: '',
+            }
+        );
+        row.term1Exams = row.exams.filter((e) => e.term === 'term1');
+        row.term2Exams = row.exams.filter((e) => e.term === 'term2');
+      }
+    }
+
+    return { rows, flatDynamicFields, examColumns, examColumnsOverflow };
   }
 
   // Grand totals across all subjects

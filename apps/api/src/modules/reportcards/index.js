@@ -4,6 +4,13 @@
 // which reach back here for ReportTemplate. Deferring to first access keeps that
 // from becoming a cycle — a consumer loads only what it names.
 module.exports = {
+  // consumers: tenancy/superAdminController, reportcards/reportTemplateController.
+  // Pasted template HTML arrives wrapped in markdown fences; stored verbatim they
+  // foster-parent out of <table> and render as stray text above every table.
+  get sanitizeTemplateHtml() {
+    return require('./lib/sanitizeTemplateHtml');
+  },
+
   // ReportCard — consumers: modules/fees/services/calculationService,
   // people/controllers/teacherController, seeds and tools
   get ReportCard() {

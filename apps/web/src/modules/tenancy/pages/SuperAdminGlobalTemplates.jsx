@@ -10,6 +10,7 @@ import {
   usePreviewGlobalTemplateMutation,
 } from '../api/superAdminApi';
 import { STARTER_TEMPLATE } from '../lib/starterReportTemplate';
+import { PER_EXAM_TEMPLATE } from '../lib/perExamReportTemplate';
 
 /**
  * Global report card template authoring — SUPER ADMIN ONLY.
@@ -265,7 +266,28 @@ export default function SuperAdminGlobalTemplates() {
                   toast.success('Example template loaded — every placeholder in it resolves.');
                 }}
               >
-                Load example
+                Load example (components)
+              </button>
+              {/* Two shapes exist and neither is wrong. Components-in-one-exam is
+                  CBSE's; one-exam-per-assessment (FA1 / FA2 / SA-I) is just as
+                  common. A school on the second shape has no components at all,
+                  so the component example renders blank columns for them. */}
+              <button
+                type="button"
+                className="sa-btn sa-btn-link"
+                style={{ marginLeft: 8 }}
+                onClick={() => {
+                  if (
+                    form.htmlContent.trim() &&
+                    !window.confirm('Replace the current HTML with the per-exam template?')
+                  ) {
+                    return;
+                  }
+                  setForm((f) => ({ ...f, htmlContent: PER_EXAM_TEMPLATE }));
+                  toast.success('Per-exam template loaded — one column per exam.');
+                }}
+              >
+                Load example (per-exam)
               </button>
             </span>
             <textarea

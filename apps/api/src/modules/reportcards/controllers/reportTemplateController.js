@@ -10,6 +10,7 @@ const { resolveTemplate } = require('../services/templateResolver');
 const { ClassModel: Class } = require('../../academics');
 const SchoolSettings = require('../../tenancy').SchoolSettings;
 const logger = require('../../../core/logging/logger.js');
+const { sanitizeTemplateHtml } = require('../lib/sanitizeTemplateHtml');
 const { serviceError } = require('../lib/respond');
 
 /**
@@ -43,14 +44,18 @@ exports.createTemplate = async (req, res) => {
     const schoolId = req.schoolId;
     const userId = req.user._id;
 
+    // Pasted markup usually arrives wrapped in ``` fences; stored verbatim they
+    // foster-parent out of <table> and render as stray text above every table.
+    const { html: cleanHtml, warning: fenceWarning } = sanitizeTemplateHtml(htmlContent);
+
     // Extract fields from template
-    const extraction = TemplateFieldExtractor.extractFields(htmlContent);
+    const extraction = TemplateFieldExtractor.extractFields(cleanHtml);
 
     // Create template
     const template = new ReportTemplate({
       name,
       description,
-      htmlContent,
+      htmlContent: cleanHtml,
       cssContent: cssContent || '',
       extractedFields: extraction.fields,
       templateType: templateType || 'custom',
@@ -71,6 +76,8 @@ exports.createTemplate = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: 'Template created successfully',
+      // Surfaced so the author knows their paste was cleaned, not silently altered
+      ...(fenceWarning && { warning: fenceWarning }),
       data: {
         templateId: template._id,
         name: template.name,
@@ -232,9 +239,12 @@ exports.updateTemplate = async (req, res) => {
     // Update fields
     if (name !== undefined) template.name = name;
     if (description !== undefined) template.description = description;
+    let fenceWarning = null;
     if (htmlContent !== undefined) {
-      template.htmlContent = htmlContent;
-      const extraction = TemplateFieldExtractor.extractFields(htmlContent);
+      const cleaned = sanitizeTemplateHtml(htmlContent);
+      fenceWarning = cleaned.warning;
+      template.htmlContent = cleaned.html;
+      const extraction = TemplateFieldExtractor.extractFields(cleaned.html);
       template.extractedFields = extraction.fields;
     }
     if (cssContent !== undefined) template.cssContent = cssContent;
@@ -258,6 +268,7 @@ exports.updateTemplate = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Template updated successfully',
+      ...(fenceWarning && { warning: fenceWarning }),
       data: {
         templateId: template._id,
         name: template.name,
