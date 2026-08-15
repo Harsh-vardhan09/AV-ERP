@@ -58,9 +58,13 @@ const marksSchema = new mongoose.Schema(
     //   { "math_theory": 80, "math_practical": 15, "science_project": 25 }
     // When this field is present (non-empty), the aggregator reads from here
     // instead of marksObtained + marksType.
+    // Values are Numbers for every scored / capacity / total / percentage field.
+    // Mixed rather than Number because a template also carries a derived GRADE,
+    // which is a letter ('A+'), and `of: Number` silently dropped it. The
+    // validator (services/marksEntryValidator) enforces the per-role types.
     fields: {
       type: Map,
-      of: Number,
+      of: mongoose.Schema.Types.Mixed,
       default: undefined, // undefined = old record (uses marksObtained)
     },
 

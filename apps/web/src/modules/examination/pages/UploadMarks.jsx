@@ -47,11 +47,48 @@ const toLabel = (key) => {
 };
 
 /**
- * Checks if a field is a total field (auto-calculated)
+ * What a template marks-field actually MEANS.
+ *
+ * The extractor marks a field as 'marks' by name, which answers "is this about
+ * marks?" not "is this a score?". A template legitimately carries Max Marks,
+ * Obtained Marks, Total Obtained, Total Marks, Overall Percentage and Overall
+ * Grade — only ONE of those is typed by a teacher. Treating them all as scores
+ * made a single subject add up to 100 + 100 + 100 + 99.98 = 399.98.
+ *
+ * Mirrors apps/api/src/modules/examination/lib/marksFieldRoles.js — the server
+ * re-derives every derived field, so this is convenience, not authority.
  */
-const isTotalField = (key) => {
-  if (!key) return false;
-  return /total/i.test(key);
+const FIELD_ROLE_RULES = [
+  [/grade/i, 'grade'],
+  [/percent|pct/i, 'percentage'],
+  [/\b(max|maximum)\b|^max[_-]|[_-]max$|max[_-]?marks/i, 'capacity'],
+  [/total|grand[_-]?total|aggregate/i, 'total'],
+];
+
+const fieldRole = (key) => {
+  const k = String(key || '');
+  for (const [re, role] of FIELD_ROLE_RULES) if (re.test(k)) return role;
+  return 'component';
+};
+
+/** Only components are typed by a teacher and counted toward a subject total. */
+const isComponentField = (key) => fieldRole(key) === 'component';
+
+/** Auto-filled by the form — the teacher must not type into these. */
+const isDerivedField = (key) => ['total', 'percentage', 'grade'].includes(fieldRole(key));
+
+/** Kept for the existing call sites: "is this an auto-calculated total?" */
+const isTotalField = (key) => fieldRole(key) === 'total';
+
+const gradeFor = (pct) => {
+  if (!Number.isFinite(pct)) return '';
+  if (pct >= 91) return 'A+';
+  if (pct >= 81) return 'A';
+  if (pct >= 71) return 'B+';
+  if (pct >= 61) return 'B';
+  if (pct >= 51) return 'C';
+  if (pct >= 41) return 'D';
+  return 'E';
 };
 
 /**
@@ -67,33 +104,49 @@ const getTermPrefix = (key) => {
  * Recalculates all total fields by summing their term siblings
  * e.g., t1_total = t1_oral + t1_half_yearly
  */
-const recalcTotals = (fields) => {
+const recalcTotals = (fields, subjectTotal) => {
   if (!fields || typeof fields !== 'object') return fields;
 
   const updated = { ...fields };
+  const isSet = (v) => v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v));
 
+  // ── Term totals: sum this term's components only ──
   Object.keys(fields).forEach((key) => {
     if (!isTotalField(key)) return;
-
     const term = getTermPrefix(key);
-    if (!term) return;
+    if (!term) return; // a bare "total" is handled as the overall total below
 
-    const sum = Object.entries(fields)
-      .filter(([k, v]) => {
-        return (
-          !isTotalField(k) &&
-          getTermPrefix(k) === term &&
-          v !== '' &&
-          v !== null &&
-          v !== undefined
-        );
-      })
-      .reduce((accumulator, [, value]) => {
-        const numValue = Number(value);
-        return accumulator + (Number.isFinite(numValue) ? numValue : 0);
-      }, 0);
+    updated[key] = Object.entries(fields)
+      .filter(([k, v]) => isComponentField(k) && getTermPrefix(k) === term && isSet(v))
+      .reduce((acc, [, v]) => acc + Number(v), 0);
+  });
 
-    updated[key] = sum;
+  // ── Overall obtained, percentage and grade ──
+  // These are DERIVED. They used to be free inputs, so "Overall Percentage" and
+  // "Overall Grade" were typed by hand and then summed as if they were scores.
+  const components = Object.entries(fields).filter(([k, v]) => isComponentField(k) && isSet(v));
+  const obtained = components.reduce((acc, [, v]) => acc + Number(v), 0);
+
+  // A capacity field the teacher filled in beats the configured total: a school
+  // may run one subject out of 50 without reconfiguring the exam.
+  const capacities = Object.entries(fields).filter(
+    ([k, v]) => fieldRole(k) === 'capacity' && isSet(v)
+  );
+  const max = capacities.length
+    ? capacities.reduce((acc, [, v]) => acc + Number(v), 0)
+    : Number(subjectTotal) || 0;
+
+  const pct = max > 0 && components.length ? Number(((obtained / max) * 100).toFixed(2)) : null;
+
+  Object.keys(updated).forEach((key) => {
+    const role = fieldRole(key);
+    if (role === 'total' && !getTermPrefix(key)) {
+      updated[key] = components.length ? Number(obtained.toFixed(2)) : '';
+    } else if (role === 'percentage') {
+      updated[key] = pct === null ? '' : pct;
+    } else if (role === 'grade') {
+      updated[key] = pct === null ? '' : gradeFor(pct);
+    }
   });
 
   return updated;
@@ -257,8 +310,14 @@ const UploadMarks = () => {
     if (!isDynamic) return {};
     const out = {};
     for (const student of marks) {
+      // SCORES only. This used to be "not a total", so Max Marks, Overall
+      // Percentage and Overall Grade were added in and one subject came to
+      // 399.98 out of 100 on an otherwise ordinary entry.
       const sum = Object.entries(student.fields || {})
-        .filter(([k, v]) => !isTotalField(k) && v !== '' && v !== null && Number.isFinite(Number(v)))
+        .filter(
+          ([k, v]) =>
+            isComponentField(k) && v !== '' && v !== null && Number.isFinite(Number(v))
+        )
         .reduce((s, [, v]) => s + Number(v), 0);
       if (sum > totalMaxMarks) {
         out[`${student.studentId}-__sum`] =
@@ -425,8 +484,10 @@ const UploadMarks = () => {
    */
   const handleFieldChange = useCallback(
     (studentId, fieldKey, value) => {
-      // Total fields are read-only
-      if (isDynamic && isTotalField(fieldKey)) return;
+      // Total, percentage and grade are DERIVED — recalcTotals fills them in.
+      // They used to be free inputs, which is how "Overall Percentage" and
+      // "Overall Grade" got typed by hand and then summed as if they were scores.
+      if (isDynamic && isDerivedField(fieldKey)) return;
 
       setMarks((prev) =>
         prev.map((student) => {
@@ -448,10 +509,10 @@ const UploadMarks = () => {
 
             return {
               ...student,
-              fields: recalcTotals({
-                ...student.fields,
-                [fieldKey]: validation.value,
-              }),
+              fields: recalcTotals(
+                { ...student.fields, [fieldKey]: validation.value },
+                totalMaxMarks
+              ),
             };
           }
 
@@ -497,16 +558,18 @@ const UploadMarks = () => {
       if (isDynamic) {
         for (const [key, val] of Object.entries(student.fields)) {
           if (val === '' || val === null || val === undefined) continue;
+          // Derived fields are computed, not typed — a grade is a letter, and a
+          // percentage is bounded by 100 rather than by the subject total.
+          if (isDerivedField(key)) continue;
 
           const num = Number(val);
-          const cap = getFieldMax(key);
+          // A capacity field states a maximum; it is not itself capped by one.
+          const cap = fieldRole(key) === 'capacity' ? Infinity : getFieldMax(key);
 
           if (!Number.isFinite(num) || num < 0) {
             errors.push(`Invalid value for ${toLabel(key)} (${student.studentName})`);
           } else if (num > cap) {
-            errors.push(
-              `${toLabel(key)}: max ${cap}, got ${num} (${student.studentName})`
-            );
+            errors.push(`${toLabel(key)}: max ${cap}, got ${num} (${student.studentName})`);
           }
         }
       } else {
@@ -1152,7 +1215,7 @@ const UploadMarks = () => {
                           </td>
                           {isDynamic ? (
                             dynamicMarksFields.map((field) => {
-                              const isTotal = isTotalField(field.key);
+                              const isTotal = isDerivedField(field.key);
                               const value = student.fields?.[field.key];
                               const errorKey = `${student.studentId}-${field.key}`;
                               const hasError = validationErrors[errorKey];

@@ -14,6 +14,8 @@
  * Every reader goes through here so that cannot happen again.
  */
 
+const { fieldRole, isComponent } = require('./marksFieldRoles');
+
 /** `fields` is a Map on a hydrated doc and a plain object after .lean(). */
 function toPlainFields(fields) {
   if (!fields) return {};
@@ -27,7 +29,7 @@ const isNum = (v) => v !== null && v !== undefined && v !== '' && Number.isFinit
  * A component whose name says "total" is an auto-calculated sum of its siblings,
  * filled in by the marks-entry form. Adding it to the siblings double-counts.
  */
-const isTotalKey = (k) => /total/i.test(String(k));
+const isTotalKey = (k) => fieldRole(k) === 'total';
 
 /**
  * The single number to show for one marks document.
@@ -41,11 +43,21 @@ function displayMarks(doc) {
   const entries = Object.entries(f).filter(([, v]) => isNum(v));
   if (!entries.length) return null;
 
-  const components = entries.filter(([k]) => !isTotalKey(k));
-  // If a row carries ONLY total fields, they are all there is to show.
-  const use = components.length ? components : entries;
+  // SCORES only. A template legitimately carries Max Marks, Overall Percentage
+  // and Overall Grade as 'marks' fields; adding those to the score made one
+  // subject read 399.98 out of 100. See lib/marksFieldRoles.
+  const components = entries.filter(([k]) => isComponent(k));
+  if (components.length) {
+    const sum = components.reduce((acc, [, v]) => acc + Number(v), 0);
+    return Number(sum.toFixed(2));
+  }
 
-  const sum = use.reduce((acc, [, v]) => acc + Number(v), 0);
+  // No scored component — fall back to a stored total, which is what a row that
+  // only carries derived fields has to offer.
+  const totals = entries.filter(([k]) => isTotalKey(k));
+  if (!totals.length) return null;
+
+  const sum = totals.reduce((acc, [, v]) => acc + Number(v), 0);
   // Marks on a screen must never carry float noise from summing.
   return Number(sum.toFixed(2));
 }

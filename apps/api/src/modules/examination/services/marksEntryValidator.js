@@ -20,7 +20,7 @@
  */
 
 const ExamSubjectConfig = require('../models/ExamSubjectConfig');
-const { isTotalKey } = require('../lib/marksValue');
+const { fieldRole, isComponent, recomputeDerived } = require('../lib/marksFieldRoles');
 
 const DEFAULT_MAX = 100;
 
@@ -111,6 +111,14 @@ function validateEntry({ entry, maxima, label = 'Student', subjectName = '' }) {
 
     const clean = {};
     for (const [key, raw] of usable) {
+      const role = fieldRole(key);
+
+      // A grade is a letter, not a number, and is derived anyway.
+      if (role === 'grade') {
+        clean[key] = raw;
+        continue;
+      }
+
       const num = Number(raw);
       if (!Number.isFinite(num)) {
         errors.push(`${label}: ${subj}${key} — "${raw}" is not a number`);
@@ -120,6 +128,21 @@ function validateEntry({ entry, maxima, label = 'Student', subjectName = '' }) {
         errors.push(`${label}: ${subj}${key} — ${num} is negative`);
         continue;
       }
+      // A percentage is bounded by 100, not by the subject total.
+      if (role === 'percentage') {
+        if (num > 100) {
+          errors.push(`${label}: ${subj}${key} — ${num}% is above 100%`);
+          continue;
+        }
+        clean[key] = num;
+        continue;
+      }
+      // A capacity states a maximum; it is not a score and is not capped by one.
+      if (role === 'capacity') {
+        clean[key] = num;
+        continue;
+      }
+
       const cap = componentCap(key, maxima);
       if (Number.isFinite(cap) && num > cap) {
         errors.push(`${label}: ${subj}${key} — ${num} exceeds the maximum of ${cap}`);
@@ -128,25 +151,32 @@ function validateEntry({ entry, maxima, label = 'Student', subjectName = '' }) {
       clean[key] = num;
     }
 
-    // The sum rule. Auto-calculated *total* components are display-only sums of
-    // their siblings; counting them here would double the subject total.
-    const components = Object.entries(clean).filter(([k]) => !isTotalKey(k));
-    const sum = components.reduce((s, [, v]) => s + v, 0);
+    // THE SUM RULE — over SCORES only.
+    // It used to run over everything that was not a *total*, so Max Marks,
+    // Overall Percentage and Overall Grade were added to the score: a single
+    // subject came to 100 + 100 + 100 + 99.98 = 399.98 and was rejected on a
+    // perfectly ordinary entry. Only 'component' fields are scores.
+    const components = Object.entries(clean).filter(([k]) => isComponent(k));
+    const sum = components.reduce((s, [, v]) => s + Number(v), 0);
     if (components.length && sum > max) {
       errors.push(
-        `${label}: ${subj}the components add up to ${sum}, which is more than the ` +
+        `${label}: ${subj}the marks add up to ${sum}, which is more than the ` +
           `subject total of ${max} (${components.map(([k, v]) => `${k} ${v}`).join(', ')})`
       );
     }
 
     // A stored total must also be within the subject total.
     for (const [k, v] of Object.entries(clean)) {
-      if (isTotalKey(k) && v > max) {
+      if (fieldRole(k) === 'total' && Number(v) > max) {
         errors.push(`${label}: ${subj}${k} — ${v} exceeds the subject total of ${max}`);
       }
     }
 
-    return { errors, value: errors.length ? null : sum, fields: errors.length ? null : clean };
+    // Derived fields are recomputed from the components, never trusted from the
+    // client — the server is the authority on a percentage and a grade.
+    const finalFields = errors.length ? null : recomputeDerived(clean, max);
+
+    return { errors, value: errors.length ? null : sum, fields: finalFields };
   }
 
   // ── Legacy single-value shape ──

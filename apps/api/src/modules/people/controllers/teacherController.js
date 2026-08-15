@@ -1074,17 +1074,14 @@ exports.uploadMarks = async (req, res) => {
         });
       }
 
-      const operations = validMarks
+      // Store what the VALIDATOR produced, not what the client sent: it has
+      // already stripped blanks and recomputed every derived field, so a
+      // hand-typed percentage or grade cannot survive into the database.
+      const operations = check.entries
         .map((m) => {
           const studentObjectId = toObjectId(m.studentId);
           if (!studentObjectId) return null;
-          const cleanedFields = {};
-          Object.entries(m.fields).forEach(([k, v]) => {
-            if (v === '' || v === null || v === undefined) return;
-            const num = Number(v);
-            // Already validated above — no clamping, the value is stored as entered.
-            if (Number.isFinite(num)) cleanedFields[k] = num;
-          });
+          const cleanedFields = m._fields || {};
           if (Object.keys(cleanedFields).length === 0) return null;
           return {
             updateOne: {

@@ -420,6 +420,103 @@ describe('where maxMarks comes from', () => {
   });
 });
 
+/**
+ * The screenshot case. A template's marks fields were:
+ *   Max Marks · Obtained Marks · Total Obtained · Total Marks ·
+ *   Overall Percentage · Overall Grade
+ * Only "Obtained Marks" is a score. Everything else is the denominator, an auto
+ * sum, or derived — but all six were summed, so an ordinary entry of 100/100
+ * came to 100 + 100 + 100 + 99.98 = 399.98 and was rejected.
+ */
+describe('only scored components count', () => {
+  const REAL_TEMPLATE_FIELDS = {
+    max_marks: 100,
+    obtained_marks: 100,
+    total_obtained: 100,
+    total_marks: 100,
+    overall_percentage: 100,
+    overall_grade: 99.98,
+  };
+
+  test('a full-marks entry on a six-field template is accepted', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    const res = await post(ctx, [
+      { studentId: String(ctx.stuUser._id), fields: REAL_TEMPLATE_FIELDS },
+    ]);
+
+    expect(res.status).toBe(200);
+    const view = await request(app)
+      .get('/api/v1/student/marks')
+      .set('Cookie', authCookie(ctx.stuUser));
+    // The score is the ONE component, not the sum of all six
+    expect(view.body.data[0].marksObtained).toBe(100);
+  });
+
+  test('percentage and grade are recomputed by the server, not trusted', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    await post(ctx, [
+      {
+        studentId: String(ctx.stuUser._id),
+        // A teacher typed nonsense into the derived fields
+        fields: { max_marks: 100, obtained_marks: 40, overall_percentage: 99, overall_grade: 7 },
+      },
+    ]);
+
+    const raw = await db('marks').findOne({});
+    expect(raw.fields.overall_percentage).toBe(40); // 40 / 100
+    expect(raw.fields.overall_grade).toBe('E'); // 40% falls in the E band (below 41)
+  });
+
+  test('a capacity field is not capped by the subject total', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    // max_marks 100 must not be read as "a score of 100 out of 100"
+    const res = await post(ctx, [
+      { studentId: String(ctx.stuUser._id), fields: { max_marks: 100, obtained_marks: 55 } },
+    ]);
+    expect(res.status).toBe(200);
+    const raw = await db('marks').findOne({});
+    expect(raw.fields.max_marks).toBe(100);
+    expect(raw.fields.obtained_marks).toBe(55);
+  });
+
+  test('a real over-max score is still rejected', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    const res = await post(ctx, [
+      { studentId: String(ctx.stuUser._id), fields: { max_marks: 100, obtained_marks: 150 } },
+    ]);
+    expect(res.status).toBe(400);
+    expect(res.body.details.errors[0]).toMatch(/obtained_marks — 150 exceeds/);
+  });
+
+  test('a percentage above 100 is rejected', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    const res = await post(ctx, [
+      { studentId: String(ctx.stuUser._id), fields: { overall_percentage: 250 } },
+    ]);
+    expect(res.status).toBe(400);
+    expect(res.body.details.errors[0]).toMatch(/250% is above 100%/);
+  });
+
+  test('field roles are classified from the real template names', () => {
+    const { fieldRole } = require('../src/modules/examination/lib/marksFieldRoles');
+    expect(fieldRole('max_marks')).toBe('capacity');
+    expect(fieldRole('obtained_marks')).toBe('component');
+    expect(fieldRole('total_obtained')).toBe('total');
+    expect(fieldRole('total_marks')).toBe('total');
+    expect(fieldRole('overall_percentage')).toBe('percentage');
+    expect(fieldRole('overall_grade')).toBe('grade');
+    expect(fieldRole('t1_pertest')).toBe('component');
+  });
+
+  test('grades follow the report card bands', () => {
+    const { gradeFor } = require('../src/modules/examination/lib/marksFieldRoles');
+    expect(gradeFor(95)).toBe('A+');
+    expect(gradeFor(85)).toBe('A');
+    expect(gradeFor(75)).toBe('B+');
+    expect(gradeFor(40)).toBe('E');
+  });
+});
+
 describe('displayMarks', () => {
   test('prefers an explicit marksObtained', () => {
     expect(displayMarks({ marksObtained: 42, fields: { a: 1 } })).toBe(42);
