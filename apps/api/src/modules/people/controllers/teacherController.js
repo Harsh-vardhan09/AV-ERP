@@ -10,7 +10,10 @@ const {
   ClassSubjectMap,
 } = require('../../academics');
 const { MarksModel: Marks, MarksAuditLog, ExamSubjectConfig, Exam } = require('../../examination');
-const { Attendance } = require('../../attendance');
+// Attendance is the LEGACY per-period model — still read by getAttendanceRecords,
+// which lists the historical rows a teacher took before daily marking. It is never
+// a source of percentages any more; attendanceService owns those.
+const { Attendance, attendanceService } = require('../../attendance');
 const Leave = require('../../communication').Leave;
 const Knowledgecenter = require('../../communication').Knowledgecenter;
 const StudentProfile = require('../models/StudentProfile');
@@ -1830,36 +1833,29 @@ exports.getStudentPerformance = async (req, res) => {
     }
 
     // --- Attendance summary ---
-    const attendanceDocs = await Attendance.find({
-      classId: ctAssignment.classId,
-      sectionId: ctAssignment.sectionId,
+    // Was the LEGACY per-period model, counting one "session" per period document
+    // and scoped by class/section rather than schoolId — so this disagreed with
+    // the student's own dashboard on the model, the denominator, and the
+    // weighting of both `late` and `leave`. All six consumers now share
+    // attendanceService.getSummary; see the rules documented there.
+    const attSummary = await attendanceService.getSummary({
+      studentId,
+      schoolId: req.schoolId,
       session: ctAssignment.session,
-      'records.studentId': studentId,
-    }).select('date attendanceType subjectId records');
-
-    let totalSessions = 0,
-      present = 0,
-      absent = 0,
-      late = 0,
-      leave = 0;
-    const recentAttendance = [];
-
-    attendanceDocs.forEach((doc) => {
-      const rec = doc.records.find((r) => r.studentId?.toString() === studentId);
-      if (!rec) return;
-      totalSessions++;
-      if (rec.status === 'present') present++;
-      else if (rec.status === 'absent') absent++;
-      else if (rec.status === 'late') late++;
-      else if (rec.status === 'leave') leave++;
-      recentAttendance.push({ date: doc.date, status: rec.status, type: doc.attendanceType });
     });
 
-    // Sort recent desc, take last 10
-    recentAttendance.sort((a, b) => new Date(b.date) - new Date(a.date));
-    const recentSlice = recentAttendance.slice(0, 10);
+    const present = attSummary.presentDays;
+    const absent = attSummary.absentDays;
+    const late = attSummary.lateDays;
+    const leave = attSummary.leaveDays;
+    const totalSessions = attSummary.countedDays;
+    const attendancePct = attSummary.totalDays > 0 ? attSummary.percentage : null;
 
-    const attendancePct = totalSessions > 0 ? Math.round((present / totalSessions) * 100) : null;
+    // Most recent first, last 10
+    const recentSlice = [...attSummary.days]
+      .reverse()
+      .slice(0, 10)
+      .map((d) => ({ date: d.date, status: d.status }));
 
     // --- Assignment summary ---
     const assignments = await Assignment.find({

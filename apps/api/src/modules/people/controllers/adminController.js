@@ -1307,15 +1307,12 @@ exports.getAdminStudentDetail = async (req, res) => {
 
     // DAYS, not class periods. Queried by studentId, so a mid-session section
     // change no longer erases the student's earlier attendance.
-    const attendanceRows = await DailyAttendance.find({
-      schoolId: req.schoolId,
+    // Shared summary — same rules as the student and teacher dashboards.
+    const attSummary = await attendanceService.getSummary({
       studentId: student._id,
+      schoolId: req.schoolId,
       ...(student.session?._id && { session: student.session._id }),
-    })
-      .select('status')
-      .lean();
-
-    const attSummary = attendanceService.summarise(attendanceRows);
+    });
     const present = attSummary.presentDays;
     const absent = attSummary.absentDays;
     const late = attSummary.lateDays;

@@ -349,11 +349,13 @@ class DataAggregatorService {
    * history, and the denominator is days the school actually marked.
    */
   static async _fetchAttendance(studentId, schoolId, sessionId) {
-    const rows = await DailyAttendance.find({ schoolId, studentId, session: sessionId })
-      .select('status')
-      .lean();
-
-    const s = attendanceService.summarise(rows);
+    // The shared summary — same call and same rules as the student and teacher
+    // dashboards, so a report card can never quote a third figure.
+    const s = await attendanceService.getSummary({
+      studentId,
+      schoolId,
+      session: sessionId,
+    });
     return {
       totalDays: s.totalDays,
       presentDays: s.presentDays,

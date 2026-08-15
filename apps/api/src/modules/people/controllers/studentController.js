@@ -76,6 +76,8 @@ exports.getMyAttendance = async (req, res) => {
       };
     }
 
+    // This endpoint returns the per-day rows as well as the summary, so it keeps
+    // its own query; the counts below still come from the shared summarise().
     const records = await DailyAttendance.find(filter)
       .populate('markedBy', 'firstName lastName')
       .sort({ date: -1 })
@@ -539,15 +541,13 @@ exports.getMyReport = async (req, res) => {
 
     // Attendance stats — DAYS, not class periods. Queried by studentId so a
     // section change mid-session no longer erases the earlier history.
-    const attendanceRows = await DailyAttendance.find({
-      schoolId: req.schoolId,
+    // Shared summary — the same call the teacher dashboard makes, so the two
+    // cannot report different figures for the same student.
+    const attSummary = await attendanceService.getSummary({
       studentId: profile._id,
+      schoolId: req.schoolId,
       session: profile.session._id,
-    })
-      .select('status')
-      .lean();
-
-    const attSummary = attendanceService.summarise(attendanceRows);
+    });
     const totalClasses = attSummary.countedDays;
     const presentCount = attSummary.presentDays + attSummary.lateDays;
 
@@ -599,8 +599,13 @@ exports.getMyReport = async (req, res) => {
         attendance: {
           totalClasses,
           present: presentCount,
-          absent: totalClasses - presentCount,
-          percentage: totalClasses > 0 ? ((presentCount / totalClasses) * 100).toFixed(2) : 0,
+          absent: attSummary.absentDays,
+          late: attSummary.lateDays,
+          leave: attSummary.leaveDays,
+          // From the shared service, NOT recomputed here — a local
+          // (present / total).toFixed(2) was a third formula for the same number
+          // and rounded differently from every other consumer.
+          percentage: attSummary.percentage,
         },
         assignments: {
           total: totalAssignments,

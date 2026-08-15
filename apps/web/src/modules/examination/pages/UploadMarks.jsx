@@ -172,27 +172,6 @@ const UploadMarks = () => {
 
   // ─── Mutations ───
   const [uploadMarks, { isLoading: uploading }] = useUploadMarksMutation();
-
-  // Components must also sum within the subject total: each one can be under its
-  // own cap while four of them add up to 360 out of 100. The server enforces this;
-  // showing it here stops a teacher discovering it only on submit.
-  const sumErrors = useMemo(() => {
-    if (!isDynamic) return {};
-    const out = {};
-    for (const student of marks) {
-      const sum = Object.entries(student.fields || {})
-        .filter(([k, v]) => !isTotalField(k) && v !== '' && v !== null && Number.isFinite(Number(v)))
-        .reduce((s, [, v]) => s + Number(v), 0);
-      if (sum > totalMaxMarks) {
-        out[`${student.studentId}-__sum`] =
-          `Components add up to ${sum}, more than the subject total of ${totalMaxMarks}`;
-      }
-    }
-    return out;
-  }, [marks, isDynamic, totalMaxMarks]);
-
-  const blockingErrors = { ...validationErrors, ...sumErrors };
-  const hasBlockingErrors = Object.keys(blockingErrors).length > 0;
   const [uploadMarksExcel, { isLoading: uploadingExcel }] = useUploadMarksExcelMutation();
 
   // ─── Derived Data ───
@@ -212,6 +191,7 @@ const UploadMarks = () => {
   const templateTier = templateData?.data?.tier;
   const fieldMaxMap = templateData?.data?.fieldMaxMap || EMPTY_OBJECT;
   const totalMaxMarks = templateData?.data?.totalMaxMarks ?? 100;
+
 
   /**
    * Gets the maximum allowed marks for a field
@@ -269,6 +249,27 @@ const UploadMarks = () => {
   }, [templateSchema, getFieldMax]);
 
   const isDynamic = dynamicMarksFields.length > 0;
+
+  // Components must also sum within the subject total: each one can be under its
+  // own cap while four of them add up to 360 out of 100. The server enforces this;
+  // showing it here stops a teacher discovering it only on submit.
+  const sumErrors = useMemo(() => {
+    if (!isDynamic) return {};
+    const out = {};
+    for (const student of marks) {
+      const sum = Object.entries(student.fields || {})
+        .filter(([k, v]) => !isTotalField(k) && v !== '' && v !== null && Number.isFinite(Number(v)))
+        .reduce((s, [, v]) => s + Number(v), 0);
+      if (sum > totalMaxMarks) {
+        out[`${student.studentId}-__sum`] =
+          `Components add up to ${sum}, more than the subject total of ${totalMaxMarks}`;
+      }
+    }
+    return out;
+  }, [marks, isDynamic, totalMaxMarks]);
+
+  const blockingErrors = { ...validationErrors, ...sumErrors };
+  const hasBlockingErrors = Object.keys(blockingErrors).length > 0;
 
   /**
    * Derive unique classes from assignments

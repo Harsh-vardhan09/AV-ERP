@@ -333,16 +333,47 @@ async function getStudentAttendance({ schoolId, studentId, session, year, month 
   };
 }
 
-/** Counts and percentage from a set of daily rows. */
+/**
+ * ════════════════════════════════════════════════════════════════════════════
+ * THE ATTENDANCE RULES. One place, deliberately explicit.
+ *
+ * The student dashboard and the teacher dashboard used to compute this
+ * separately and disagreed on all four of these at once — different model,
+ * different denominator, opposite weighting of late and leave. Two
+ * implementations of the same number always drift. Every consumer calls this.
+ *
+ *  1. DENOMINATOR = days that have a record.
+ *     Not calendar days, not a working-day calendar. A school cannot be marked
+ *     absent for a day it never held, and there is no holiday calendar in this
+ *     system to subtract — inventing one would be guesswork. A Sunday has no
+ *     record, so it never enters the denominator. The corollary is that an
+ *     unmarked day silently vanishes: see getUnassignedSections.
+ *
+ *  2. LATE COUNTS AS PRESENT.
+ *     The student was there. Punctuality is a different concern from
+ *     attendance. lateDays is reported separately so a school that disagrees
+ *     can weight it without a code change.
+ *
+ *  3. APPROVED LEAVE IS EXCLUDED FROM THE DENOMINATOR.
+ *     Neither present nor absent — sanctioned absence should not depress a
+ *     percentage. This is the rule a school is most likely to want changed;
+ *     changing it means moving `leave` out of the subtraction below and
+ *     nowhere else.
+ *
+ *  4. NO HALF-DAY.
+ *     The status enum is present/absent/late/leave — half-day does not exist in
+ *     this system. `halfDay: 0` is reported so consumers have a stable shape,
+ *     but adding a real half-day means changing the enum, the marking UI, the
+ *     import path and the migration, and deciding what every existing row means.
+ * ════════════════════════════════════════════════════════════════════════════
+ */
 function summarise(rows) {
   const counts = { present: 0, absent: 0, late: 0, leave: 0 };
   for (const r of rows) if (counts[r.status] !== undefined) counts[r.status]++;
 
   const totalDays = rows.length;
-  // 'late' is attendance — the student was there. 'leave' is authorised and is
-  // excluded from the denominator rather than counted against the student.
-  const countedDays = totalDays - counts.leave;
-  const presentDays = counts.present + counts.late;
+  const countedDays = totalDays - counts.leave; // rule 3
+  const presentDays = counts.present + counts.late; // rule 2
   const percentage = countedDays > 0 ? Math.round((presentDays / countedDays) * 100) : 0;
 
   return {
@@ -351,9 +382,68 @@ function summarise(rows) {
     absentDays: counts.absent,
     lateDays: counts.late,
     leaveDays: counts.leave,
+    halfDayDays: 0, // rule 4 — no such status exists
     countedDays,
+    // presentDays + lateDays, i.e. what the percentage is actually built from
+    attendedDays: presentDays,
     percentage,
   };
+}
+
+/**
+ * THE single entry point for "what is this student's attendance?".
+ *
+ * @param {object} opts
+ * @param {string} opts.studentId  StudentProfile._id
+ * @param {string} opts.schoolId
+ * @param {string} [opts.session]  scope to one academic session
+ * @param {Date|string} [opts.from] inclusive
+ * @param {Date|string} [opts.to]   inclusive
+ * @returns {Promise<object>} the summary, plus the day-by-day rows
+ */
+async function getSummary({ studentId, schoolId, session, from, to }) {
+  if (!studentId) throw ApiError.badRequest('studentId is required.');
+  if (!schoolId) throw ApiError.badRequest('School context is required.');
+
+  const filter = { schoolId, studentId };
+  if (session) filter.session = session;
+
+  if (from || to) {
+    const tz = await getSchoolTimezone(schoolId);
+    filter.date = {};
+    if (from) filter.date.$gte = toSchoolDay(from, tz);
+    if (to) filter.date.$lte = toSchoolDay(to, tz);
+  }
+
+  const rows = await DailyAttendance.find(filter)
+    .select('date status remarks')
+    .sort({ date: 1 })
+    .lean();
+
+  return {
+    ...summarise(rows),
+    days: rows.map((r) => ({ date: toDayKey(r.date), status: r.status, remarks: r.remarks || '' })),
+  };
+}
+
+/** Summaries for many students in one query — class lists and admin reports. */
+async function getSummaries({ studentIds, schoolId, session, from, to }) {
+  const filter = { schoolId, studentId: { $in: studentIds } };
+  if (session) filter.session = session;
+  if (from || to) {
+    const tz = await getSchoolTimezone(schoolId);
+    filter.date = {};
+    if (from) filter.date.$gte = toSchoolDay(from, tz);
+    if (to) filter.date.$lte = toSchoolDay(to, tz);
+  }
+
+  const rows = await DailyAttendance.find(filter).select('studentId status').lean();
+  const byStudent = {};
+  for (const r of rows) (byStudent[String(r.studentId)] ||= []).push(r);
+
+  return Object.fromEntries(
+    studentIds.map((id) => [String(id), summarise(byStudent[String(id)] || [])])
+  );
 }
 
 /**
@@ -443,6 +533,9 @@ module.exports = {
   getStudentAttendance,
   getUnassignedSections,
   resolveReadableStudent,
+  // The shared summary — every consumer of an attendance percentage uses these.
+  getSummary,
+  getSummaries,
   summarise,
   VALID_STATUS,
 };
