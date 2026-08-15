@@ -58,6 +58,14 @@ module.exports = {
     return require('./lib/marksValue');
   },
 
+  // consumers: people's teacherController, imports/attendanceAdapter.
+  // The authoritative rule for what a marks value may be — per-component maxima
+  // AND the sum rule, because an unconfigured component falls back to the subject
+  // total and four of them stored 360/100.
+  get marksEntryValidator() {
+    return require('./services/marksEntryValidator');
+  },
+
   // consumers: people's admin + teacher routers, examination's own EC router.
   // Exam edit/archive/delete/unlock — one implementation behind all three.
   get examController() {

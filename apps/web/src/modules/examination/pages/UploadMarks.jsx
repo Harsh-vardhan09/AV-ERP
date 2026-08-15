@@ -172,6 +172,27 @@ const UploadMarks = () => {
 
   // ─── Mutations ───
   const [uploadMarks, { isLoading: uploading }] = useUploadMarksMutation();
+
+  // Components must also sum within the subject total: each one can be under its
+  // own cap while four of them add up to 360 out of 100. The server enforces this;
+  // showing it here stops a teacher discovering it only on submit.
+  const sumErrors = useMemo(() => {
+    if (!isDynamic) return {};
+    const out = {};
+    for (const student of marks) {
+      const sum = Object.entries(student.fields || {})
+        .filter(([k, v]) => !isTotalField(k) && v !== '' && v !== null && Number.isFinite(Number(v)))
+        .reduce((s, [, v]) => s + Number(v), 0);
+      if (sum > totalMaxMarks) {
+        out[`${student.studentId}-__sum`] =
+          `Components add up to ${sum}, more than the subject total of ${totalMaxMarks}`;
+      }
+    }
+    return out;
+  }, [marks, isDynamic, totalMaxMarks]);
+
+  const blockingErrors = { ...validationErrors, ...sumErrors };
+  const hasBlockingErrors = Object.keys(blockingErrors).length > 0;
   const [uploadMarksExcel, { isLoading: uploadingExcel }] = useUploadMarksExcelMutation();
 
   // ─── Derived Data ───
@@ -433,12 +454,25 @@ const UploadMarks = () => {
             };
           }
 
-          // Legacy mode
-          return { ...student, marksObtained: value };
+          // Legacy mode — validated too. It used to accept anything, so a typo
+          // of 360 out of 100 reached the server unchallenged.
+          {
+            const max = getFieldMax('total') || totalMaxMarks;
+            const validation = validateNumericInput(value, max);
+            setValidationErrors((prevErrors) => {
+              const key = `${studentId}-marksObtained`;
+              if (!validation.isValid && validation.error) {
+                return { ...prevErrors, [key]: validation.error };
+              }
+              const { [key]: _, ...rest } = prevErrors;
+              return rest;
+            });
+            return { ...student, marksObtained: value };
+          }
         })
       );
     },
-    [isDynamic, getFieldMax]
+    [isDynamic, getFieldMax, totalMaxMarks]
   );
 
   /**
@@ -1208,10 +1242,26 @@ const UploadMarks = () => {
                   </table>
                 </div>
 
+                {hasBlockingErrors && (
+                  <div className="px-6 py-3 bg-red-50 border-t border-red-200 text-sm text-red-800">
+                    <p className="font-semibold">
+                      {Object.keys(blockingErrors).length} value(s) are out of range — fix them
+                      before saving
+                    </p>
+                    <ul className="mt-1 list-disc list-inside space-y-0.5 text-xs">
+                      {Object.entries(blockingErrors)
+                        .slice(0, 6)
+                        .map(([k, msg]) => (
+                          <li key={k}>{msg}</li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="px-6 py-4 bg-gray-50 border-t flex items-center justify-between flex-wrap gap-4">
                   <button
                     type="submit"
-                    disabled={uploading || marksLocked}
+                    disabled={uploading || marksLocked || hasBlockingErrors}
                     title={marksLockReason || undefined}
                     className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center"
                   >

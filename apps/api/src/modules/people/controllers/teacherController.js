@@ -19,6 +19,7 @@ const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtract
 const { refreshExamEvaluationStatus } = require('../../examination').marksReadinessService;
 const { evaluateMarksWindow } = require('../../examination').marksWindow;
 const { withDisplayMarks } = require('../../examination').marksValue;
+const { resolveMaxima, validateBatch } = require('../../examination').marksEntryValidator;
 const { User } = require('../../identity');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
@@ -1045,40 +1046,28 @@ exports.uploadMarks = async (req, res) => {
         const s = studentsById[String(id)];
         return s ? `${s.firstName || ''} ${s.lastName || ''}`.trim() || String(id) : String(id);
       };
-      const fieldErrors = [];
-      for (const m of validMarks) {
-        if (!toObjectId(m.studentId)) {
-          fieldErrors.push(`Invalid studentId: ${m.studentId}`);
-          continue;
-        }
-        const usable = Object.entries(m.fields).filter(
-          ([, v]) => v !== '' && v !== null && v !== undefined
-        );
-        if (!usable.length) {
-          fieldErrors.push(`${nameOf(m.studentId)}: no marks entered`);
-          continue;
-        }
-        for (const [k, v] of usable) {
-          const num = Number(v);
-          if (!Number.isFinite(num)) {
-            fieldErrors.push(`${nameOf(m.studentId)} — ${k}: "${v}" is not a number`);
-          } else if (num < 0) {
-            fieldErrors.push(`${nameOf(m.studentId)} — ${k}: cannot be negative`);
-          } else {
-            const cap = resolveFieldMax(k);
-            if (isFinite(cap) && num > cap) {
-              fieldErrors.push(
-                `${nameOf(m.studentId)} — ${k}: ${num} exceeds the maximum of ${cap}`
-              );
-            }
-          }
-        }
-      }
-      if (fieldErrors.length) {
+      // Checking each component against its own cap is NOT enough: an
+      // unconfigured component's cap falls back to the SUBJECT TOTAL, so four
+      // components of 90 each passed individually and stored a subject total of
+      // 360/100. marksEntryValidator adds the sum rule and owns both write shapes.
+      const maxima = await resolveMaxima({
+        examId: examObjectId,
+        classId: classObjectId,
+        subjectId: subjectObjectId,
+        schoolId: schoolObjectId || req.schoolId,
+        marksType: normalizedType,
+      });
+      const check = validateBatch({ marks: validMarks, maxima, nameOf });
+      if (!check.ok) {
         return res.status(400).json({
           success: false,
-          message: `Marks not saved — ${fieldErrors.length} problem(s) found. Nothing was written.`,
-          details: { code: 'INVALID_MARKS', errors: fieldErrors.slice(0, 25) },
+          message: `Marks not saved — ${check.errors.length} problem(s) found. Nothing was written.`,
+          details: {
+            code: 'INVALID_MARKS',
+            errors: check.errors.slice(0, 25),
+            subjectTotal: maxima.subjectTotal,
+            maxSource: maxima.source,
+          },
         });
       }
 
@@ -1150,6 +1139,48 @@ exports.uploadMarks = async (req, res) => {
     // ══ OLD FORMAT: single marksType + marksObtained (backward compat) ═══════
     if (!normalizedType) {
       return res.status(400).json({ success: false, message: 'marksType is required' });
+    }
+
+    // The legacy path clamped an out-of-range value to the cap and reported
+    // success, so a teacher who typed 360 saw "saved" for a 100 they never
+    // entered. Reject with the same rule the component path uses.
+    {
+      const legacyProfiles = await StudentProfile.find({
+        userId: {
+          $in: (Array.isArray(marks) ? marks : [])
+            .map((m) => toObjectId(m?.studentId))
+            .filter(Boolean),
+        },
+        schoolId: req.schoolId,
+      })
+        .select('userId firstName lastName')
+        .lean();
+      const byId = Object.fromEntries(legacyProfiles.map((p) => [String(p.userId), p]));
+      const legacyNameOf = (id) => {
+        const s = byId[String(id)];
+        return s ? `${s.firstName || ''} ${s.lastName || ''}`.trim() || String(id) : String(id);
+      };
+
+      const maxima = await resolveMaxima({
+        examId: examObjectId,
+        classId: classObjectId,
+        subjectId: subjectObjectId,
+        schoolId: schoolObjectId || req.schoolId,
+        marksType: normalizedType,
+      });
+      const check = validateBatch({ marks, maxima, nameOf: legacyNameOf });
+      if (!check.ok) {
+        return res.status(400).json({
+          success: false,
+          message: `Marks not saved — ${check.errors.length} problem(s) found. Nothing was written.`,
+          details: {
+            code: 'INVALID_MARKS',
+            errors: check.errors.slice(0, 25),
+            subjectTotal: maxima.subjectTotal,
+            maxSource: maxima.source,
+          },
+        });
+      }
     }
 
     const operations = sanitizedMarks.map((m) => ({
@@ -1465,11 +1496,23 @@ exports.uploadMarksExcel = async (req, res) => {
 
       const raw = Number(marksVal);
       if (!Number.isFinite(raw)) {
-        errors.push(`Row ${idx + 2}: Marks must be a number`);
+        errors.push(`Row ${idx + 2}: "${marksVal}" is not a number (expected 0–${maxMarks})`);
         return;
       }
-      const clamped = Math.min(maxMarks, Math.max(0, raw));
-      if (clamped !== raw) clampedCount += 1;
+      // An out-of-range mark is a ROW ERROR, not a silent clamp. Clamping stored
+      // a number the school never entered and reported the import as clean.
+      if (raw < 0) {
+        errors.push(`Row ${idx + 2}: ${raw} is negative (expected 0–${maxMarks})`);
+        return;
+      }
+      if (raw > maxMarks) {
+        errors.push(
+          `Row ${idx + 2}: Roll No ${rollNo} — ${raw} is above the maximum for this subject ` +
+            `(expected 0–${maxMarks})`
+        );
+        return;
+      }
+      const clamped = raw;
 
       operations.push({
         updateOne: {

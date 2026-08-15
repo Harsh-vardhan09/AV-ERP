@@ -190,7 +190,9 @@ describe('a save that cannot be stored fails loudly', () => {
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/not saved/i);
     expect(res.body.details.code).toBe('INVALID_MARKS');
-    expect(res.body.details.errors[0]).toMatch(/Amara Singh — t1_theory: 150 exceeds/);
+    expect(res.body.details.errors[0]).toMatch(
+      /Amara Singh: t1_theory — 150 exceeds the maximum of 100/
+    );
     expect(await db('marks').countDocuments({})).toBe(0);
   });
 
@@ -260,7 +262,161 @@ describe('a save that cannot be stored fails loudly', () => {
       { studentId: String(ctx.stuUser._id), fields: { t1_pertest: 11 } },
     ]);
     expect(over.status).toBe(400);
-    expect(over.body.details.errors[0]).toMatch(/t1_pertest: 11 exceeds the maximum of 10/);
+    expect(over.body.details.errors[0]).toMatch(/t1_pertest — 11 exceeds the maximum of 10/);
+  });
+});
+
+/**
+ * The 360/100 bug. Per-component checking alone was not enough: a component
+ * whose name matches no configured distribution entry falls back to the SUBJECT
+ * TOTAL as its cap, so four components of 90 each passed individually and stored
+ * a subject total of 360 out of 100.
+ */
+describe('components must also sum within the subject total', () => {
+  test('four components of 90 are rejected even though each is under 100', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    const res = await post(ctx, [
+      {
+        studentId: String(ctx.stuUser._id),
+        fields: { t1_a: 90, t1_b: 90, t1_c: 90, t1_d: 90 },
+      },
+    ]);
+
+    expect(res.status).toBe(400);
+    expect(res.body.details.errors[0]).toMatch(
+      /add up to 360, which is more than the subject total of 100/
+    );
+    expect(res.body.details.subjectTotal).toBe(100);
+    expect(await db('marks').countDocuments({})).toBe(0);
+  });
+
+  test('components that sum exactly to the total are accepted', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    const res = await post(ctx, [
+      { studentId: String(ctx.stuUser._id), fields: { t1_a: 40, t1_b: 60 } },
+    ]);
+    expect(res.status).toBe(200);
+
+    const view = await request(app)
+      .get('/api/v1/student/marks')
+      .set('Cookie', authCookie(ctx.stuUser));
+    expect(view.body.data[0].marksObtained).toBe(100);
+  });
+
+  test('the sum rule uses the distribution total, not a hardcoded 100', async () => {
+    const ctx = await seed({
+      maxMarks: 80,
+      distribution: [
+        { type: 'pertest', label: 'Periodic Test', maxMarks: 10 },
+        { type: 'theory', label: 'Theory', maxMarks: 40 },
+      ],
+    });
+    // subject total is 10 + 40 = 50
+    const over = await post(ctx, [
+      {
+        studentId: String(ctx.stuUser._id),
+        fields: { t1_pertest: 10, t1_theory: 40, t1_extra: 5 },
+      },
+    ]);
+    expect(over.status).toBe(400);
+    expect(over.body.details.subjectTotal).toBe(50);
+    expect(over.body.details.maxSource).toBe('ExamSubjectConfig.marksDistribution');
+    expect(over.body.details.errors[0]).toMatch(/add up to 55.*subject total of 50/);
+  });
+
+  test('an auto-calculated total field does not trip the sum rule', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    const res = await post(ctx, [
+      { studentId: String(ctx.stuUser._id), fields: { t1_a: 40, t1_b: 60, t1_total: 100 } },
+    ]);
+    expect(res.status).toBe(200); // 40+60 = 100, the total is not added again
+  });
+
+  test('a total field above the subject total is rejected', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    const res = await post(ctx, [
+      { studentId: String(ctx.stuUser._id), fields: { t1_total: 360 } },
+    ]);
+    expect(res.status).toBe(400);
+    expect(res.body.details.errors[0]).toMatch(/t1_total — 360 exceeds the maximum of 100/);
+  });
+});
+
+describe('the legacy single-value path rejects rather than clamping', () => {
+  test('360 out of 100 is refused, not stored as 100', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    const res = await post(ctx, [{ studentId: String(ctx.stuUser._id), marksObtained: 360 }]);
+
+    expect(res.status).toBe(400);
+    expect(res.body.details.errors[0]).toMatch(/360 exceeds the maximum of 100/);
+    expect(await db('marks').countDocuments({})).toBe(0);
+  });
+
+  test('a negative legacy mark is refused', async () => {
+    const ctx = await seed();
+    const res = await post(ctx, [{ studentId: String(ctx.stuUser._id), marksObtained: -3 }]);
+    expect(res.status).toBe(400);
+    expect(res.body.details.errors[0]).toMatch(/negative/);
+  });
+
+  test('a non-numeric legacy mark is refused', async () => {
+    const ctx = await seed();
+    const res = await post(ctx, [{ studentId: String(ctx.stuUser._id), marksObtained: 'ninety' }]);
+    expect(res.status).toBe(400);
+    expect(res.body.details.errors[0]).toMatch(/is not a number/);
+  });
+
+  test('a valid legacy mark still saves', async () => {
+    const ctx = await seed({ maxMarks: 100 });
+    const res = await post(ctx, [{ studentId: String(ctx.stuUser._id), marksObtained: 87 }]);
+    expect(res.status).toBe(200);
+    expect((await db('marks').findOne({})).marksObtained).toBe(87);
+  });
+});
+
+describe('where maxMarks comes from', () => {
+  const { resolveMaxima } = require('../src/modules/examination/services/marksEntryValidator');
+
+  test('marksDistribution wins, and the total is its sum', async () => {
+    const ctx = await seed({
+      maxMarks: 999,
+      distribution: [
+        { type: 'a', label: 'A', maxMarks: 30 },
+        { type: 'b', label: 'B', maxMarks: 20 },
+      ],
+    });
+    const m = await resolveMaxima({
+      examId: ctx.exam._id,
+      classId: ctx.classId,
+      subjectId: ctx.subjectId,
+      schoolId: ctx.schoolId,
+    });
+    expect(m.subjectTotal).toBe(50);
+    expect(m.componentMax).toEqual({ a: 30, b: 20 });
+  });
+
+  test('falls back to the flat maxMarks when there is no distribution', async () => {
+    const ctx = await seed({ maxMarks: 75 });
+    const m = await resolveMaxima({
+      examId: ctx.exam._id,
+      classId: ctx.classId,
+      subjectId: ctx.subjectId,
+      schoolId: ctx.schoolId,
+    });
+    expect(m.subjectTotal).toBe(75);
+    expect(m.source).toBe('ExamSubjectConfig.maxMarks');
+  });
+
+  test('an unconfigured subject is bounded, not unlimited', async () => {
+    const ctx = await seed();
+    const m = await resolveMaxima({
+      examId: ctx.exam._id,
+      classId: ctx.classId,
+      subjectId: new mongoose.Types.ObjectId(), // no config for this subject
+      schoolId: ctx.schoolId,
+    });
+    expect(m.configured).toBe(false);
+    expect(m.subjectTotal).toBe(100);
   });
 });
 

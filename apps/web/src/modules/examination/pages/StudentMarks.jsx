@@ -130,6 +130,50 @@ const ReportCardTab = () => {
   );
 };
 
+/**
+ * Pass / Fail, and the two states the old rule collapsed wrongly.
+ *
+ * It was: `m.passingMarks ? m.marksObtained >= m.passingMarks : true`
+ *   - a MISSING mark became `undefined >= 33` → false → a confident "Fail",
+ *     which reads as "the student failed" rather than "nobody marked this"
+ *   - a subject with no passingMarks configured became "Pass" unconditionally,
+ *     including for a zero
+ *   - a mark ABOVE the maximum still passed, so 360/100 showed a green "Pass"
+ */
+const markStatus = (m) => {
+  const value = m?.marksObtained;
+  const max = Number(m?.maxMarks);
+
+  if (value === null || value === undefined || value === '') {
+    return {
+      label: 'Not marked',
+      cls: 'bg-slate-50 text-slate-500 border-slate-200',
+      hint: 'No marks have been entered for this subject yet.',
+    };
+  }
+
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0 || (Number.isFinite(max) && max > 0 && num > max)) {
+    return {
+      label: 'Data error',
+      cls: 'bg-amber-50 text-amber-800 border-amber-300',
+      hint: `Recorded mark (${value}) is outside the valid range 0–${max || '?'}. Report this to the school office.`,
+    };
+  }
+
+  if (!m.passingMarks) {
+    return {
+      label: `${num}/${max || '?'}`,
+      cls: 'bg-slate-50 text-slate-600 border-slate-200',
+      hint: 'No pass mark is configured for this subject, so no pass/fail can be shown.',
+    };
+  }
+
+  return num >= m.passingMarks
+    ? { label: 'Pass', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', hint: `Pass mark ${m.passingMarks}` }
+    : { label: 'Fail', cls: 'bg-rose-50 text-rose-700 border-rose-200', hint: `Pass mark ${m.passingMarks}` };
+};
+
 const StudentMarks = () => {
   const [tab, setTab] = useState('marks');
   const { data, isLoading } = useGetMyStudentMarksQuery();
@@ -191,7 +235,11 @@ const StudentMarks = () => {
       )}
 
       {Object.values(grouped).map((group, i) => {
-        const percentage = group.totalMax > 0 ? ((group.totalObtained / group.totalMax) * 100).toFixed(1) : 0;
+        const pctNum = group.totalMax > 0 ? (group.totalObtained / group.totalMax) * 100 : 0;
+        const percentage = pctNum.toFixed(1);
+        // A percentage outside 0–100 is impossible and must not look authoritative.
+        // 335.0% in confident indigo read as a real result rather than bad data.
+        const pctImpossible = pctNum > 100 || pctNum < 0;
         return (
           <div key={i} className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden mb-6">
             
@@ -213,9 +261,23 @@ const StudentMarks = () => {
                 )}
               </div>
               <div className="text-left sm:text-right shrink-0">
-                <span className="text-xl sm:text-2xl font-extrabold text-indigo-600 block tracking-tight tabular-nums">
-                  {percentage}%
+                <span
+                  title={
+                    pctImpossible
+                      ? `${group.totalObtained} out of ${group.totalMax} is not a possible result. Report this to the school office.`
+                      : undefined
+                  }
+                  className={`text-xl sm:text-2xl font-extrabold block tracking-tight tabular-nums ${
+                    pctImpossible ? 'text-amber-600' : 'text-indigo-600'
+                  }`}
+                >
+                  {pctImpossible ? `⚠ ${percentage}%` : `${percentage}%`}
                 </span>
+                {pctImpossible && (
+                  <span className="text-[10px] font-semibold text-amber-700 block">
+                    Invalid data — marks exceed the maximum
+                  </span>
+                )}
                 <span className="text-xs font-bold text-slate-400 mt-0.5 block tabular-nums">
                   {group.totalObtained} / {group.totalMax} Marks
                 </span>
@@ -237,7 +299,7 @@ const StudentMarks = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                   {group.subjects.map((m, j) => {
-                    const passed = m.passingMarks ? m.marksObtained >= m.passingMarks : true;
+                    const status = markStatus(m);
                     return (
                       <tr key={j} className="hover:bg-slate-50/50 transition-colors">
                         <td className="py-3.5 px-5">
@@ -258,12 +320,11 @@ const StudentMarks = () => {
                           {m.maxMarks || '—'}
                         </td>
                         <td className="py-3.5 px-5 text-center">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                            passed 
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                              : 'bg-rose-50 text-rose-700 border-rose-200'
-                          }`}>
-                            {passed ? 'Pass' : 'Fail'}
+                          <span
+                            title={status.hint}
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${status.cls}`}
+                          >
+                            {status.label}
                           </span>
                         </td>
                         <td className="py-3.5 px-5 text-slate-400 text-xs hidden sm:table-cell tabular-nums">
