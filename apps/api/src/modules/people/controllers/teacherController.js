@@ -18,6 +18,7 @@ const ReportTemplate = require('../../reportcards').ReportTemplate;
 const TemplateFieldExtractor = require('../../reportcards').TemplateFieldExtractor;
 const { refreshExamEvaluationStatus } = require('../../examination').marksReadinessService;
 const { evaluateMarksWindow } = require('../../examination').marksWindow;
+const { withDisplayMarks } = require('../../examination').marksValue;
 const { User } = require('../../identity');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
@@ -1027,17 +1028,70 @@ exports.uploadMarks = async (req, res) => {
         return res.status(400).json({ success: false, message: 'No valid marks entries provided' });
       }
 
+      // Validate BEFORE writing anything. This used to silently clamp an
+      // out-of-range value (150 stored as 100) and silently drop a non-numeric
+      // one, then return 200 — so a teacher saw "saved" for a mark that was
+      // altered or never stored. Nothing caught it downstream either.
+      // Names, so an error names the student rather than an ObjectId. The client
+      // sends User._id, which is what StudentProfile.userId holds.
+      const profiles = await StudentProfile.find({
+        userId: { $in: validMarks.map((m) => toObjectId(m.studentId)).filter(Boolean) },
+        schoolId: req.schoolId,
+      })
+        .select('userId firstName lastName rollNo')
+        .lean();
+      const studentsById = Object.fromEntries(profiles.map((p) => [String(p.userId), p]));
+      const nameOf = (id) => {
+        const s = studentsById[String(id)];
+        return s ? `${s.firstName || ''} ${s.lastName || ''}`.trim() || String(id) : String(id);
+      };
+      const fieldErrors = [];
+      for (const m of validMarks) {
+        if (!toObjectId(m.studentId)) {
+          fieldErrors.push(`Invalid studentId: ${m.studentId}`);
+          continue;
+        }
+        const usable = Object.entries(m.fields).filter(
+          ([, v]) => v !== '' && v !== null && v !== undefined
+        );
+        if (!usable.length) {
+          fieldErrors.push(`${nameOf(m.studentId)}: no marks entered`);
+          continue;
+        }
+        for (const [k, v] of usable) {
+          const num = Number(v);
+          if (!Number.isFinite(num)) {
+            fieldErrors.push(`${nameOf(m.studentId)} — ${k}: "${v}" is not a number`);
+          } else if (num < 0) {
+            fieldErrors.push(`${nameOf(m.studentId)} — ${k}: cannot be negative`);
+          } else {
+            const cap = resolveFieldMax(k);
+            if (isFinite(cap) && num > cap) {
+              fieldErrors.push(
+                `${nameOf(m.studentId)} — ${k}: ${num} exceeds the maximum of ${cap}`
+              );
+            }
+          }
+        }
+      }
+      if (fieldErrors.length) {
+        return res.status(400).json({
+          success: false,
+          message: `Marks not saved — ${fieldErrors.length} problem(s) found. Nothing was written.`,
+          details: { code: 'INVALID_MARKS', errors: fieldErrors.slice(0, 25) },
+        });
+      }
+
       const operations = validMarks
         .map((m) => {
           const studentObjectId = toObjectId(m.studentId);
           if (!studentObjectId) return null;
           const cleanedFields = {};
           Object.entries(m.fields).forEach(([k, v]) => {
+            if (v === '' || v === null || v === undefined) return;
             const num = Number(v);
-            if (Number.isFinite(num)) {
-              const cap = resolveFieldMax(k);
-              cleanedFields[k] = Math.max(0, isFinite(cap) ? Math.min(cap, num) : num);
-            }
+            // Already validated above — no clamping, the value is stored as entered.
+            if (Number.isFinite(num)) cleanedFields[k] = num;
           });
           if (Object.keys(cleanedFields).length === 0) return null;
           return {
@@ -1490,7 +1544,8 @@ exports.getMarks = async (req, res) => {
       .populate('subjectId', 'name code')
       .populate('examId', 'name type')
       .populate('uploadedBy', 'firstName lastName');
-    res.status(200).json({ success: true, data: marks });
+    // Rows written as a `fields` map carry no marksObtained — see lib/marksValue.
+    res.status(200).json({ success: true, data: marks.map(withDisplayMarks) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

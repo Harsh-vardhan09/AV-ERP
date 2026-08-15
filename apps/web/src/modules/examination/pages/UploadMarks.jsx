@@ -589,6 +589,21 @@ const UploadMarks = () => {
       setValidationErrors({});
     } catch (error) {
       console.error('[UploadMarks] Upload error:', error);
+      // The server rejects a batch that cannot be stored and returns the exact
+      // per-student problems. Show them — a teacher must never see "saved" for a
+      // mark that was altered or never written.
+      const perField = error?.data?.details?.errors;
+      if (Array.isArray(perField) && perField.length) {
+        toast.error(error.data.message, { duration: 6000 });
+        perField.slice(0, 5).forEach((e) => toast.error(e, { duration: 6000 }));
+        if (perField.length > 5) {
+          toast.error(`…and ${perField.length - 5} more`, { duration: 6000 });
+        }
+        setValidationErrors(
+          Object.fromEntries(perField.map((e, i) => [`server_${i}`, e]))
+        );
+        return;
+      }
       toast.error(error?.data?.message || 'Failed to upload marks');
     }
   };

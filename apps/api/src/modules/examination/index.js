@@ -51,6 +51,13 @@ module.exports = {
     return require('./lib/marksWindow');
   },
 
+  // consumers: people's student/teacher controllers. The ONLY place a marks
+  // document becomes a displayable number — a row written as a `fields` map has
+  // no marksObtained, and readers that project it render a blank cell.
+  get marksValue() {
+    return require('./lib/marksValue');
+  },
+
   // consumers: people's admin + teacher routers, examination's own EC router.
   // Exam edit/archive/delete/unlock — one implementation behind all three.
   get examController() {

@@ -10,6 +10,7 @@ const {
   ClassTeacherAssignment,
 } = require('../../academics');
 const { MarksModel: Marks, ExamSubjectConfig, Exam } = require('../../examination');
+const { withDisplayMarks } = require('../../examination').marksValue;
 const Leave = require('../../communication').Leave;
 const ComplainBox = require('../../communication').ComplainBox;
 const Knowledgecenter = require('../../communication').Knowledgecenter;
@@ -499,7 +500,10 @@ exports.getMyMarks = async (req, res) => {
           schoolId: req.schoolId,
         });
         return {
-          ...m.toObject(),
+          // withDisplayMarks derives marksObtained from `fields` when the row was
+          // written in the template-driven format, and flattens the Map so
+          // `fields` is not serialised as {}. Without it this column is blank.
+          ...withDisplayMarks(m),
           maxMarks: config?.maxMarks || null,
           passingMarks: config?.passingMarks || null,
           studentName:
