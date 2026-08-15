@@ -254,6 +254,20 @@ describe('school-local day boundary', () => {
 });
 
 describe('the marking screen', () => {
+  test('defaults every student to present until a saved mark exists', async () => {
+    const ctx = await seed();
+    const res = await request(app)
+      .get(
+        `/api/v1/attendance/section-day?classId=${ctx.classId}&sectionId=${ctx.sectionId}&session=${ctx.session}&date=2025-09-10`
+      )
+      .set('Cookie', authCookie(ctx.classTeacher));
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.roster).toHaveLength(2);
+    expect(res.body.data.roster.map((r) => r.status)).toEqual(['present', 'present']);
+    expect(res.body.data.isMarked).toBe(false);
+  });
+
   test('shows the roster, whether the day is marked, and by whom', async () => {
     const ctx = await seed();
     const before = await request(app)

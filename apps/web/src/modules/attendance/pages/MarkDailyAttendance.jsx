@@ -30,7 +30,9 @@ const MarkDailyAttendance = () => {
   const sessionId = sessionData?.data?._id;
 
   const { data: ctData, isLoading: ctLoading } = useGetMyClassTeacherQuery();
-  const assignment = ctData?.data;
+  const assignment = Array.isArray(ctData?.data)
+    ? (ctData.data.find((item) => item?.session?.isActive) || ctData.data[0] || null)
+    : ctData?.data || null;
   const classId = assignment?.classId?._id || assignment?.classId;
   const sectionId = assignment?.sectionId?._id || assignment?.sectionId;
 
@@ -72,6 +74,13 @@ const MarkDailyAttendance = () => {
   const setAll = (status) => {
     setMarks(Object.fromEntries((day?.roster || []).map((r) => [r.studentId, status])));
     setDirty(true);
+  };
+
+  const handleDateChange = (nextDate) => {
+    if (dirty && !window.confirm('You have unsaved attendance changes. Switch date and lose them?')) {
+      return;
+    }
+    setDate(nextDate);
   };
 
   const handleSave = async () => {
@@ -132,7 +141,7 @@ const MarkDailyAttendance = () => {
               type="date"
               value={date}
               max={todayKey()}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => handleDateChange(e.target.value)}
               className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 outline-none"
             />
           </div>
@@ -165,15 +174,18 @@ const MarkDailyAttendance = () => {
           <div className="px-5 py-3 bg-gray-50 border-b flex flex-wrap items-center justify-between gap-3">
             <div className="flex gap-2 flex-wrap">
               <span className="text-sm text-gray-600 mr-1">Mark all:</span>
-              {STATUSES.map((s) => (
-                <button
-                  key={s.key}
-                  onClick={() => setAll(s.key)}
-                  className="text-xs px-3 py-1 rounded-full border border-gray-300 hover:bg-gray-100"
-                >
-                  {s.label}
-                </button>
-              ))}
+              <button
+                onClick={() => setAll('present')}
+                className="text-xs px-3 py-1 rounded-full border border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+              >
+                Present All
+              </button>
+              <button
+                onClick={() => setAll('absent')}
+                className="text-xs px-3 py-1 rounded-full border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+              >
+                Absent All
+              </button>
             </div>
             <div className="text-xs text-gray-600 flex gap-3 flex-wrap">
               <span>Present {counts.present}</span>
@@ -224,7 +236,7 @@ const MarkDailyAttendance = () => {
               {day.roster.length === 0 && (
                 <tr>
                   <td colSpan={3} className="text-center py-8 text-gray-500">
-                    No active students in this section.
+                    No students found for this class and section.
                   </td>
                 </tr>
               )}

@@ -107,7 +107,7 @@ async function getSectionDay({ schoolId, classId, sectionId, session, date }) {
       name: `${s.firstName} ${s.lastName || ''}`.trim(),
       rollNo: s.rollNo || '',
       admissionNumber: s.admissionNumber || '',
-      status: mark?.status || null,
+      status: mark?.status || 'present',
       remarks: mark?.remarks || '',
     };
   });
