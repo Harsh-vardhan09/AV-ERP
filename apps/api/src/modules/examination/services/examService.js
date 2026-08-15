@@ -354,6 +354,56 @@ async function unlockExam({ examId, schoolId, actor }) {
   return { exam: updated, changed: true };
 }
 
+/**
+ * Which subjects on this exam can actually feed a component-based report card.
+ *
+ * A config with no marksDistribution is "legacy": the teacher enters one
+ * aggregate number, it is stored as marksObtained with no `fields` map, and
+ * DataAggregatorService surfaces it only as t1_theory. The component tokens a
+ * report template binds (t1_pertest, t1_nb, …) are never emitted, so those
+ * columns render blank while the subject total is non-zero. This reports that
+ * BEFORE marks are entered instead of after the card comes out wrong.
+ *
+ * @returns {Promise<{total:number, configured:number, legacy:number,
+ *                    components:string[], subjects:Array}>}
+ */
+async function getExamConfigHealth({ examId, schoolId, classId }) {
+  const filter = { examId, schoolId };
+  if (classId) filter.classId = classId;
+
+  const configs = await ExamSubjectConfig.find(filter)
+    .populate('subjectId', 'name code')
+    .populate('classId', 'name')
+    .lean();
+
+  const subjects = configs.map((c) => {
+    const components = (c.marksDistribution || []).map((d) => d.type);
+    return {
+      configId: String(c._id),
+      subjectId: String(c.subjectId?._id || c.subjectId),
+      subjectName: c.subjectId?.name || 'Unknown subject',
+      className: c.classId?.name || '',
+      classId: String(c.classId?._id || c.classId),
+      hasDistribution: components.length > 0,
+      components,
+      maxMarks: c.maxMarks,
+    };
+  });
+
+  const legacy = subjects.filter((s) => !s.hasDistribution);
+
+  // Union of every component any subject declares — what a template could bind to
+  const components = [...new Set(subjects.flatMap((s) => s.components))];
+
+  return {
+    total: subjects.length,
+    configured: subjects.length - legacy.length,
+    legacy: legacy.length,
+    components,
+    subjects,
+  };
+}
+
 /** Audit trail for one exam, or the whole school. */
 async function listAuditLog({ schoolId, examId, limit = 100 }) {
   const filter = { schoolId };
@@ -373,4 +423,5 @@ module.exports = {
   unlockExam,
   listAuditLog,
   countMarks,
+  getExamConfigHealth,
 };

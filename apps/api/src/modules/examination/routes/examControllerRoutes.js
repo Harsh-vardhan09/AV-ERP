@@ -55,6 +55,7 @@ router.patch('/exam/:id/archive', validateObjectId('id'), examController.archive
 router.patch('/exam/:id/restore', validateObjectId('id'), examController.restoreExam);
 router.patch('/exam/:id/unlock', validateObjectId('id'), examController.unlockExam);
 router.get('/exam-audit-log', examController.getExamAuditLog);
+router.get('/exam/:id/config-health', validateObjectId('id'), examController.getExamConfigHealth);
 router.patch('/exam/:id/start-evaluation', validateObjectId('id'), admin.startEvaluation);
 router.patch('/exam/:id/complete-evaluation', validateObjectId('id'), admin.completeEvaluation);
 router.patch('/exam/:id/template', validateObjectId('id'), admin.linkTemplateToExam);

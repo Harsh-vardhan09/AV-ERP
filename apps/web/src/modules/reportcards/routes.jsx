@@ -19,5 +19,8 @@ export const reportcardsRoutes = [
   { path: 'teacher/report-cards/:studentId', lazy: page(() => import('./pages/ReportCardEditor')), handle: { roles: TEACHER, module: MODULE } },
   { path: 'teacher/template-report-cards', lazy: redirect('/teacher/report-cards'), handle: { roles: TEACHER, module: MODULE } },
 
-  { path: 'student/report-card', lazy: page(() => import('./pages/ReportCardEditor')), handle: { roles: [ROLES.STUDENT], module: MODULE } },
+  // The student report card lives on /student/marks (StudentMarks, "Report Card"
+  // tab) — template-driven, with the PDF download. This route ran ReportCardEditor
+  // against the legacy pre-template renderer. Kept as a redirect for bookmarks.
+  { path: 'student/report-card', lazy: redirect('/student/marks'), handle: { roles: [ROLES.STUDENT], module: MODULE } },
 ];

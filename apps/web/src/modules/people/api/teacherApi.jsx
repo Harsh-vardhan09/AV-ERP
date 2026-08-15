@@ -181,6 +181,11 @@ export const teacherApi = createApi({
       query: (id) => ({ url: `/test/${id}`, method: 'DELETE' }),
       invalidatesTags: ['Exam', 'Marks'],
     }),
+    getExamConfigHealth: builder.query({
+      query: ({ examId, classId }) =>
+        `/exam/${examId}/config-health${classId ? `?classId=${classId}` : ''}`,
+      providesTags: ['Exam'],
+    }),
 
     // Class teacher features
     getMyClassStudents: builder.query({
@@ -245,6 +250,7 @@ export const {
   useGetExamTemplateQuery, useGetTemplateFieldsQuery,
   useCreateTeacherTestMutation, useGetMyExamsQuery,
   useUpdateTeacherTestMutation, useDeleteTeacherTestMutation,
+  useGetExamConfigHealthQuery,
   useGetMyClassStudentsQuery, useGetClassMarksQuery,
   useGetNotSubmittedStudentsQuery,
   useGetStudentPerformanceQuery,

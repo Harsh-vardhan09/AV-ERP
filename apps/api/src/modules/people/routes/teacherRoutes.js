@@ -58,6 +58,8 @@ router.get('/my-exams', teacher.getMyExams);
 // restricts them to their own tests, before marks entry opens, with no marks.
 router.put('/test/:id', validateObjectId('id'), examController.updateExam);
 router.delete('/test/:id', validateObjectId('id'), examController.deleteExam);
+// Warn the teacher BEFORE entry when an exam has no marks breakdown
+router.get('/exam/:id/config-health', validateObjectId('id'), examController.getExamConfigHealth);
 
 // Class teacher specific
 router.get('/my-students', teacher.getMyClassStudents);

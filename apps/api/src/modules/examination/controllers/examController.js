@@ -62,6 +62,15 @@ exports.unlockExam = asyncHandler(async (req, res) => {
   return ok(res, exam, changed ? 'Evaluation unlocked' : 'Exam was not locked');
 });
 
+exports.getExamConfigHealth = asyncHandler(async (req, res) => {
+  const health = await examService.getExamConfigHealth({
+    examId: req.params.id,
+    schoolId: req.schoolId,
+    classId: req.query.classId,
+  });
+  return ok(res, health);
+});
+
 exports.getExamAuditLog = asyncHandler(async (req, res) => {
   const rows = await examService.listAuditLog({
     schoolId: req.schoolId,

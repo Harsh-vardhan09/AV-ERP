@@ -233,6 +233,13 @@ export const adminApi = createApi({
       query: (id) => ({ url: `/exam/${id}/unlock`, method: 'PATCH' }),
       invalidatesTags: ['Exam'],
     }),
+    // Which subjects on an exam lack a marks breakdown — such subjects cannot
+    // fill the component columns of a report card.
+    getExamConfigHealth: builder.query({
+      query: ({ examId, classId }) =>
+        `/exam/${examId}/config-health${classId ? `?classId=${classId}` : ''}`,
+      providesTags: ['ExamSubject'],
+    }),
     startExamEvaluation: builder.mutation({
       query: (id) => ({ url: `/exam/${id}/start-evaluation`, method: 'PATCH' }),
       invalidatesTags: ['Exam'],
@@ -377,6 +384,7 @@ export const {
   useAssignClassTeacherMutation, useGetClassTeachersQuery, useRemoveClassTeacherMutation, useUpdateClassTeacherMutation,
   useCreateExamMutation, useGetExamsQuery, useGetExamQuery, useUpdateExamMutation, useDeleteExamMutation, useStartExamEvaluationMutation, useCompleteExamEvaluationMutation,
   useArchiveExamMutation, useRestoreExamMutation, useUnlockExamMutation,
+  useGetExamConfigHealthQuery,
   useLinkTemplateToExamMutation, useGetAdminTemplatesQuery,
   useAddExamSubjectMutation, useGetExamSubjectsQuery, useUpdateExamSubjectMutation, useRemoveExamSubjectMutation,
   useGetMarksAuditLogQuery,

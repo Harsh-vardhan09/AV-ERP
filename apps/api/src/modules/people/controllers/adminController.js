@@ -323,6 +323,31 @@ exports.createExam = async (req, res) => {
       return res.status(400).json({ success: false, message: 'session is required' });
     }
 
+    // Exams of these types are what a report card actually reads. Creating one
+    // with no marks distribution produces configs that can only ever store a
+    // single aggregate number, so every component column on the card renders
+    // blank however correct the marks are. Refuse rather than build that.
+    // A school that genuinely wants one total can say so explicitly by sending a
+    // one-row distribution — the point is that it becomes a decision, not a default.
+    const REPORT_CARD_EXAM_TYPES = ['half_yearly', 'annual', 'pre_board'];
+    if (REPORT_CARD_EXAM_TYPES.includes(type)) {
+      const hasDefault = Array.isArray(defaultDistribution) && defaultDistribution.length > 0;
+      const hasClassWise = Object.values(classWiseDistribution || {}).some(
+        (d) => Array.isArray(d) && d.length > 0
+      );
+      if (!hasDefault && !hasClassWise) {
+        return res.status(400).json({
+          success: false,
+          message:
+            `A "${type.replace('_', ' ')}" exam feeds the report card, so it needs a marks ` +
+            `distribution (e.g. Periodic Test 10, Notebook 5, Subject Enrichment 5, Theory 80). ` +
+            `Without one, marks are stored as a single total and the component columns of the ` +
+            `report card stay blank.`,
+          details: { code: 'MARKS_DISTRIBUTION_REQUIRED', examType: type },
+        });
+      }
+    }
+
     // Determine which classes to include
     let selectedClassIds = classIds || [];
     if (scope === 'all') {
@@ -658,7 +683,27 @@ exports.completeEvaluation = async (req, res) => {
 
 exports.addExamSubject = async (req, res) => {
   try {
-    const { examId, classId, subjectId, maxMarks, passingMarks, examDate } = req.body;
+    const { examId, classId, subjectId, maxMarks, passingMarks, examDate, marksDistribution } =
+      req.body;
+
+    // marksDistribution used to be dropped here, so every subject added to an
+    // exam after creation was legacy-shaped: teachers wrote one aggregate number
+    // and the component tokens the report card binds (t1_pertest, t1_nb, …) never
+    // existed. When it is absent, inherit the shape a sibling subject on this
+    // exam+class already uses rather than silently creating another legacy row.
+    let distribution = Array.isArray(marksDistribution) ? marksDistribution : null;
+    if (!distribution?.length) {
+      const sibling = await ExamSubjectConfig.findOne({
+        examId,
+        classId,
+        schoolId: req.schoolId,
+        'marksDistribution.0': { $exists: true },
+      })
+        .select('marksDistribution')
+        .lean();
+      distribution = sibling?.marksDistribution || null;
+    }
+
     const config = await ExamSubjectConfig.create({
       examId,
       classId,
@@ -666,6 +711,7 @@ exports.addExamSubject = async (req, res) => {
       maxMarks,
       passingMarks,
       examDate,
+      ...(distribution?.length && { marksDistribution: distribution }),
       schoolId: req.schoolId,
     });
     res.status(201).json({ success: true, message: 'Subject added to exam', data: config });

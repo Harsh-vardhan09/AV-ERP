@@ -117,6 +117,14 @@ router.patch('/exam/:id/restore', writeGuard, validateObjectId('id'), examContro
 // it — a locked exam could not be edited, deleted or marked, with no way back.
 router.patch('/exam/:id/unlock', writeGuard, validateObjectId('id'), examController.unlockExam);
 router.get('/exam-audit-log', readGuard, examController.getExamAuditLog);
+// Which subjects on this exam lack a marks breakdown (and so cannot feed a
+// component-based report card). readGuard: teachers need it for the entry warning.
+router.get(
+  '/exam/:id/config-health',
+  readGuard,
+  validateObjectId('id'),
+  examController.getExamConfigHealth
+);
 router.patch(
   '/exam/:id/start-evaluation',
   writeGuard,

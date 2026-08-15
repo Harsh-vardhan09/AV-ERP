@@ -1937,14 +1937,33 @@ exports.createTeacherTest = async (req, res) => {
     const defaultPass = passingMarks || 33;
     let configCount = 0;
 
+    // Every teacher-created test used to be legacy-shaped: no marksDistribution,
+    // so marks entered against it stored one aggregate number and could never
+    // populate the component columns of a report card. Inherit the breakdown the
+    // class already uses this session (per class, since classes differ).
+    const inheritedDist = {};
+    for (const cid of classIdSet) {
+      const sibling = await ExamSubjectConfig.findOne({
+        classId: cid,
+        schoolId: req.schoolId,
+        'marksDistribution.0': { $exists: true },
+      })
+        .sort({ createdAt: -1 })
+        .select('marksDistribution')
+        .lean();
+      if (sibling?.marksDistribution?.length) inheritedDist[cid] = sibling.marksDistribution;
+    }
+
     for (const a of myAssignments) {
       try {
+        const dist = inheritedDist[String(a.classId)];
         await ExamSubjectConfig.create({
           examId: exam._id,
           classId: a.classId,
           subjectId: a.subjectId,
           maxMarks: defaultMax,
           passingMarks: defaultPass,
+          ...(dist?.length && { marksDistribution: dist }),
           schoolId: req.schoolId,
         });
         configCount++;

@@ -284,13 +284,8 @@ export const navConfig = {
       module: 'communication',
     },
     // retired: fee_management — re-add when available
-    {
-      to: '/student/report-card',
-      icon: MdDescription,
-      size: 18,
-      label: 'Report Card',
-      module: 'report_cards',
-    },
+    // retired: /student/report-card — it ran the pre-template renderer. The
+    // "Marks & Results" entry above owns both marks and the report card now.
   ],
 
   admission: [

@@ -5,13 +5,21 @@ import {
   useGetClassesQuery, useGetClassSubjectsQuery, useGetActiveSessionQuery,
   useLinkTemplateToExamMutation, useGetAdminTemplatesQuery,
   useArchiveExamMutation, useRestoreExamMutation, useUnlockExamMutation,
+  useGetExamConfigHealthQuery,
 } from '@shared/lib/api/adminApi';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import toast from 'react-hot-toast';
 
 // ── Default preset distribution rows ──────────────────────────────────────────
+// A single 'theory' row is legacy-equivalent: it produces one aggregate number,
+// which no component-based report card can read. Default to the CBSE-style
+// breakdown so the common case is configured correctly; the editor below still
+// lets an admin delete rows back down to a single component.
 const DEFAULT_DIST = [
-  { type: 'theory', label: 'Theory', maxMarks: 100 },
+  { type: 'pertest', label: 'Periodic Test', maxMarks: 10 },
+  { type: 'nb', label: 'Notebook', maxMarks: 5 },
+  { type: 'se', label: 'Subject Enrichment', maxMarks: 5 },
+  { type: 'theory', label: 'Theory', maxMarks: 80 },
 ];
 
 // ── Custom Component Modal ────────────────────────────────────────────────────
@@ -239,6 +247,35 @@ const EXAM_TYPES_LIST = [
   { value: 'annual', label: 'Annual / Final Exam' },
   { value: 'custom', label: 'Custom Exam' },
 ];
+
+// ── Marks-breakdown badge ─────────────────────────────────────────────
+// A subject with no marksDistribution stores one aggregate number, so the
+// component columns of a report card come out blank however correct the marks
+// are. Surface that on the exam list, before anyone enters marks.
+const ConfigHealthBadge = ({ examId }) => {
+  const { data } = useGetExamConfigHealthQuery({ examId });
+  const health = data?.data;
+  if (!health || health.total === 0) return null;
+
+  if (health.legacy === 0) {
+    return (
+      <span
+        className="text-xs bg-green-50 border border-green-200 text-green-700 px-2 py-0.5 rounded-full font-medium"
+        title={`Components: ${health.components.join(', ')}`}
+      >
+        ✓ Marks breakdown set
+      </span>
+    );
+  }
+  return (
+    <span
+      className="text-xs bg-red-50 border border-red-200 text-red-700 px-2 py-0.5 rounded-full font-medium"
+      title="These subjects store a single total. Component columns on the report card will be blank."
+    >
+      ⚠️ {health.legacy}/{health.total} subject(s) without marks breakdown
+    </span>
+  );
+};
 
 // ── Edit Exam Modal ───────────────────────────────────────────────────
 const EditExamModal = ({ exam, onClose, onSave, loading }) => {
@@ -767,7 +804,8 @@ const ExamManager = () => {
                     <p className="text-xs text-gray-500 mt-1">Classes: {exam.classIds?.map(c => c.name).join(', ')}</p>
                     {exam.startDate && <p className="text-xs text-gray-400">{new Date(exam.startDate).toLocaleDateString()} - {new Date(exam.endDate).toLocaleDateString()}</p>}
                     {/* Template badge / quick-link */}
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <ConfigHealthBadge examId={exam._id} />
                       {exam.templateId ? (
                         <span className="text-xs bg-green-50 border border-green-200 text-green-700 px-2 py-0.5 rounded-full font-medium">
                           📄 {exam.templateId?.name || 'Template linked'}

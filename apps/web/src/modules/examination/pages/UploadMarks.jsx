@@ -6,6 +6,7 @@ import {
   useGetMyExamsQuery,
   useGetStudentsForMarksQuery,
   useGetExamTemplateQuery,
+  useGetExamConfigHealthQuery,
 } from '@modules/people/api/teacherApi';
 import { useGetActiveSessionQuery } from '@shared/lib/api/adminApi';
 import { useGetMarksReadinessQuery } from '@modules/reportcards/api/reportCardApi';
@@ -159,6 +160,15 @@ const UploadMarks = () => {
   const [validationErrors, setValidationErrors] = useState({});
 
   const fileRef = useRef(null);
+
+  // Does this exam have a marks breakdown for this class? Without one, whatever
+  // is entered here is stored as a single aggregate number and the component
+  // columns of the report card stay blank. Ask before entry, not after.
+  const { data: configHealthData } = useGetExamConfigHealthQuery(
+    { examId: selectedExam, classId: selectedClass },
+    { skip: !selectedExam || !selectedClass }
+  );
+  const configHealth = configHealthData?.data;
 
   // ─── Mutations ───
   const [uploadMarks, { isLoading: uploading }] = useUploadMarksMutation();
@@ -923,11 +933,47 @@ const UploadMarks = () => {
           </div>
         )}
 
+        {/* "Legacy mode" alone told the teacher nothing about the consequence:
+            these marks are stored as one aggregate number, so every component
+            column on a component-based report card renders blank. */}
         {!isDynamic && !templateLoading && selectedExam && (
-          <div className="mt-4">
-            <span className="inline-flex items-center text-xs bg-yellow-50 border border-yellow-200 text-yellow-700 px-3 py-1.5 rounded-full">
-              ⚠️ Legacy mode — using single marks field
-            </span>
+          <div className="mt-4 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
+            <p className="font-semibold">⚠️ Single-total mode — no marks breakdown</p>
+            <p className="mt-1 leading-relaxed">
+              {templateName
+                ? `"${templateName}" has no per-component marks fields, so `
+                : 'No report card template resolved for this school, so '}
+              marks entered here are saved as <strong>one total per subject</strong>. They will
+              show in the subject total on the report card, but every component column
+              {configHealth?.components?.length
+                ? ` (${configHealth.components.join(', ')})`
+                : ' (periodic test, notebook, subject enrichment, …)'}{' '}
+              will be blank.
+            </p>
+            {configHealth?.legacy > 0 && (
+              <p className="mt-1 text-yellow-800">
+                {configHealth.legacy} of {configHealth.total} subject(s) on this exam have no
+                marks breakdown configured.
+              </p>
+            )}
+            <p className="mt-1 text-yellow-800">
+              Ask an administrator to set the marks distribution on this exam before entering
+              marks.
+            </p>
+          </div>
+        )}
+
+        {/* The template is component-based but this exam+class is not configured
+            for it — the mismatch that silently produces a blank report card. */}
+        {isDynamic && !templateLoading && configHealth?.legacy > 0 && (
+          <div className="mt-4 rounded-lg border border-orange-300 bg-orange-50 px-4 py-3 text-sm text-orange-900">
+            <p className="font-semibold">
+              ⚠️ {configHealth.legacy} of {configHealth.total} subject(s) have no marks breakdown
+            </p>
+            <p className="mt-1 leading-relaxed">
+              The report card expects components, but those subjects are configured for a single
+              total. Marks entered for them will not fill the component columns.
+            </p>
           </div>
         )}
 
