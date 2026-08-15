@@ -142,6 +142,106 @@ describe('the stale-index failure mode', () => {
   });
 });
 
+/**
+ * The migration is a manual step someone has to remember. Boot-time
+ * reconciliation is what makes a deploy fix this on its own.
+ */
+describe('boot-time index reconciliation', () => {
+  const { reconcileIndexes } = require('../src/core/db/reconcileIndexes');
+
+  const breakIndex = async () => {
+    await User.syncIndexes();
+    await coll()
+      .dropIndex(INDEX)
+      .catch(() => {});
+    await coll().createIndex({ email: 1, schoolId: 1 }, { unique: true });
+  };
+
+  test('repairs the stale plain index on boot', async () => {
+    const school = await createSchool('SCHOOLA');
+    await breakIndex();
+
+    const fixed = await reconcileIndexes();
+    expect(fixed.join()).toMatch(/users\.email_1_schoolId_1/);
+
+    const idx = (await coll().indexes()).find((i) => i.name === INDEX);
+    expect(idx.partialFilterExpression).toEqual({ email: { $type: 'string' } });
+    expect(idx.unique).toBe(true);
+
+    // The actual symptom is gone
+    await User.create(student(1, { schoolId: school._id }));
+    await User.create(student(2, { schoolId: school._id }));
+    expect(await User.countDocuments({ schoolId: school._id })).toBe(2);
+  });
+
+  test('is idempotent — a correct index is left alone', async () => {
+    await createSchool('SCHOOLA');
+    await User.syncIndexes();
+
+    expect(await reconcileIndexes()).toEqual([]);
+    const idx = (await coll().indexes()).find((i) => i.name === INDEX);
+    expect(idx.partialFilterExpression).toEqual({ email: { $type: 'string' } });
+  });
+
+  // If it dropped a unique index it could not rebuild, it would leave the
+  // collection unprotected — worse than the bug it is fixing.
+  // A stale NON-unique index is the only state in which violating rows can
+  // actually accumulate — a stale unique one would have rejected them on write.
+  test('refuses to rebuild when existing data violates the new index', async () => {
+    const school = await createSchool('SCHOOLA');
+    await User.syncIndexes();
+    await coll()
+      .dropIndex(INDEX)
+      .catch(() => {});
+    await coll().createIndex({ email: 1, schoolId: 1 }); // stale: not unique
+
+    await coll().insertMany([
+      { firstName: 'A', email: 'dup@a.com', schoolId: school._id, role: 'student' },
+      { firstName: 'B', email: 'dup@a.com', schoolId: school._id, role: 'student' },
+    ]);
+
+    await expect(reconcileIndexes()).resolves.toEqual([]);
+
+    // The old index survives untouched rather than the collection being left
+    // with no index at all after a failed drop-and-create.
+    const after = (await coll().indexes()).find((i) => i.name === INDEX);
+    expect(after).toBeTruthy();
+    expect(after.unique).toBeUndefined();
+    expect(after.partialFilterExpression).toBeUndefined();
+  });
+
+  test('the duplicate check ignores rows the partial filter excludes', async () => {
+    const school = await createSchool('SCHOOLA');
+    await User.syncIndexes();
+    await coll()
+      .dropIndex(INDEX)
+      .catch(() => {});
+    await coll().createIndex({ email: 1, schoolId: 1 }); // stale: not unique
+
+    // Many email-less users would look like duplicates to a naive check, but the
+    // partial filter excludes them, so the rebuild must go ahead.
+    await coll().insertMany([
+      { firstName: 'A', schoolId: school._id, role: 'student' },
+      { firstName: 'B', schoolId: school._id, role: 'student' },
+      { firstName: 'C', email: null, schoolId: school._id, role: 'student' },
+    ]);
+
+    expect((await reconcileIndexes()).join()).toMatch(/users\.email_1_schoolId_1/);
+    const after = (await coll().indexes()).find((i) => i.name === INDEX);
+    expect(after.partialFilterExpression).toEqual({ email: { $type: 'string' } });
+  });
+
+  test('never touches an index the schema does not declare', async () => {
+    await createSchool('SCHOOLA');
+    await User.syncIndexes();
+    await coll().createIndex({ firstName: 1 }, { name: 'handmade_firstName' });
+
+    await reconcileIndexes();
+
+    expect((await coll().indexes()).some((i) => i.name === 'handmade_firstName')).toBe(true);
+  });
+});
+
 // The schema is the source of truth the migration restores the database to.
 test('the schema declares the partial filter', () => {
   const idx = User.schema.indexes().find(([key]) => key.email === 1 && key.schoolId === 1);

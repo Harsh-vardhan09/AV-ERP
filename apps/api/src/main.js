@@ -2,6 +2,7 @@ require('dotenv').config();
 const http = require('http');
 const env = require('./core/config/env');
 const connect = require('./core/config/database');
+const { reconcileIndexes } = require('./core/db/reconcileIndexes');
 const app = require('./app');
 const { attachSocket } = require('./core/realtime/socket');
 const { bootWorkers } = require('./core/queue/registry');
@@ -55,6 +56,16 @@ process.on('unhandledRejection', (reason) => {
 
 const start = async () => {
   await connect();
+
+  // Mongoose cannot replace an index whose options changed — same name, different
+  // spec is refused and the OLD index survives every deploy. That is how a plain
+  // unique (email, schoolId) index outlived the schema's partial one and blocked
+  // every school's second email-less student from registering. Reconciling here
+  // means a deploy fixes it; never throws, so a problem cannot stop the boot.
+  await reconcileIndexes().catch((err) =>
+    logger.error('[Indexes] Reconciliation skipped', { error: err.message })
+  );
+
   bootWorkers();
 
   const server = http.createServer(app);
